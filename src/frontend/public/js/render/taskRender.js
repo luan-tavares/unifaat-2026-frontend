@@ -1,6 +1,5 @@
-// TODO (TF): Importar taskToggleHandler e taskDeleteHandler
-// import taskToggleHandler from "../listeners/taskToggleHandler.js";
-// import taskDeleteHandler from "../listeners/taskDeleteHandler.js";
+import taskToggleHandler from "../listeners/taskToggleHandler.js";
+import taskDeleteHandler from "../listeners/taskDeleteHandler.js";
 
 export default function taskRender(task, idUser) {
     const liElement = document.createElement("li");
@@ -14,8 +13,6 @@ export default function taskRender(task, idUser) {
 
     liElement.append(nameElement);
 
-    // TODO (TF): Adicionar checkbox para marcar concluída
-    /*
     const checkboxElement = document.createElement("input");
     checkboxElement.type = "checkbox";
     checkboxElement.classList.add("form-check-input");
@@ -26,16 +23,12 @@ export default function taskRender(task, idUser) {
     if (task.is_done) {
         nameElement.classList.add("text-decoration-line-through", "text-muted");
     }
-    */
 
-    // TODO (TF): Adicionar botão Excluir
-    /*
     const buttonDeleteElement = document.createElement("button");
     buttonDeleteElement.classList.add("btn", "btn-danger", "btn-sm");
     buttonDeleteElement.innerText = "Excluir";
     buttonDeleteElement.addEventListener("click", taskDeleteHandler);
     liElement.append(buttonDeleteElement);
-    */
 
     return liElement;
 }
