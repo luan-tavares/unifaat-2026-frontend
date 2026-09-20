@@ -9,9 +9,9 @@ services:
       - .env
       - .env.docker
     volumes:
-      - ./src/backend:/app/backend
-      - ./src/_web.js:/app/_web.js
-      - ./src/frontend/public:/app/frontend/public
+      - ./src/backend:/app/backend:z ## adicionando ':z' para dar permissão ao SELinux - somente para sistemas que utilizam o SELinux.
+      - ./src/_web.js:/app/_web.js:z ## adicionando ':z' para dar permissão ao SELinux - somente para sistemas que utilizam o SELinux.
+      - ./src/frontend/public:/app/frontend/public:z ## adicionando ':z' para dar permissão ao SELinux - somente para sistemas que utilizam o SELinux.
       - nodemodules-volume:/app/node_modules
     depends_on:
       - postgres-container
@@ -33,8 +33,8 @@ services:
       - .env
       - .env.docker
     volumes:
-      - ./src/backend:/app/backend
-      - ./src/_command.js:/app/_command.js
+      - ./src/backend:/app/backend:z ## adicionando ':z' para dar permissão ao SELinux - somente para sistemas que utilizam o SELinux.
+      - ./src/_command.js:/app/_command.js:z ## adicionando ':z' para dar permissão ao SELinux - somente para sistemas que utilizam o SELinux.
       - nodemodules-volume:/app/node_modules
     depends_on:
       - postgres-container
@@ -54,7 +54,7 @@ services:
     env_file:
       - .env.docker
     volumes:
-      - ./src/frontend:/app/frontend
+      - ./src/frontend:/app/frontend:z ## adicionando ':z' para dar permissão ao SELinux - somente para sistemas que utilizam o SELinux.
       - nodemodules-volume:/app/node_modules
     restart: unless-stopped
     ports:
@@ -72,9 +72,9 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./src/frontend/public:/var/www
-      - ./aulas:/var/www/aulas
-      - ./src/logs/nginx:/var/log/nginx
+      - ./src/frontend/public:/var/www:z ## adicionando ':z' para dar permissão ao SELinux - somente para sistemas que utilizam o SELinux.
+      - ./aulas:/var/www/aulas:z ## adicionando ':z' para dar permissão ao SELinux - somente para sistemas que utilizam o SELinux.
+      - ./src/logs/nginx:/var/log/nginx:z ## adicionando ':z' para dar permissão ao SELinux - somente para sistemas que utilizam o SELinux.
     depends_on:
       - nodeweb-container
     networks:
@@ -95,7 +95,7 @@ services:
       - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres-volume:/var/lib/postgresql
-      - ./src/docker/postgres/init:/docker-entrypoint-initdb.d
+      - ./src/docker/postgres/init:/docker-entrypoint-initdb.d:z ## adicionando ':z' para dar permissão ao SELinux - somente para sistemas que utilizam o SELinux.
     networks:
       app-network:
         aliases:
