@@ -1,4 +1,5 @@
 import taskRender from "./taskRender";
+import paginationRender from "./paginationRender";
 import { tasksListApi } from "../api/tasksListApi";
 
 export default async function tasksListRender(idUser: number, page = 1): Promise<void> {
@@ -14,9 +15,7 @@ export default async function tasksListRender(idUser: number, page = 1): Promise
 
   container.append(ulElement);
 
-  const listApi = await tasksListApi(idUser, { page });
-
-  ulElement.innerHTML = "";
+  const listApi = await tasksListApi({ page });
 
   if (listApi.data.length === 0) {
     const emptyElement = document.createElement("li");
@@ -30,4 +29,10 @@ export default async function tasksListRender(idUser: number, page = 1): Promise
     const liElement = taskRender(task, idUser);
     ulElement.append(liElement);
   });
+
+  container.append(
+    paginationRender(listApi, (newPage) => {
+      void tasksListRender(idUser, newPage);
+    })
+  );
 }
