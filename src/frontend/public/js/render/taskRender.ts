@@ -1,8 +1,14 @@
 import taskToggleHandler from "../listeners/taskToggleHandler.js";
 import taskDeleteHandler from "../listeners/taskDeleteHandler.js";
+import taskEditHandler from "../listeners/taskEditHandler.js";
+import type { Task } from "../types/api";
 
-export default function taskRender(task, idUser) {
+export default function taskRender(
+    task: Task,
+    idUser: number
+): HTMLLIElement {
     const liElement = document.createElement("li");
+
     liElement.classList.add(
         "list-group-item",
         "d-flex",
@@ -10,8 +16,8 @@ export default function taskRender(task, idUser) {
         "align-items-center"
     );
 
-    liElement.taskId = task.id;
-    liElement.userId = idUser;
+    liElement.dataset.taskId = String(task.id);
+    liElement.dataset.userId = String(idUser);
 
     const checkboxElement = document.createElement("input");
     checkboxElement.type = "checkbox";
@@ -30,6 +36,11 @@ export default function taskRender(task, idUser) {
         );
     }
 
+    const buttonEditElement = document.createElement("button");
+    buttonEditElement.classList.add("btn", "btn-warning", "btn-sm", "me-2");
+    buttonEditElement.innerText = "Editar";
+    buttonEditElement.addEventListener("click", taskEditHandler);
+
     const buttonDeleteElement = document.createElement("button");
     buttonDeleteElement.classList.add("btn", "btn-danger", "btn-sm");
     buttonDeleteElement.innerText = "Excluir";
@@ -37,6 +48,7 @@ export default function taskRender(task, idUser) {
 
     liElement.append(checkboxElement);
     liElement.append(nameElement);
+    liElement.append(buttonEditElement);
     liElement.append(buttonDeleteElement);
 
     return liElement;

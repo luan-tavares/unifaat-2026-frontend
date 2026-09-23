@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "start": "node _web.js",
-    "dev": "./node_modules/.bin/nodemon _web.js"
+    "dev": "./node_modules/.bin/nodemon _web.js",
+    "vite": "vite"
   },
   "type": "module",
   "author": "Luan Tavares",
@@ -25,6 +26,7 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.14",
+    "typescript": "^7.0.2",
     "vite": "^8.2.2"
   }
 }

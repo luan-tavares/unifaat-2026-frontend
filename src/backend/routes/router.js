@@ -12,6 +12,7 @@ import GetFileController from '../app/Http/Controllers/GetFileController.js';
 import Return404Controller from '../app/Http/Controllers/Return404Controller.js';
 import userRouter from './apis/userRouter.js';
 import taskRouter from './apis/taskRouter.js';
+import meTaskRouter from './apis/meTaskRouter.js';
 import fileUpload from 'express-fileupload';
 import swaggerUi from 'swagger-ui-express';
 import LoginController from '../app/Http/Controllers/LoginController.js';
@@ -91,6 +92,7 @@ router.use("/users", userRouter);
 
 /** Router para tarefas aninhadas em usuários */
 router.use("/users/:idUser/tasks", taskRouter);
+router.use("/me/tasks", meTaskRouter);
 
 /**
  * Fallback 404 para requisições não encontradas
