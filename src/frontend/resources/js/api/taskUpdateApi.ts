@@ -1,12 +1,7 @@
-import clientApi from "./_clientApi";
-import type { Task } from "../types/api";
+import clientApi from './_clientApi';
+import { Task } from '../types/api';
 
-export async function taskUpdateApi(
-  idUser: number,
-  taskId: number,
-  updates: Partial<Pick<Task, "name" | "is_done">>
-): Promise<Task> {
-  const { data } = await clientApi.put<Task>(`/users/${idUser}/tasks/${taskId}`, updates);
-
+export async function taskUpdateApi(taskId: number, payload: { name?: string; is_done?: boolean }): Promise<Task> {
+  const { data } = await clientApi.put(`/me/tasks/${taskId}`, payload);
   return data;
 }

@@ -9,9 +9,11 @@ export default async function taskDeleteHandler(event: Event): Promise<void> {
   const { userId: idUser, taskId } = liElement;
 
   try {
-    await taskDeleteApi(idUser, taskId);
+    // API Contextual: deleta passando só a task. (Requer que taskDeleteApi já esteja atualizada)
+    await taskDeleteApi(taskId); 
     await tasksListRender(idUser);
   } catch (error) {
     console.error(error);
+    alert("Erro ao excluir tarefa");
   }
 }
