@@ -18,7 +18,7 @@ export default async function tasksListeners(idUser: number): Promise<void> {
       const { taskCreateApi } = await import("../api/taskCreateApi");
       await taskCreateApi(idUser, { name: taskName });
       if (taskInput) taskInput.value = "";
-      await tasksListRender(idUser);
+      await tasksListRender();
     } catch (error) {
       alert("Erro ao criar tarefa");
       console.error(error);

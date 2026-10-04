@@ -6,12 +6,12 @@ export default async function taskToggleHandler(event: Event): Promise<void> {
   const liElement = (event.target as HTMLElement).closest("li") as TaskListItemElement | null;
   if (!liElement) return;
 
-  const { userId: idUser, taskId } = liElement;
+  const { taskId } = liElement;
   const isDone = (event.target as HTMLInputElement).checked;
 
   try {
-    await taskUpdateApi(idUser, taskId, { is_done: isDone });
-    await tasksListRender(idUser);
+    await taskUpdateApi(taskId, { is_done: isDone });
+    await tasksListRender();
   } catch (error) {
     alert("Erro ao atualizar tarefa");
     console.error(error);

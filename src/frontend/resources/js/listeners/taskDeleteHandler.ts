@@ -6,12 +6,16 @@ export default async function taskDeleteHandler(event: Event): Promise<void> {
   const liElement = (event.target as HTMLElement).closest("li") as TaskListItemElement | null;
   if (!liElement) return;
 
-  const { userId: idUser, taskId } = liElement;
+  const { taskId } = liElement;
+
+  const confirmed = confirm("Tem certeza que deseja excluir esta tarefa?");
+  if (!confirmed) return;
 
   try {
-    await taskDeleteApi(idUser, taskId);
-    await tasksListRender(idUser);
+    await taskDeleteApi(taskId);
+    await tasksListRender();
   } catch (error) {
+    alert("Erro ao excluir tarefa");
     console.error(error);
   }
 }

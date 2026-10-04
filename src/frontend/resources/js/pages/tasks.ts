@@ -17,7 +17,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     const { idUser } = auth;
     setUserId(idUser);
 
-    await tasksListRender(idUser);
+    await tasksListRender();
     await tasksListeners(idUser);
   } catch (error) {
     console.error("Falha ao carregar tarefas:", error);
