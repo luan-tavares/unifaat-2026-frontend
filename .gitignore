@@ -1,6 +1,6 @@
 .env
 /src/node_modules/
 .claude/
-/src/frontend/public/*
-!/src/frontend/public/.gitkeep
-prova-1/
+/src/public/*
+!/src/public/.gitkeep
+/prova-1/

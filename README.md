@@ -21,8 +21,13 @@ Repositório centralizado para todas as aulas do bimestre de Frontend. Aqui voc�
 ```
 .
 ├── src/                      # Projeto compartilhado - Bimestre 01 (usado em TODAS as aulas)
-│   ├── backend/              # API Node.js (Express-like)
-│   ├── frontend/             # Aplicação Vue 3 com Vite
+│   ├── app/                  # Controllers, Middlewares, Models, Commands (Node/Express)
+│   ├── bootstrap/ database/ routes/ utils/ docs/ storage/
+│   ├── resources/            # Fonte do frontend (HTML, TS, CSS, img) — compilado pelo Vite
+│   │   └── views/            # Views do servidor (EJS)
+│   ├── public/               # Saída do Vite (gerada, não versionada)
+│   ├── _web.js _command.js _worker.js   # Entry points do Node
+│   ├── vite.config.js tsconfig.json nodemon.json
 │   ├── docker/               # Configurações Docker
 │   ├── package.json
 │   └── readme.md             # Documentação detalhada do projeto
@@ -176,6 +181,9 @@ O `src/` é o projeto base do **primeiro bimestre** que evolui ao longo das aula
 | `nodevitehmr-container` | `node:25`             | Servir o frontend via Vite HMR                                | 5172          |
 | `nodevitecompiler-container` | `node:24`        | Pré-compilar o frontend (`vite build --watch`): TypeScript, Bootstrap, Axios e FontAwesome viram JS/CSS puro em `public/`. | —          |
 | `postgres-container`    | `postgres:18`         | Banco de dados PostgreSQL da aplicação.                       | 5432          |
+| `elasticsearch-container` | `elasticsearch:9.5.5` | Banco de busca. Sem porta exposta: só a rede interna (`elasticsearch_host:9200`) acessa. | 9200 |
+| `rabbitmq-container`    | `rabbitmq:3.13.1-management-alpine` | Fila de mensagens (jobs). Painel web em http://localhost:15672. | 5672 / 15672 |
+| `nodeworker-container`  | `node:25`             | Worker: consome a fila e executa os jobs de `app/Jobs` (`nodemon _worker.js`). | — |
 
 ### Volumes Persistentes
 
@@ -184,15 +192,14 @@ O `src/` é o projeto base do **primeiro bimestre** que evolui ao longo das aula
 | `public-volume:/var/www`            | `nginx-container`         | Disponibilizar os arquivos estáticos compilados do frontend (`public/`).  |
 | `./aulas:/var/www/aulas`            | `nginx-container`         | Disponibilizar materiais das aulas (slides, PDFs, etc).                 |
 | `./src/logs/nginx:/var/log/nginx`   | `nginx-container`         | Persistir os logs do NGINX fora do container.                            |
-| `./src/backend:/app/backend`        | `nodeweb-container`       | Disponibilizar o código do backend dentro do container.                  |
-| `./src/_web.js:/app/_web.js`        | `nodeweb-container`       | Arquivo de entrada da aplicação web.                                     |
-| `public-volume:/app/frontend/public`| `nodeweb-container`       | Ler os arquivos compilados do frontend (mesmo volume do NGINX).          |
-| `./src/_command.js:/app/_command.js`| `nodecommand-container`   | Arquivo de entrada dos comandos CLI.                                     |
-| `./src/frontend:/app/frontend`      | `nodevitehmr-container`   | Disponibilizar o código frontend para Vite.                              |
-| `./src/frontend/resources:/app/resources` | `nodevitecompiler-container` | Código-fonte que o Vite observa e compila (`vite build --watch`). |
+| `./src:/app`                        | `nodeweb-container`, `nodecommand-container`, `nodeworker-container` | Disponibilizar o código do projeto (`src/`) dentro do container. |
+| `public-volume:/app/public`         | `nodeweb-container`       | Ler os arquivos compilados do frontend (mesmo volume do NGINX).          |
+| `./src/resources:/app/resources`    | `nodevitehmr-container`, `nodevitecompiler-container` | Código-fonte que o Vite serve (HMR) e compila (`vite build --watch`). |
 | `public-volume:/app/public`         | `nodevitecompiler-container` | Escrever o resultado da compilação (mesmo volume do NGINX e do Node web). |
 | `nodemodules-volume:/app/node_modules` | node containers       | Isolar o `node_modules` instalado em build-time.                        |
 | `postgres-volume:/var/lib/postgresql` | `postgres-container`    | Persistir os dados do banco entre reinicializações.                      |
+| `elastic-volume:/usr/share/elasticsearch/data` | `elasticsearch-container` | Persistir os índices do Elasticsearch.                     |
+| `rabbitmq-volume:/var/lib/rabbitmq` | `rabbitmq-container`  | Persistir filas e usuário do RabbitMQ.                                   |
 
 ### Redes
 
@@ -254,8 +261,9 @@ npm run dev
 - Os slides estão em PDF em `aulas/[numero]/slide/`
 - Mantenha o `.env` atualizado e **nunca** commite variáveis sensíveis
 - Todos os comandos npm rodam da raiz do repositório
-- Para editar código do backend, modifique em `src/backend/`
-- Para editar código do frontend, modifique em `src/frontend/public/`
+- Código do servidor (Node): `src/app/`, `src/routes/`, `src/database/`...
+- Código do frontend: `src/resources/` (o Vite compila para `src/public/`, nunca edite `public/` à mão)
+- Views do servidor (EJS): `src/resources/views/`
 
 ---
 

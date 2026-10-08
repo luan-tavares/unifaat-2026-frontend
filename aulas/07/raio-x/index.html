@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raio-X do Código — Aula 07</title>
+<link rel="stylesheet" href="../../../assets/raio-x.css">
+<script src="../../../assets/tema.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+<body>
+
+<nav class="topbar"><a class="back" href="../../../index.html">← Voltar</a></nav>
+
+<header>
+  <span class="kicker">Raio-X do Código · Aula 07 · Timeline</span>
+  <h1>Views e Elasticsearch</h1>
+  <p class="meta">
+    <span><i class="fa-solid fa-folder"></i> src/ · docker/ · docker-compose.yml</span>
+    <span><i class="fa-solid fa-calendar-days"></i> 19/10/2026</span>
+    <span><i class="fa-solid fa-wrench"></i> 8 etapas até agora</span>
+  </p>
+</header>
+
+<main>
+<div class="timeline">
+
+  <!-- ETAPA 1 -->
+  <div class="entry">
+    <div class="entry-dot">1</div>
+    <div class="entry-date">Etapa 1</div>
+    <h2>Porta do Nginx sai do hardcode e vira variável de ambiente</h2>
+    <p class="sub">O <code class="inline">listen 80</code> estava fixo no config do Nginx. Agora a porta interna vem do <code class="inline">.env</code> (<code class="inline">NGINX_PORT</code>), e o template finalmente é tratado como template.</p>
+
+    <div class="diff">
+      <div class="diff-head">docker/nginx/default.conf.template</div>
+      <div class="line ctx">  server {</div>
+      <div class="line rem">-     listen 80; # Porta em que o NGINX vai escutar</div>
+      <div class="line add">+     listen ${NGINX_PORT}; # Porta em que o NGINX vai escutar, vem do .env</div>
+      <div class="line ctx">      ...</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">docker/nginx/Dockerfile</div>
+      <div class="line ctx">  # Remove o default do container</div>
+      <div class="line ctx">  RUN rm /etc/nginx/conf.d/default.conf</div>
+      <div class="line ctx"></div>
+      <div class="line rem">- # Copia o novo config</div>
+      <div class="line rem">- COPY ./docker/nginx/default.conf.template /etc/nginx/conf.d/default.conf</div>
+      <div class="line add">+ # Copia o template: na subida, o nginx troca as ${VARIAVEIS} pelo valor do ambiente e gera o /etc/nginx/conf.d/default.conf</div>
+      <div class="line add">+ COPY ./docker/nginx/default.conf.template /etc/nginx/templates/default.conf.template</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">docker-compose.yml (nginx-container)</div>
+      <div class="line ctx">      env_file:</div>
+      <div class="line ctx">        - .env</div>
+      <div class="line ctx">      ports:</div>
+      <div class="line rem">-       - "${NGNIX_WEB_PORT}:80"</div>
+      <div class="line add">+       - "${NGNIX_WEB_PORT}:${NGINX_PORT}"</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">.env.example (e o seu .env)</div>
+      <div class="line ctx">  NGNIX_WEB_PORT=8080</div>
+      <div class="line add">+ NGINX_PORT=80</div>
+      <div class="line ctx">  NODE_WEB_PORT=3000</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Por que mudar o destino do COPY</h4>
+        <p>O arquivo já se chamava <code class="inline">.template</code>, mas era copiado direto para <code class="inline">conf.d/</code> e nada era substituído. A imagem oficial do Nginx, ao subir, pega tudo que está em <code class="inline">/etc/nginx/templates/*.template</code>, troca as <code class="inline">${VARIAVEIS}</code> pelos valores do ambiente (<code class="inline">envsubst</code>) e grava o resultado em <code class="inline">/etc/nginx/conf.d/</code>.</p>
+      </div>
+      <div class="why-card">
+        <h4>E o $uri, $host...?</h4>
+        <p>O <code class="inline">envsubst</code> da imagem só troca variáveis que <strong>existem no ambiente</strong>. As variáveis do próprio Nginx (<code class="inline">$uri</code>, <code class="inline">$host</code>, <code class="inline">$remote_addr</code>) continuam intactas. O container já recebia o <code class="inline">.env</code> via <code class="inline">env_file</code>, então o <code class="inline">NGINX_PORT</code> chega sem mais nada.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+      <div>
+        <strong>Atualize seu .env:</strong>
+        <p>quem já tem <code class="inline">.env</code> precisa adicionar <code class="inline">NGINX_PORT=80</code>. Sem ela, o compose avisa variável vazia e o mapeamento de porta quebra. O <code class="inline">NGNIX_WEB_PORT</code> (com o erro de digitação) foi mantido para não quebrar os <code class="inline">.env</code> existentes.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">docker compose config</code> ok; <code class="inline">docker compose build nginx-container</code> ok; container com o template em <code class="inline">/etc/nginx/templates/</code> → <code class="inline">nginx -t</code> ok e <code class="inline">conf.d/default.conf</code> gerado com <code class="inline">listen 80;</code> e <code class="inline">$uri</code>/<code class="inline">$host</code> preservados.</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 2 -->
+  <div class="entry">
+    <div class="entry-dot">2</div>
+    <div class="entry-date">Etapa 2</div>
+    <h2>Reestruturação do <code class="inline">src/</code>: fim de <code class="inline">backend/</code> e <code class="inline">frontend/</code></h2>
+    <p class="sub">A View é HTML gerado pelo servidor, mas é frontend. Separar as duas pastas deixou de fazer sentido: tudo vai para a raiz de <code class="inline">src/</code>, com <code class="inline">resources/</code> (fonte) e <code class="inline">public/</code> (compilado), como na Aula 05.</p>
+
+    <h3 class="block-title">Antes</h3>
+
+    <div class="tree">src/
+├── <span class="dir">backend/</span>
+│   ├── app/  bootstrap/  database/  docs/  routes/  storage/  utils/
+│   └── node_modules/        <span class="comment">// versionado por engano (cookie-parser)</span>
+├── <span class="dir">frontend/</span>
+│   ├── resources/           <span class="comment">// fonte: html, ts, css, img</span>
+│   └── public/              <span class="comment">// saída do Vite</span>
+├── _web.js  _command.js
+└── vite.config.js  tsconfig.json  package.json</div>
+
+    <h3 class="block-title">Depois</h3>
+
+    <div class="tree">src/
+├── app/                 <span class="new">← era backend/app</span>
+├── bootstrap/           <span class="new">← era backend/bootstrap</span>
+├── database/  docs/  routes/  storage/  utils/   <span class="new">← eram backend/*</span>
+├── resources/           <span class="new">← era frontend/resources</span>
+│   └── views/           <span class="new">← NOVO: templates EJS (etapa 4)</span>
+├── public/              <span class="new">← era frontend/public (gerado, gitignored)</span>
+├── _web.js  _command.js
+├── vite.config.js  tsconfig.json  package.json
+└── nodemon.json         <span class="new">← NOVO</span></div>
+
+    <div class="callout">
+      <span class="icon"><i class="fa-solid fa-code-branch"></i></span>
+      <div>
+        <strong>Movido com git mv:</strong>
+        <p>o histórico de cada arquivo é preservado. <code class="inline">src/backend/node_modules</code> (16 arquivos do <code class="inline">cookie-parser</code> commitados por engano) foi <strong>removido</strong>: a dependência já está no <code class="inline">package.json</code>.</p>
+      </div>
+    </div>
+
+    <h3 class="block-title">Os caminhos que apontavam para backend/ e frontend/</h3>
+
+    <div class="diff">
+      <div class="diff-head">src/_web.js</div>
+      <div class="line rem">- import router from './backend/routes/router.js';</div>
+      <div class="line rem">- import app from "./backend/bootstrap/app.js";</div>
+      <div class="line add">+ import router from './routes/router.js';</div>
+      <div class="line add">+ import app from "./bootstrap/app.js";</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/_command.js</div>
+      <div class="line rem">- import loadCommands from './backend/utils/loadCommands.js'</div>
+      <div class="line add">+ import loadCommands from './utils/loadCommands.js'</div>
+      <div class="line ctx">  ...</div>
+      <div class="line rem">- const commandsPath = path.join(__dirname, 'backend', 'app', 'Commands');</div>
+      <div class="line add">+ const commandsPath = path.join(__dirname, 'app', 'Commands');</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/bootstrap/config.js</div>
+      <div class="line ctx">  const CONSTANTS = Object.freeze({</div>
+      <div class="line rem">-     DIR: `${process.cwd()}/backend`,</div>
+      <div class="line add">+     DIR: process.cwd(),</div>
+      <div class="line ctx">  });</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/routes/router.js</div>
+      <div class="line rem">- router.use(express.static(path.join(CONSTANTS.DIR, '..', 'frontend', 'public')));</div>
+      <div class="line add">+ router.use(express.static(path.join(CONSTANTS.DIR, 'public')));</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/app/Http/SwaggerDoc.js</div>
+      <div class="line rem">-     const docsDir = path.resolve(process.cwd(), 'backend/docs');</div>
+      <div class="line add">+     const docsDir = path.resolve(process.cwd(), 'docs');</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/app/Http/Controllers/UserApi/UploadImageController.js</div>
+      <div class="line rem">-         const storagePath = path.resolve(process.cwd(), 'backend/storage/users');</div>
+      <div class="line add">+         const storagePath = path.resolve(process.cwd(), 'storage/users');</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/tsconfig.json</div>
+      <div class="line rem">-   "include": ["frontend/resources/js/**/*.ts"]</div>
+      <div class="line add">+   "include": ["resources/js/**/*.ts"]</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/vite.config.js</div>
+      <div class="line ctx">  export default defineConfig({</div>
+      <div class="line rem">-     root: 'frontend/resources',</div>
+      <div class="line add">+     root: 'resources',</div>
+      <div class="line ctx">      plugins: [</div>
+      <div class="line rem">-         copyStaticAssets('frontend/resources', '../public', ['404.html', 'example.json', 'img'])</div>
+      <div class="line add">+         copyStaticAssets('resources', '../public', ['404.html', 'example.json', 'img'])</div>
+      <div class="line ctx">      ...</div>
+      <div class="line ctx">              input: [</div>
+      <div class="line rem">-                 "./frontend/resources/index.html",</div>
+      <div class="line rem">-                 "./frontend/resources/login.html",</div>
+      <div class="line rem">-                 "./frontend/resources/tasks.html"</div>
+      <div class="line add">+                 "./resources/index.html",</div>
+      <div class="line add">+                 "./resources/login.html",</div>
+      <div class="line add">+                 "./resources/tasks.html"</div>
+      <div class="line ctx">              ],</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">.gitignore</div>
+      <div class="line rem">- /src/frontend/public/*</div>
+      <div class="line rem">- !/src/frontend/public/.gitkeep</div>
+      <div class="line add">+ /src/public/*</div>
+      <div class="line add">+ !/src/public/.gitkeep</div>
+    </div>
+
+    <h3 class="block-title">Docker: os containers Node passam a montar o src/ inteiro</h3>
+
+    <div class="diff">
+      <div class="diff-head">docker-compose.yml (nodeweb-container)</div>
+      <div class="line ctx">      volumes:</div>
+      <div class="line rem">-       - ./src/backend:/app/backend</div>
+      <div class="line rem">-       - ./src/_web.js:/app/_web.js</div>
+      <div class="line rem">-       - public-volume:/app/frontend/public</div>
+      <div class="line add">+       - ./src:/app</div>
+      <div class="line add">+       - public-volume:/app/public</div>
+      <div class="line ctx">        - nodemodules-volume:/app/node_modules</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">docker-compose.yml (nodecommand-container)</div>
+      <div class="line ctx">      volumes:</div>
+      <div class="line rem">-       - ./src/backend:/app/backend</div>
+      <div class="line rem">-       - ./src/_command.js:/app/_command.js</div>
+      <div class="line add">+       - ./src:/app</div>
+      <div class="line ctx">        - nodemodules-volume:/app/node_modules</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">docker-compose.yml (vite hmr e vite compiler)</div>
+      <div class="line rem">-       - ./src/frontend:/app/frontend</div>
+      <div class="line add">+       - ./src/resources:/app/resources</div>
+      <div class="line ctx">        ...</div>
+      <div class="line rem">-       - ./src/frontend/resources:/app/resources</div>
+      <div class="line add">+       - ./src/resources:/app/resources</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">docker/node-web/Dockerfile (o node-command é igual, com _command.js)</div>
+      <div class="line ctx">  COPY src/package*.json ./</div>
+      <div class="line rem">- COPY src/backend/ ./backend/</div>
+      <div class="line ctx">  COPY src/_web.js ./</div>
+      <div class="line add">+ # O resto do código (app/, routes/, resources/views/...) entra pelo volume ./src:/app do compose</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">docker/node-vite-hmr/Dockerfile e docker/node24-vite-compiler/Dockerfile</div>
+      <div class="line rem">- COPY src/frontend/ ./frontend/</div>
+      <div class="line add">+ COPY src/resources/ ./resources/</div>
+      <div class="line ctx">  ...</div>
+      <div class="line rem">- COPY src/frontend/resources/ ./resources/</div>
+      <div class="line add">+ COPY src/resources/ ./resources/</div>
+    </div>
+
+    <h3 class="block-title">Arquivo novo: src/nodemon.json</h3>
+
+    <div class="diff">
+      <div class="diff-head">src/nodemon.json</div>
+      <div class="line add">+ {</div>
+      <div class="line add">+     "ignore": [</div>
+      <div class="line add">+         "public/",</div>
+      <div class="line add">+         "resources/",</div>
+      <div class="line add">+         "storage/",</div>
+      <div class="line add">+         "logs/"</div>
+      <div class="line add">+     ]</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Por que ./src:/app</h4>
+        <p>É o padrão do projeto de Desenvolvimento Web (<code class="inline">.:/app</code>). Com tudo na raiz, montar pasta por pasta viraria uma lista enorme. Por cima do <code class="inline">src/</code> montado ficam o <code class="inline">nodemodules-volume</code> (em <code class="inline">/app/node_modules</code>) e o <code class="inline">public-volume</code> (em <code class="inline">/app/public</code>), que o compilador do Vite escreve e o Nginx serve.</p>
+      </div>
+      <div class="why-card">
+        <h4>Por que o nodemon.json</h4>
+        <p>Com o <code class="inline">src/</code> inteiro montado, o nodemon passou a enxergar o <code class="inline">public/</code>, onde o Vite escreve <code class="inline">.js</code> a cada build. Resultado: <strong>13 reinícios em 10 segundos</strong> depois de salvar um <code class="inline">.ts</code>. Ignorando <code class="inline">public/</code>, <code class="inline">resources/</code>, <code class="inline">storage/</code> e <code class="inline">logs/</code>, voltou a 0, e uma mudança em <code class="inline">routes/</code> continua reiniciando.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="icon"><i class="fa-solid fa-bug"></i></span>
+      <div>
+        <strong>Bônus — dois bugs corrigidos de graça:</strong>
+        <p><code class="inline">ListFilesController</code> e <code class="inline">Return404Controller</code> usavam <code class="inline">CONSTANTS.DIR/public</code>, que antes apontava para <code class="inline">backend/public</code> (pasta que não existia). Com <code class="inline">DIR</code> na raiz de <code class="inline">src/</code>, apontam para o <code class="inline">public/</code> certo.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">npx tsc --noEmit</code> e <code class="inline">npx vite build</code> ok. <code class="inline">docker compose up -d --build</code>: todos os containers sobem. Pelo Nginx: <code class="inline">/login</code> 200, <code class="inline">/docs/</code> 200 (Swagger com 6 rotas, achou <code class="inline">docs/</code>), <code class="inline">/arquivo</code> 200 (achou <code class="inline">storage/</code>), rota inexistente 404. <code class="inline">POST /api/login</code> → 200 + cookie, <code class="inline">GET /me/tasks</code> → 200. <code class="inline">docker compose run --rm nodecommand-container --help</code> lista migrate/seed.</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 3 -->
+  <div class="entry">
+    <div class="entry-dot">3</div>
+    <div class="entry-date">Etapa 3</div>
+    <h2>Novo container: Elasticsearch (só na rede interna)</h2>
+    <p class="sub">Mais um servidor TCP/IP em container, porta interna 9200, API REST com JSON. Nada de novo na infra, com uma diferença importante: <strong>ele não tem porta exposta</strong>.</p>
+
+    <div class="diff">
+      <div class="diff-head">docker-compose.yml (novo serviço)</div>
+      <div class="line add">+   #ELASTICSEARCH</div>
+      <div class="line add">+   elasticsearch-container:</div>
+      <div class="line add">+     image: elasticsearch:9.5.5</div>
+      <div class="line add">+     restart: unless-stopped</div>
+      <div class="line add">+     environment:</div>
+      <div class="line add">+       - discovery.type=single-node # Um nó só, sem cluster</div>
+      <div class="line add">+       - xpack.security.enabled=false # Sem usuário/senha/HTTPS: só porque NÃO tem porta exposta</div>
+      <div class="line add">+       - ES_JAVA_OPTS=-Xms512m -Xmx512m # Limita a memória da JVM</div>
+      <div class="line add">+     # Sem "ports": só a rede interna (app-network) alcança o Elasticsearch</div>
+      <div class="line add">+     volumes:</div>
+      <div class="line add">+       - elastic-volume:/usr/share/elasticsearch/data</div>
+      <div class="line add">+     networks:</div>
+      <div class="line add">+       app-network:</div>
+      <div class="line add">+         aliases:</div>
+      <div class="line add">+           - elasticsearch_host</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">docker-compose.yml (nodeweb-container e nodecommand-container)</div>
+      <div class="line ctx">      depends_on:</div>
+      <div class="line ctx">        - postgres-container</div>
+      <div class="line add">+       - elasticsearch-container</div>
+      <div class="line ctx">      environment:</div>
+      <div class="line ctx">        POSTGRES_HOST: postgres_host</div>
+      <div class="line ctx">        POSTGRES_PORT: 5432</div>
+      <div class="line add">+       ELASTIC_HOST: elasticsearch_host</div>
+      <div class="line add">+       ELASTIC_PORT: 9200</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">docker-compose.yml (volumes)</div>
+      <div class="line ctx">  volumes:</div>
+      <div class="line ctx">    nodemodules-volume:</div>
+      <div class="line ctx">    public-volume:</div>
+      <div class="line ctx">    postgres-volume:</div>
+      <div class="line add">+   elastic-volume:</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Sem bloco ports</h4>
+        <p>Nenhuma porta da máquina aponta para o Elasticsearch. Só quem está na <code class="inline">app-network</code> chega nele, pelo endereço <code class="inline">elasticsearch_host:9200</code>: o servidor web (busca), o command (criar índice, carga inicial) e, depois, o worker (alimenta). <strong>O navegador nunca fala direto com o Elastic</strong>: toda busca passa pela API.</p>
+      </div>
+      <div class="why-card">
+        <h4>As três variáveis</h4>
+        <p><code class="inline">discovery.type=single-node</code>: um nó, sem cluster. <code class="inline">xpack.security.enabled=false</code>: sem usuário/senha/HTTPS, aceitável só em ambiente local e só porque não há porta exposta. <code class="inline">ES_JAVA_OPTS</code>: o Elastic é Java e por padrão quer muita memória.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="icon"><i class="fa-solid fa-terminal"></i></span>
+      <div>
+        <strong>Como testar em aula:</strong>
+        <p><code class="inline">docker compose exec nodeweb-container curl http://elasticsearch_host:9200</code>. Um <code class="inline">curl localhost:9200</code> na sua máquina <strong>não responde</strong>, e é isso mesmo que queremos. Na primeira subida ele leva uns 20 a 40 segundos para responder (a JVM inicializando).</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p>De dentro da rede: <code class="inline">docker run --rm --network fe-2026_app-network curlimages/curl -s http://elasticsearch_host:9200</code> → JSON com <code class="inline">"number" : "9.5.5"</code> e <code class="inline">"tagline" : "You Know, for Search"</code>. Do host: <code class="inline">curl localhost:9200</code> → sem resposta.</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 4 -->
+  <div class="entry">
+    <div class="entry-dot">4</div>
+    <div class="entry-date">Etapa 4</div>
+    <h2>EJS instalado + primeira View: Hello World</h2>
+    <p class="sub">O controller não monta HTML: ele decide os dados e chama <code class="inline">render</code>. O template EJS, em <code class="inline">resources/views/</code>, transforma os dados em HTML.</p>
+
+    <div class="diff">
+      <div class="diff-head">terminal</div>
+      <div class="line add">+ cd src &amp;&amp; npm install ejs</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/package.json</div>
+      <div class="line ctx">      "cookie-parser": "^1.4.7",</div>
+      <div class="line ctx">      "dotenv": "^17.4.2",</div>
+      <div class="line add">+     "ejs": "^7.0.1",</div>
+      <div class="line ctx">      "express": "^5.2.1",</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/_web.js</div>
+      <div class="line ctx">  import express from 'express';</div>
+      <div class="line ctx">  import chalk from 'chalk';</div>
+      <div class="line ctx"></div>
+      <div class="line add">+ import path from 'node:path';</div>
+      <div class="line add">+ </div>
+      <div class="line ctx">  import router from './routes/router.js';</div>
+      <div class="line ctx">  import app from "./bootstrap/app.js";</div>
+      <div class="line add">+ import CONSTANTS from './bootstrap/config.js';</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx">  const web = express();</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ /** Views: o HTML montado pelo servidor (EJS), em resources/views */</div>
+      <div class="line add">+ web.set('view engine', 'ejs');</div>
+      <div class="line add">+ web.set('views', path.join(CONSTANTS.DIR, 'resources', 'views'));</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/routes/router.js</div>
+      <div class="line ctx">  import SwaggerDoc from '../app/Http/SwaggerDoc.js';</div>
+      <div class="line add">+ import HelloWorldController from '../app/Http/Controllers/Views/HelloWorldController.js';</div>
+      <div class="line ctx">  ...</div>
+      <div class="line add">+ /**</div>
+      <div class="line add">+  * ========================================</div>
+      <div class="line add">+  * VIEWS (HTML montado no servidor com EJS)</div>
+      <div class="line add">+  * ========================================</div>
+      <div class="line add">+  */</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ /** Hello world: GET /hello?nome=Luan */</div>
+      <div class="line add">+ router.get('/hello', HelloWorldController);</div>
+    </div>
+
+    <h3 class="block-title">Arquivo novo: app/Http/Controllers/Views/HelloWorldController.js</h3>
+
+    <div class="diff">
+      <div class="diff-head">src/app/Http/Controllers/Views/HelloWorldController.js</div>
+      <div class="line add">+ /**</div>
+      <div class="line add">+  * Primeira View: em vez de devolver JSON, o controller entrega dados</div>
+      <div class="line add">+  * para um template EJS (resources/views/hello.ejs), que monta o HTML.</div>
+      <div class="line add">+  *</div>
+      <div class="line add">+  * Rota: GET /hello?nome=Luan</div>
+      <div class="line add">+  */</div>
+      <div class="line add">+ export default function HelloWorldController(request, response) {</div>
+      <div class="line add">+     // Valor padrão antes, sobrescreve se veio na query</div>
+      <div class="line add">+     let nome = "mundo";</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     if (request.query.nome) {</div>
+      <div class="line add">+         nome = request.query.nome;</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     // render: executa a view com os dados, coloca Content-Type text/html e responde</div>
+      <div class="line add">+     return response.status(200).render("hello", {</div>
+      <div class="line add">+         nome: nome,</div>
+      <div class="line add">+         agora: new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })</div>
+      <div class="line add">+     });</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <h3 class="block-title">Arquivo novo: resources/views/hello.ejs</h3>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/views/hello.ejs (versão desta etapa; a etapa 5 adiciona o CSS/JS)</div>
+      <div class="line add">+ &lt;!DOCTYPE html&gt;</div>
+      <div class="line add">+ &lt;html lang="pt-BR"&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ &lt;head&gt;</div>
+      <div class="line add">+   &lt;meta charset="UTF-8" /&gt;</div>
+      <div class="line add">+   &lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;</div>
+      <div class="line add">+   &lt;title&gt;Hello World - View&lt;/title&gt;</div>
+      <div class="line add">+ &lt;/head&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ &lt;body&gt;</div>
+      <div class="line add">+   &lt;%# A tag com "=" imprime ESCAPADO: um ?nome=&lt;script&gt; vira texto, não executa %&gt;</div>
+      <div class="line add">+   &lt;h1&gt;Olá, &lt;%= nome %&gt;!&lt;/h1&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+   &lt;p&gt;Este HTML não existe em disco: o servidor montou agora, às &lt;%= agora %&gt;.&lt;/p&gt;</div>
+      <div class="line add">+ &lt;/body&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ &lt;/html&gt;</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>As duas linhas do web.set</h4>
+        <p><code class="inline">'view engine', 'ejs'</code>: <code class="inline">render("hello")</code> procura <code class="inline">hello.ejs</code>. <code class="inline">'views'</code>: em qual pasta procurar — <code class="inline">src/resources/views</code>.</p>
+      </div>
+      <div class="why-card">
+        <h4>O render</h4>
+        <p>Executa o template com os dados, coloca <code class="inline">Content-Type: text/html; charset=utf-8</code> e responde. O valor padrão <code class="inline">"mundo"</code> vem antes do <code class="inline">if</code>: sem <code class="inline">else</code>.</p>
+      </div>
+      <div class="why-card">
+        <h4>&lt;%= escapa</h4>
+        <p><code class="inline">/hello?nome=&lt;script&gt;alert(1)&lt;/script&gt;</code> vira <code class="inline">&amp;lt;script&amp;gt;...</code> na página: aparece como texto, não executa. Gancho para a Aula 08 (XSS).</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+      <div>
+        <strong>Pegadinha do Docker — dependência nova:</strong>
+        <p>o <code class="inline">node_modules</code> dos containers mora num volume nomeado, criado uma vez só. Depois do <code class="inline">npm install ejs</code>, só o <code class="inline">--build</code> <strong>não basta</strong>: no container, <code class="inline">node_modules/ejs</code> não existia e o <code class="inline">/hello</code> deu 502. Solução: <code class="inline">docker compose down</code> → <code class="inline">docker volume rm fe-2026_nodemodules-volume</code> → <code class="inline">docker compose up -d --build</code>.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">GET /hello?nome=Luan</code> → <code class="inline">200</code>, <code class="inline">text/html; charset=utf-8</code>, <code class="inline">&lt;h1&gt;Olá, Luan!&lt;/h1&gt;</code> + hora do servidor. <code class="inline">GET /hello</code> → "Olá, mundo!". Com <code class="inline">&lt;script&gt;</code> na query → sai escapado. Editar o <code class="inline">.ejs</code> com tudo no ar → muda no próximo request, <strong>sem reiniciar</strong> o servidor.</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 5 -->
+  <div class="entry">
+    <div class="entry-dot">5</div>
+    <div class="entry-date">Etapa 5</div>
+    <h2>Helper <code class="inline">vite()</code>: a View encontra o CSS/JS compilado (manifest.json)</h2>
+    <p class="sub">O Vite gera nomes com hash (<code class="inline">src/app.aQR1sM3P.js</code>). A View não tem como adivinhar. O <code class="inline">manifest.json</code> (ligado desde a Aula 05) tem o mapa fonte → compilado, e o helper transforma isso em tags.</p>
+
+    <h3 class="block-title">Arquivo novo: utils/vite.js</h3>
+
+    <div class="diff">
+      <div class="diff-head">src/utils/vite.js</div>
+      <div class="line add">+ import fs from 'node:fs';</div>
+      <div class="line add">+ import path from 'node:path';</div>
+      <div class="line add">+ import CONSTANTS from '../bootstrap/config.js';</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ /**</div>
+      <div class="line add">+  * Ponte entre a View (servidor) e o Vite (frontend compilado).</div>
+      <div class="line add">+  *</div>
+      <div class="line add">+  * O Vite gera os arquivos com hash no nome (ex.: src/login.COZhj-27.js), então</div>
+      <div class="line add">+  * a View não sabe o nome final. Com build.manifest: true (vite.config.js), o</div>
+      <div class="line add">+  * Vite grava em public/.vite/manifest.json o mapa "arquivo fonte -&gt; compilado".</div>
+      <div class="line add">+  *</div>
+      <div class="line add">+  * Uso na view: &lt;%- vite(["css/app.css", "js/app.ts"]) %&gt;</div>
+      <div class="line add">+  * Devolve as tags &lt;link&gt; e &lt;script&gt; já com os nomes compilados.</div>
+      <div class="line add">+  */</div>
+      <div class="line add">+ export default function vite(entries) {</div>
+      <div class="line add">+     // Lido a cada chamada: o "vite build --watch" reescreve o manifest a cada mudança</div>
+      <div class="line add">+     const manifestPath = path.join(CONSTANTS.DIR, 'public', '.vite', 'manifest.json');</div>
+      <div class="line add">+     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     const styles = new Set();</div>
+      <div class="line add">+     const scripts = [];</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     for (const entry of entries) {</div>
+      <div class="line add">+         const chunk = manifest[entry];</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         if (!chunk) {</div>
+      <div class="line add">+             throw new Error(`Entrada "${entry}" não existe no manifest do Vite (faltou no rollupOptions.input?)`);</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         collectCss(manifest, entry, styles);</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         if (chunk.file.endsWith('.css')) {</div>
+      <div class="line add">+             styles.add(chunk.file);</div>
+      <div class="line add">+             continue;</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         scripts.push(chunk.file);</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     const tags = [];</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     for (const file of styles) {</div>
+      <div class="line add">+         tags.push(`&lt;link rel="stylesheet" href="/${file}"&gt;`);</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     for (const file of scripts) {</div>
+      <div class="line add">+         tags.push(`&lt;script type="module" src="/${file}"&gt;&lt;/script&gt;`);</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     return tags.join('\n');</div>
+      <div class="line add">+ }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ /**</div>
+      <div class="line add">+  * Um chunk JS pode importar outros chunks que têm CSS próprio:</div>
+      <div class="line add">+  * percorre os imports para não esquecer nenhuma folha de estilo.</div>
+      <div class="line add">+  */</div>
+      <div class="line add">+ function collectCss(manifest, key, styles) {</div>
+      <div class="line add">+     const chunk = manifest[key];</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     if (!chunk) {</div>
+      <div class="line add">+         return;</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     for (const file of chunk.css ?? []) {</div>
+      <div class="line add">+         styles.add(file);</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     for (const imported of chunk.imports ?? []) {</div>
+      <div class="line add">+         collectCss(manifest, imported, styles);</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/_web.js</div>
+      <div class="line ctx">  import CONSTANTS from './bootstrap/config.js';</div>
+      <div class="line add">+ import vite from './utils/vite.js';</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx">  web.set('views', path.join(CONSTANTS.DIR, 'resources', 'views'));</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ /** Disponível em todas as views: &lt;%- vite(["css/app.css"]) %&gt; devolve as tags dos arquivos compilados */</div>
+      <div class="line add">+ web.locals.vite = vite;</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/vite.config.js e docker/node24-vite-compiler/vite.config.js</div>
+      <div class="line ctx">              input: [</div>
+      <div class="line ctx">                  "./resources/index.html",</div>
+      <div class="line ctx">                  "./resources/login.html",</div>
+      <div class="line rem">-                 "./resources/tasks.html"</div>
+      <div class="line add">+                 "./resources/tasks.html",</div>
+      <div class="line add">+                 // Entradas avulsas, usadas pelas Views (EJS) via helper vite()</div>
+      <div class="line add">+                 "./resources/css/app.css",</div>
+      <div class="line add">+                 "./resources/js/app.ts"</div>
+      <div class="line ctx">              ],</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/views/hello.ejs</div>
+      <div class="line ctx">    &lt;title&gt;Hello World - View&lt;/title&gt;</div>
+      <div class="line add">+   &lt;%# Tags &lt;link&gt;/&lt;script&gt; com os nomes compilados pelo Vite (lidos do manifest.json) %&gt;</div>
+      <div class="line add">+   &lt;%- vite(["css/app.css", "js/app.ts"]) %&gt;</div>
+      <div class="line ctx">  &lt;/head&gt;</div>
+      <div class="line ctx"></div>
+      <div class="line rem">- &lt;body&gt;</div>
+      <div class="line add">+ &lt;body class="container py-5"&gt;</div>
+      <div class="line rem">-   &lt;h1&gt;Olá, &lt;%= nome %&gt;!&lt;/h1&gt;</div>
+      <div class="line add">+   &lt;h1 class="text-primary"&gt;&lt;i class="fa-solid fa-hand"&gt;&lt;/i&gt; Olá, &lt;%= nome %&gt;!&lt;/h1&gt;</div>
+    </div>
+
+    <h3 class="block-title">O que a view recebe no lugar do vite()</h3>
+
+    <div class="diff">
+      <div class="diff-head">HTML entregue em GET /hello</div>
+      <div class="line ctx">  &lt;link rel="stylesheet" href="/src/app.Bg3PD_Gv.css"&gt;</div>
+      <div class="line ctx">  &lt;script type="module" src="/src/app.aQR1sM3P.js"&gt;&lt;/script&gt;</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Entradas avulsas</h4>
+        <p><code class="inline">css/app.css</code> e <code class="inline">js/app.ts</code> antes só entravam no build pelos <code class="inline">.html</code>. Para terem chave própria no manifest, precisam estar no <code class="inline">rollupOptions.input</code>.</p>
+      </div>
+      <div class="why-card">
+        <h4>web.locals</h4>
+        <p>Tudo em <code class="inline">web.locals</code> fica disponível em <strong>todas</strong> as views sem passar pelo controller. Usa-se <code class="inline">&lt;%- %&gt;</code> (sem escape) porque o HTML vem do helper, não do usuário.</p>
+      </div>
+      <div class="why-card">
+        <h4>Lido a cada chamada</h4>
+        <p>O <code class="inline">vite build --watch</code> reescreve o manifest (e os hashes) a cada mudança. O helper também segue os <code class="inline">imports</code> de cada chunk para pegar CSS que venha junto.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+      <div>
+        <strong>Pegadinhas:</strong>
+        <p>o <code class="inline">vite.config.js</code> do compilador é copiado na imagem → precisa de <code class="inline">--build</code>. Se o compilador ainda não terminou o primeiro build, o manifest não existe e a view dá 500. Uma entrada fora do <code class="inline">input</code> gera um erro explícito: "não existe no manifest".</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">/hello</code> traz <code class="inline">&lt;link&gt;</code> e <code class="inline">&lt;script&gt;</code> com os nomes compilados, os dois respondem 200 (<code class="inline">text/css</code> e <code class="inline">application/javascript</code>). No Chrome: título azul do Bootstrap com o ícone do FontAwesome.</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 6 -->
+  <div class="entry">
+    <div class="entry-dot">6</div>
+    <div class="entry-date">Etapa 6</div>
+    <h2>Login vira View + middleware de sessão no servidor</h2>
+    <p class="sub">O HTML do login sai do disco (e do <code class="inline">createElement</code>) e passa a vir do servidor. A pergunta "já está logado?" sai do navegador e vira middleware: decidida <strong>antes</strong> de o HTML existir.</p>
+
+    <h3 class="block-title">Removidos</h3>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/login.html (apagado)</div>
+      <div class="line rem">- &lt;!DOCTYPE html&gt;</div>
+      <div class="line rem">- &lt;html lang="pt-BR"&gt;</div>
+      <div class="line rem">- </div>
+      <div class="line rem">- &lt;head&gt;</div>
+      <div class="line rem">-   &lt;meta charset="UTF-8" /&gt;</div>
+      <div class="line rem">-   &lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;</div>
+      <div class="line rem">-   &lt;title&gt;Login - Tasks&lt;/title&gt;</div>
+      <div class="line rem">-   &lt;link rel="icon" type="image/png" href="./img/favicon.ico"&gt;</div>
+      <div class="line rem">-   &lt;link rel="stylesheet" href="./css/app.css"&gt;</div>
+      <div class="line rem">-   &lt;script type="module" src="./js/app.ts"&gt;&lt;/script&gt;</div>
+      <div class="line rem">-   &lt;script type="module" src="./js/pages/login.ts"&gt;&lt;/script&gt;</div>
+      <div class="line rem">- &lt;/head&gt;</div>
+      <div class="line rem">- </div>
+      <div class="line rem">- &lt;body class="d-flex flex-column min-vh-100 bg-light"&gt;</div>
+      <div class="line rem">- </div>
+      <div class="line rem">-   &lt;header class="bg-primary text-white text-center py-4 shadow-sm"&gt;</div>
+      <div class="line rem">-     &lt;h1 class="h3 m-0"&gt;Tasks - Login&lt;/h1&gt;</div>
+      <div class="line rem">-   &lt;/header&gt;</div>
+      <div class="line rem">- </div>
+      <div class="line rem">-   &lt;main class="container flex-grow-1 d-flex align-items-center justify-content-center py-5"&gt;</div>
+      <div class="line rem">-     &lt;div id="login-container" class="card shadow-sm p-5" style="max-width: 400px; width: 100%;"&gt;&lt;/div&gt;</div>
+      <div class="line rem">-   &lt;/main&gt;</div>
+      <div class="line rem">- </div>
+      <div class="line rem">-   &lt;footer class="bg-primary text-white text-center py-3 mt-auto"&gt;</div>
+      <div class="line rem">-     &lt;div class="small"&gt;Frontend 2026.2&lt;/div&gt;</div>
+      <div class="line rem">-   &lt;/footer&gt;</div>
+      <div class="line rem">- </div>
+      <div class="line rem">- &lt;/body&gt;</div>
+      <div class="line rem">- </div>
+      <div class="line rem">- &lt;/html&gt;</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/render/loginRender.ts (apagado)</div>
+      <div class="line rem">- export default async function loginRender(): Promise&lt;void&gt; {</div>
+      <div class="line rem">-   const container = document.querySelector("#login-container");</div>
+      <div class="line rem">-   ...</div>
+      <div class="line rem">-   const formElement = document.createElement("form");</div>
+      <div class="line rem">-   formElement.id = "login-form";</div>
+      <div class="line rem">-   ...  (≈60 linhas de createElement montando o formulário)</div>
+      <div class="line rem">-   container.append(formElement);</div>
+      <div class="line rem">- }</div>
+    </div>
+
+    <h3 class="block-title">Arquivo novo: resources/views/login.ejs</h3>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/views/login.ejs</div>
+      <div class="line add">+ &lt;!DOCTYPE html&gt;</div>
+      <div class="line add">+ &lt;html lang="pt-BR"&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ &lt;head&gt;</div>
+      <div class="line add">+   &lt;meta charset="UTF-8" /&gt;</div>
+      <div class="line add">+   &lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;</div>
+      <div class="line add">+   &lt;title&gt;Login - Tasks&lt;/title&gt;</div>
+      <div class="line add">+   &lt;link rel="icon" type="image/png" href="/img/favicon.ico"&gt;</div>
+      <div class="line add">+   &lt;%- vite(["css/app.css", "js/app.ts", "js/pages/login.ts"]) %&gt;</div>
+      <div class="line add">+ &lt;/head&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ &lt;body class="d-flex flex-column min-vh-100 bg-light"&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+   &lt;header class="bg-primary text-white text-center py-4 shadow-sm"&gt;</div>
+      <div class="line add">+     &lt;h1 class="h3 m-0"&gt;Tasks - Login&lt;/h1&gt;</div>
+      <div class="line add">+   &lt;/header&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+   &lt;main class="container flex-grow-1 d-flex align-items-center justify-content-center py-5"&gt;</div>
+      <div class="line add">+     &lt;div id="login-container" class="card shadow-sm p-5" style="max-width: 400px; width: 100%;"&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+       &lt;%# O formulário que o loginRender.ts montava via DOM agora já vem pronto do servidor %&gt;</div>
+      <div class="line add">+       &lt;form id="login-form" class="d-flex flex-column gap-3"&gt;</div>
+      <div class="line add">+         &lt;h2 class="text-center mb-4"&gt;Login&lt;/h2&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         &lt;label for="email-input" class="form-label"&gt;Email&lt;/label&gt;</div>
+      <div class="line add">+         &lt;input id="email-input" type="email" class="form-control" placeholder="seu@email.com" required&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         &lt;label for="password-input" class="form-label"&gt;Senha&lt;/label&gt;</div>
+      <div class="line add">+         &lt;input id="password-input" type="password" class="form-control" placeholder="sua senha" required&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         &lt;button type="submit" class="btn btn-primary btn-lg mt-3"&gt;Entrar&lt;/button&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         &lt;div id="login-message" class="alert alert-danger d-none"&gt;&lt;/div&gt;</div>
+      <div class="line add">+       &lt;/form&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     &lt;/div&gt;</div>
+      <div class="line add">+   &lt;/main&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+   &lt;footer class="bg-primary text-white text-center py-3 mt-auto"&gt;</div>
+      <div class="line add">+     &lt;div class="small"&gt;Frontend 2026.2&lt;/div&gt;</div>
+      <div class="line add">+   &lt;/footer&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ &lt;/body&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ &lt;/html&gt;</div>
+    </div>
+
+    <h3 class="block-title">O login.ts fica só com os listeners</h3>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/pages/login.ts</div>
+      <div class="line rem">- import loginRender from "../render/loginRender";</div>
+      <div class="line rem">- import loginListeners from "../listeners/loginListeners";</div>
+      <div class="line rem">- import { checkAuthentication } from "../utils/checkAuthentication";</div>
+      <div class="line rem">- import { setUserId } from "../utils/getUserIdFromAuth";</div>
+      <div class="line rem">- </div>
+      <div class="line rem">- window.addEventListener("DOMContentLoaded", async () =&gt; {</div>
+      <div class="line rem">-   try {</div>
+      <div class="line rem">-     // Valida se o usuário já está logado com token válido</div>
+      <div class="line rem">-     const auth = await checkAuthentication();</div>
+      <div class="line rem">- </div>
+      <div class="line rem">-     if (auth.authenticated &amp;&amp; auth.idUser !== undefined) {</div>
+      <div class="line rem">-       setUserId(auth.idUser);</div>
+      <div class="line rem">-       window.location.href = "/tasks.html";</div>
+      <div class="line rem">-       return;</div>
+      <div class="line rem">-     }</div>
+      <div class="line rem">- </div>
+      <div class="line rem">-     // Se não tiver token válido, renderiza o login</div>
+      <div class="line rem">-     await loginRender();</div>
+      <div class="line rem">-     await loginListeners();</div>
+      <div class="line rem">-   } catch (error) {</div>
+      <div class="line rem">-     console.error("Falha ao carregar login:", error);</div>
+      <div class="line rem">-     // Mesmo com erro, renderiza o login</div>
+      <div class="line rem">-     await loginRender();</div>
+      <div class="line rem">-     await loginListeners();</div>
+      <div class="line rem">-   }</div>
+      <div class="line rem">- });</div>
+      <div class="line ctx"></div>
+      <div class="line add">+ import loginListeners from "../listeners/loginListeners";</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ // O HTML do formulário agora vem pronto do servidor (resources/views/login.ejs)</div>
+      <div class="line add">+ // e a checagem "já está logado?" virou middleware no servidor</div>
+      <div class="line add">+ // (RedirectIfAuthenticatedMiddleware). Aqui sobram só os listeners.</div>
+      <div class="line add">+ window.addEventListener("DOMContentLoaded", async () =&gt; {</div>
+      <div class="line add">+   await loginListeners();</div>
+      <div class="line add">+ });</div>
+    </div>
+
+    <h3 class="block-title">Arquivos novos: middleware e controller</h3>
+
+    <div class="diff">
+      <div class="diff-head">src/app/Http/Middlewares/RedirectIfAuthenticatedMiddleware.js</div>
+      <div class="line add">+ import jwt from "jsonwebtoken";</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ /**</div>
+      <div class="line add">+  * Middleware de página (View).</div>
+      <div class="line add">+  *</div>
+      <div class="line add">+  * Se o usuário JÁ tem sessão válida (cookie auth_token), não faz sentido</div>
+      <div class="line add">+  * mostrar o login: redireciona para as tarefas ANTES de o HTML ser montado.</div>
+      <div class="line add">+  * Sem cookie, ou com token inválido/expirado, segue para o controller.</div>
+      <div class="line add">+  *</div>
+      <div class="line add">+  * Antes isso era feito no navegador (checkAuthentication no login.ts),</div>
+      <div class="line add">+  * depois que a página já tinha chegado. Com arquivo estático não havia</div>
+      <div class="line add">+  * outro jeito: o Nginx não sabe o que é um JWT.</div>
+      <div class="line add">+  */</div>
+      <div class="line add">+ export default function RedirectIfAuthenticatedMiddleware(request, response, next) {</div>
+      <div class="line add">+     const token = request.cookies.auth_token;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     if (!token) {</div>
+      <div class="line add">+         return next();</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     try {</div>
+      <div class="line add">+         jwt.verify(token, process.env.JWT_SECRET);</div>
+      <div class="line add">+     } catch (error) {</div>
+      <div class="line add">+         return next();</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     return response.redirect("/tasks.html");</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/app/Http/Controllers/Views/LoginViewController.js</div>
+      <div class="line add">+ /**</div>
+      <div class="line add">+  * Tela de login como View: o HTML vem de resources/views/login.ejs.</div>
+      <div class="line add">+  *</div>
+      <div class="line add">+  * Rota: GET /login (protegida por RedirectIfAuthenticatedMiddleware)</div>
+      <div class="line add">+  */</div>
+      <div class="line add">+ export default function LoginViewController(request, response) {</div>
+      <div class="line add">+     return response.status(200).render("login");</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/routes/router.js</div>
+      <div class="line ctx">  import HelloWorldController from '../app/Http/Controllers/Views/HelloWorldController.js';</div>
+      <div class="line add">+ import LoginViewController from '../app/Http/Controllers/Views/LoginViewController.js';</div>
+      <div class="line add">+ import RedirectIfAuthenticatedMiddleware from '../app/Http/Middlewares/RedirectIfAuthenticatedMiddleware.js';</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx">  router.get('/hello', HelloWorldController);</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ /** Login: se já tem sessão válida, o middleware redireciona antes do HTML existir */</div>
+      <div class="line add">+ router.get('/login', RedirectIfAuthenticatedMiddleware, LoginViewController);</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/vite.config.js e docker/node24-vite-compiler/vite.config.js</div>
+      <div class="line ctx">                  "./resources/index.html",</div>
+      <div class="line rem">-                 "./resources/login.html",</div>
+      <div class="line ctx">                  "./resources/tasks.html",</div>
+      <div class="line ctx">                  // Entradas avulsas, usadas pelas Views (EJS) via helper vite()</div>
+      <div class="line ctx">                  "./resources/css/app.css",</div>
+      <div class="line rem">-                 "./resources/js/app.ts"</div>
+      <div class="line add">+                 "./resources/js/app.ts",</div>
+      <div class="line add">+                 "./resources/js/pages/login.ts"</div>
+    </div>
+
+    <h3 class="block-title">Todo redirect para /login.html vira /login</h3>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/utils/checkAuthentication.ts · listeners/tasksListeners.ts · index.html</div>
+      <div class="line rem">-   window.location.href = "/login.html";</div>
+      <div class="line add">+   window.location.href = "/login";</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/app.ts (comentários)</div>
+      <div class="line rem">- // Redirecionado para /login.html</div>
+      <div class="line add">+ // Redirecionado para /login</div>
+      <div class="line ctx">  // As funcionalidades foram migradas para:</div>
+      <div class="line rem">- // - /login.html → Login de usuários</div>
+      <div class="line add">+ // - /login → Login de usuários (View EJS, resources/views/login.ejs)</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Antes x agora</h4>
+        <p>Antes: o Nginx entregava o <code class="inline">login.html</code> para qualquer um, e o <code class="inline">login.ts</code> chamava <code class="inline">checkAuthentication()</code> e redirecionava pelo JS, <strong>depois</strong> da página chegar. Agora: <code class="inline">GET /login</code> → <code class="inline">ParseCookiesMiddleware</code> → <code class="inline">RedirectIfAuthenticatedMiddleware</code> → se o token for válido, <strong>302 para /tasks.html</strong> antes de o HTML existir; senão, <code class="inline">LoginViewController</code> → <code class="inline">render("login")</code>. Com estático isso era impossível: o Nginx não sabe o que é JWT.</p>
+      </div>
+      <div class="why-card">
+        <h4>Por que apagar o login.html</h4>
+        <p>Com um <code class="inline">public/login.html</code> existindo, o <code class="inline">try_files $uri.html</code> do Nginx entregaria o estático em <code class="inline">/login</code> e a View nunca seria chamada. Saiu do projeto e dos <code class="inline">input</code> do Vite; o <code class="inline">emptyOutDir</code> tira a cópia antiga do <code class="inline">public/</code>.</p>
+      </div>
+      <div class="why-card">
+        <h4>Quem faz o quê</h4>
+        <p>Servidor: decide se mostra (middleware) e monta o HTML (view). Navegador: interação — o <code class="inline">loginListeners.ts</code> não mudou nada, continua achando <code class="inline">#login-form</code>, <code class="inline">#email-input</code>, <code class="inline">#password-input</code> e <code class="inline">#login-message</code> pelos mesmos ids.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="icon"><i class="fa-solid fa-bug"></i></span>
+      <div>
+        <strong>Bug que já existia (não corrigido nesta etapa):</strong>
+        <p>o botão <strong>Sair</strong> só limpa o <code class="inline">userId</code> da memória e vai para <code class="inline">/login</code>. O cookie <code class="inline">auth_token</code> (HttpOnly, 10 min) continua válido, então o middleware manda de volta para <code class="inline">/tasks.html</code>. O <code class="inline">login.ts</code> antigo fazia a mesma coisa no navegador. A correção é uma rota <code class="inline">GET /logout</code> no servidor com <code class="inline">response.clearCookie("auth_token")</code>.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">tsc</code> ok; <code class="inline">public/</code> sem <code class="inline">login.html</code>. <code class="inline">GET /login</code> sem cookie → 200 com o formulário e os 3 assets (todos 200). Com cookie válido → <strong>302 Location: /tasks.html</strong>. Com <code class="inline">auth_token=lixo</code> → 200. <code class="inline">/login.html</code> → 404. No Chrome: senha errada mostra "Invalid email or password"; senha certa vai para <code class="inline">/tasks.html</code>; abrir <code class="inline">/login</code> logado volta para <code class="inline">/tasks.html</code>; console sem erros.</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 7 -->
+  <div class="entry">
+    <div class="entry-dot">7</div>
+    <div class="entry-date">Etapa 7</div>
+    <h2>Container do RabbitMQ volta</h2>
+    <p class="sub">O servidor de filas do semestre passado, igual ao projeto de Desenvolvimento Web. É ele que vai segurar os jobs de sincronização do Elasticsearch fora do ciclo HTTP.</p>
+
+    <div class="diff">
+      <div class="diff-head">docker-compose.yml (novo serviço)</div>
+      <div class="line add">+   #RABBITMQ</div>
+      <div class="line add">+   rabbitmq-container:</div>
+      <div class="line add">+     image: rabbitmq:3.13.1-management-alpine</div>
+      <div class="line add">+     restart: unless-stopped</div>
+      <div class="line add">+     ports:</div>
+      <div class="line add">+       - "5672:5672"    # Porta para conexão com a fila (producers/consumers)</div>
+      <div class="line add">+       - "15672:15672"  # Porta do painel de gerenciamento web</div>
+      <div class="line add">+     environment:</div>
+      <div class="line add">+       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}</div>
+      <div class="line add">+       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}</div>
+      <div class="line add">+     volumes:</div>
+      <div class="line add">+       - rabbitmq-volume:/var/lib/rabbitmq</div>
+      <div class="line add">+     networks:</div>
+      <div class="line add">+       app-network:</div>
+      <div class="line add">+         aliases:</div>
+      <div class="line add">+           - rabbitmq_host</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">docker-compose.yml (nodeweb-container e nodecommand-container)</div>
+      <div class="line ctx">      depends_on:</div>
+      <div class="line ctx">        - postgres-container</div>
+      <div class="line ctx">        - elasticsearch-container</div>
+      <div class="line add">+       - rabbitmq-container</div>
+      <div class="line ctx">      environment:</div>
+      <div class="line ctx">        ...</div>
+      <div class="line ctx">        ELASTIC_PORT: 9200</div>
+      <div class="line add">+       RABBITMQ_HOST: rabbitmq_host</div>
+      <div class="line add">+       RABBITMQ_PORT: 5672</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">docker-compose.yml (volumes)</div>
+      <div class="line ctx">    elastic-volume:</div>
+      <div class="line add">+   rabbitmq-volume:</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">.env.example (e preencha no seu .env)</div>
+      <div class="line ctx">  NODE_WEB_PORT=3000</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ RABBITMQ_USER=</div>
+      <div class="line add">+ RABBITMQ_PASSWORD=</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>As duas portas</h4>
+        <p><code class="inline">5672</code>: o protocolo AMQP, por onde quem publica (web, command) e quem consome (worker) falam com a fila. <code class="inline">15672</code>: o painel web, para ver filas, mensagens e consumers durante a aula. Diferente do Elasticsearch, aqui expomos porta, como no projeto de DW.</p>
+      </div>
+      <div class="why-card">
+        <h4>Usuário e senha</h4>
+        <p>Vêm do <code class="inline">.env</code> via <code class="inline">RABBITMQ_DEFAULT_USER</code>/<code class="inline">RABBITMQ_DEFAULT_PASS</code>. Quem publica job recebe <code class="inline">RABBITMQ_HOST: rabbitmq_host</code> no <code class="inline">environment</code>, no mesmo padrão do <code class="inline">POSTGRES_HOST</code>.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+      <div>
+        <strong>Atualize seu .env:</strong>
+        <p>preencha <code class="inline">RABBITMQ_USER</code> e <code class="inline">RABBITMQ_PASSWORD</code>. O usuário só é criado na <strong>primeira</strong> subida, com o volume vazio: para trocar a senha depois, é preciso apagar o <code class="inline">rabbitmq-volume</code>.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">rabbitmq-diagnostics -q ping</code> → "Ping succeeded"; painel <code class="inline">http://localhost:15672</code> → 200; API do painel com o usuário do <code class="inline">.env</code> → 200.</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 8 -->
+  <div class="entry">
+    <div class="entry-dot">8</div>
+    <div class="entry-date">Etapa 8</div>
+    <h2>Fila, jobs e worker voltam (padrão de DW)</h2>
+    <p class="sub">A estrutura de jobs do semestre passado, copiada sem alteração do projeto de Desenvolvimento Web. Como o <code class="inline">src/</code> agora tem o mesmo layout do DW (<code class="inline">app/</code>, <code class="inline">database/</code>, <code class="inline">utils/</code>), os imports funcionam como estão.</p>
+
+    <div class="tree">src/
+├── <span class="new">_worker.js</span>                      <span class="comment">// NOVO entry point, ao lado de _web.js e _command.js</span>
+├── app/
+│   ├── <span class="new">Jobs/ExampleJob.js</span>          <span class="comment">// job de exemplo</span>
+│   └── Commands/<span class="new">CreateExampleJobCommand.js</span>   <span class="comment">// dispara o ExampleJob</span>
+├── database/connections/<span class="new">rabbit.js</span>  <span class="comment">// conexão AMQP</span>
+└── utils/
+    ├── <span class="new">job.js</span>                      <span class="comment">// createJob({ name, handle }) + dispatch</span>
+    └── <span class="new">loadJobs.js</span>                 <span class="comment">// carrega app/Jobs para o worker</span>
+docker/<span class="new">node-worker/Dockerfile</span></div>
+
+    <div class="diff">
+      <div class="diff-head">terminal</div>
+      <div class="line add">+ cd src &amp;&amp; npm install amqplib</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/package.json</div>
+      <div class="line ctx">    "dependencies": {</div>
+      <div class="line ctx">      "@fortawesome/fontawesome-free": "^7.3.1",</div>
+      <div class="line add">+     "amqplib": "^2.2.0",</div>
+      <div class="line ctx">      "axios": "^1.20.0",</div>
+    </div>
+
+    <h3 class="block-title">O job: createJob + dispatch</h3>
+
+    <div class="diff">
+      <div class="diff-head">src/utils/job.js</div>
+      <div class="line add">+ import rabbit from '../database/connections/rabbit.js'</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ export function createJob({ name, handle }) {</div>
+      <div class="line add">+     if (!name || typeof name !== 'string') {</div>
+      <div class="line add">+         throw new Error('Job precisa receber um name válido.')</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     if (!handle || typeof handle !== 'function') {</div>
+      <div class="line add">+         throw new Error('Job precisa receber um handle(payload) válido.')</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     async function dispatch(queue, payload = {}, options = {}) {</div>
+      <div class="line add">+         if (!queue) {</div>
+      <div class="line add">+             throw new Error('dispatch requer o parâmetro queue.')</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         if (!name || typeof name !== 'string') {</div>
+      <div class="line add">+             throw new Error('dispatch requer o nome do job como string.')</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         await rabbit.connect()</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         try {</div>
+      <div class="line add">+             return await rabbit.publish(queue, { job: name, payload }, options)</div>
+      <div class="line add">+         } finally {</div>
+      <div class="line add">+             await rabbit.close()</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     return {</div>
+      <div class="line add">+         name,</div>
+      <div class="line add">+         handle,</div>
+      <div class="line add">+         dispatch</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/app/Jobs/ExampleJob.js</div>
+      <div class="line add">+ import { createJob } from '../../utils/job.js'</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ export default createJob({</div>
+      <div class="line add">+     name: 'ExampleJob',</div>
+      <div class="line add">+     handle: async (payload) =&gt; {</div>
+      <div class="line add">+         const { name } = payload</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         console.log(`Enviando e-mail de boas-vindas para o usuário ${name}`)</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ })</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/app/Commands/CreateExampleJobCommand.js</div>
+      <div class="line add">+ import ExampleJob from '../../app/Jobs/ExampleJob.js'</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ export default {</div>
+      <div class="line add">+     name: 'create-example-job',</div>
+      <div class="line add">+     description: 'Enfileira o job ExampleJob na fila default',</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     async handle() {</div>
+      <div class="line add">+         await ExampleJob.dispatch('default', { name: 'luan' });</div>
+      <div class="line add">+         console.log('Job ExampleJob enviado para a fila default');</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <h3 class="block-title">O worker: novo entry point</h3>
+
+    <div class="diff">
+      <div class="diff-head">src/_worker.js</div>
+      <div class="line add">+ import { Command } from 'commander'</div>
+      <div class="line add">+ import path from 'node:path'</div>
+      <div class="line add">+ import { fileURLToPath } from 'node:url'</div>
+      <div class="line add">+ import loadJobs from './utils/loadJobs.js'</div>
+      <div class="line add">+ import rabbit from './database/connections/rabbit.js'</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ const __filename = fileURLToPath(import.meta.url)</div>
+      <div class="line add">+ const __dirname = path.dirname(__filename)</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ const program = new Command()</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ program</div>
+      <div class="line add">+     .name('worker')</div>
+      <div class="line add">+     .description('Worker RabbitMQ')</div>
+      <div class="line add">+     .option('--queue &lt;queue&gt;', 'Nome da fila RabbitMQ')</div>
+      <div class="line add">+     .parse(process.argv)</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ const options = program.opts()</div>
+      <div class="line add">+ const queue = options.queue || 'default'</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ const jobsPath = path.join(__dirname, 'app', 'Jobs')</div>
+      <div class="line add">+ const jobs = await loadJobs(jobsPath)</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ if (Object.keys(jobs).length === 0) {</div>
+      <div class="line add">+     console.warn('Atenção: nenhum job registrado em app/Jobs')</div>
+      <div class="line add">+ }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ process.on('SIGINT', async () =&gt; {</div>
+      <div class="line add">+     console.log('\nEncerrando worker...')</div>
+      <div class="line add">+     await rabbit.close()</div>
+      <div class="line add">+     process.exit(0)</div>
+      <div class="line add">+ })</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ process.on('SIGTERM', async () =&gt; {</div>
+      <div class="line add">+     console.log('\nEncerrando worker...')</div>
+      <div class="line add">+     await rabbit.close()</div>
+      <div class="line add">+     process.exit(0)</div>
+      <div class="line add">+ })</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ await rabbit.connect()</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ console.log(`Worker iniciado. Aguardando mensagens na fila: ${queue}`)</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ await rabbit.consume(queue, async (msg) =&gt; {</div>
+      <div class="line add">+     if (!msg) {</div>
+      <div class="line add">+         return</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     let payload = null</div>
+      <div class="line add">+     let jobName = null</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     try {</div>
+      <div class="line add">+         const content = msg.content.toString()</div>
+      <div class="line add">+         const data = JSON.parse(content)</div>
+      <div class="line add">+         jobName = data.job</div>
+      <div class="line add">+         payload = data.payload</div>
+      <div class="line add">+     } catch (error) {</div>
+      <div class="line add">+         console.error('Falha ao ler mensagem:', error)</div>
+      <div class="line add">+         return</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     if (!jobName || !jobs[jobName]) {</div>
+      <div class="line add">+         console.error(`Job não encontrado: ${jobName}`)</div>
+      <div class="line add">+         return</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     try {</div>
+      <div class="line add">+         await jobs[jobName](payload)</div>
+      <div class="line add">+         console.log(`Job executado: ${jobName}`)</div>
+      <div class="line add">+     } catch (error) {</div>
+      <div class="line add">+         console.error(`Erro ao executar job ${jobName}:`, error)</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ })</div>
+    </div>
+
+    <h3 class="block-title">A conexão com o RabbitMQ</h3>
+
+    <div class="diff">
+      <div class="diff-head">src/database/connections/rabbit.js</div>
+      <div class="line add">+ import { configDotenv } from 'dotenv';</div>
+      <div class="line add">+ import { connect as amqpConnect } from 'amqplib';</div>
+      <div class="line add">+ import { sleep } from '../../utils/sleep.js';</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ export default (() =&gt; {</div>
+      <div class="line add">+     configDotenv({</div>
+      <div class="line add">+         quiet: true</div>
+      <div class="line add">+     });</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     let connection = null;</div>
+      <div class="line add">+     let channel = null;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     const isDocker = process.env.IS_DOCKER === 'true';</div>
+      <div class="line add">+     const rabbitHost = process.env.RABBITMQ_HOST || (isDocker ? 'rabbitmq_host' : 'localhost');</div>
+      <div class="line add">+     const rabbitPort = process.env.RABBITMQ_PORT || '5672';</div>
+      <div class="line add">+     const rabbitUser = process.env.RABBITMQ_USER;</div>
+      <div class="line add">+     const rabbitPassword = process.env.RABBITMQ_PASSWORD;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     const rabbitUrl = process.env.RABBITMQ_URL || null;</div>
+      <div class="line add">+     const rabbitOptions = {</div>
+      <div class="line add">+         protocol: 'amqp',</div>
+      <div class="line add">+         hostname: rabbitHost,</div>
+      <div class="line add">+         port: Number(rabbitPort),</div>
+      <div class="line add">+         username: rabbitUser,</div>
+      <div class="line add">+         password: rabbitPassword</div>
+      <div class="line add">+     };</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     const connect = async () =&gt; {</div>
+      <div class="line add">+         if (connection) {</div>
+      <div class="line add">+             return connection;</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         const maxAttempts = 10;</div>
+      <div class="line add">+         const retryDelayMs = 4;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         for (let attempt = 1; attempt &lt;= maxAttempts; attempt += 1) {</div>
+      <div class="line add">+             try {</div>
+      <div class="line add">+                 const connectTarget = rabbitUrl || rabbitOptions;</div>
+      <div class="line add">+                 connection = await amqpConnect(connectTarget);</div>
+      <div class="line add">+                 return connection;</div>
+      <div class="line add">+             } catch (error) {</div>
+      <div class="line add">+                 if (attempt === maxAttempts) {</div>
+      <div class="line add">+                     console.error(`RabbitMQ falhou após ${maxAttempts} tentativas. Host=${rabbitHost}:${rabbitPort} URL=${rabbitUrl ? rabbitUrl : JSON.stringify(rabbitOptions)}`);</div>
+      <div class="line add">+                     throw error;</div>
+      <div class="line add">+                 }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+                 console.warn(`RabbitMQ conexão falhou (tentativa ${attempt}/${maxAttempts}), retry em ${retryDelayMs / 1000}s...`);</div>
+      <div class="line add">+                 await sleep(retryDelayMs);</div>
+      <div class="line add">+ </div>
+      <div class="line add">+                 console.log(`Tentando conectar novamente ao RabbitMQ (tentativa ${attempt + 1}/${maxAttempts})...`);</div>
+      <div class="line add">+             }</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+     };</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     const createChannel = async () =&gt; {</div>
+      <div class="line add">+         if (!channel) {</div>
+      <div class="line add">+             const conn = await connect();</div>
+      <div class="line add">+             channel = await conn.createChannel();</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+         return channel;</div>
+      <div class="line add">+     };</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     const assertQueue = async (queue, options = { durable: true }) =&gt; {</div>
+      <div class="line add">+         const ch = await createChannel();</div>
+      <div class="line add">+         await ch.assertQueue(queue, options);</div>
+      <div class="line add">+         return ch;</div>
+      <div class="line add">+     };</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     const publish = async (queue, message, options = {}) =&gt; {</div>
+      <div class="line add">+         const ch = await assertQueue(queue);</div>
+      <div class="line add">+         const buffer = Buffer.from(typeof message === 'string' ? message : JSON.stringify(message));</div>
+      <div class="line add">+         return ch.sendToQueue(queue, buffer, options);</div>
+      <div class="line add">+     };</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     const consume = async (queue, onMessage, options = { noAck: false }) =&gt; {</div>
+      <div class="line add">+         const ch = await assertQueue(queue);</div>
+      <div class="line add">+         return ch.consume(queue, async (msg) =&gt; {</div>
+      <div class="line add">+             if (!msg) {</div>
+      <div class="line add">+                 return;</div>
+      <div class="line add">+             }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+             await onMessage(msg, ch);</div>
+      <div class="line add">+ </div>
+      <div class="line add">+             if (!options.noAck) {</div>
+      <div class="line add">+                 ch.ack(msg);</div>
+      <div class="line add">+             }</div>
+      <div class="line add">+         }, options);</div>
+      <div class="line add">+     };</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     const close = async () =&gt; {</div>
+      <div class="line add">+         if (channel) {</div>
+      <div class="line add">+             await channel.close();</div>
+      <div class="line add">+             channel = null;</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         if (connection) {</div>
+      <div class="line add">+             await connection.close();</div>
+      <div class="line add">+             connection = null;</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+     };</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     return {</div>
+      <div class="line add">+         connect,</div>
+      <div class="line add">+         createChannel,</div>
+      <div class="line add">+         assertQueue,</div>
+      <div class="line add">+         publish,</div>
+      <div class="line add">+         consume,</div>
+      <div class="line add">+         close</div>
+      <div class="line add">+     };</div>
+      <div class="line add">+ })();</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/utils/loadJobs.js</div>
+      <div class="line add">+ import fs from 'node:fs/promises'</div>
+      <div class="line add">+ import path from 'node:path'</div>
+      <div class="line add">+ import { pathToFileURL } from 'node:url'</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ export default async function loadJobs(jobsPath) {</div>
+      <div class="line add">+     const files = await fs.readdir(jobsPath)</div>
+      <div class="line add">+     const jobs = {}</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     for (const file of files) {</div>
+      <div class="line add">+         if (!file.endsWith('.js')) {</div>
+      <div class="line add">+             continue</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         const jobFilePath = path.join(jobsPath, file)</div>
+      <div class="line add">+         const jobModule = await import(pathToFileURL(jobFilePath).href)</div>
+      <div class="line add">+         const fileName = path.basename(file, '.js')</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         let jobName = fileName</div>
+      <div class="line add">+         let jobHandler = null</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         if (jobModule.default) {</div>
+      <div class="line add">+             if (typeof jobModule.default === 'function') {</div>
+      <div class="line add">+                 jobHandler = jobModule.default</div>
+      <div class="line add">+             } else if (typeof jobModule.default === 'object' &amp;&amp; typeof jobModule.default.handle === 'function') {</div>
+      <div class="line add">+                 jobName = jobModule.default.name || fileName</div>
+      <div class="line add">+                 jobHandler = jobModule.default.handle</div>
+      <div class="line add">+             }</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         if (!jobHandler) {</div>
+      <div class="line add">+             const jobDefinition = Object.values(jobModule).find(value =&gt; typeof value === 'object' &amp;&amp; typeof value.handle === 'function')</div>
+      <div class="line add">+ </div>
+      <div class="line add">+             if (jobDefinition) {</div>
+      <div class="line add">+                 jobName = jobDefinition.name || fileName</div>
+      <div class="line add">+                 jobHandler = jobDefinition.handle</div>
+      <div class="line add">+             }</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         if (!jobHandler) {</div>
+      <div class="line add">+             const functionExport = Object.values(jobModule).find(value =&gt; typeof value === 'function')</div>
+      <div class="line add">+             if (functionExport) {</div>
+      <div class="line add">+                 jobHandler = functionExport</div>
+      <div class="line add">+             }</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         if (!jobHandler) {</div>
+      <div class="line add">+             continue</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         jobs[jobName] = jobHandler</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     return jobs</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <h3 class="block-title">Docker: imagem e container do worker</h3>
+
+    <div class="diff">
+      <div class="diff-head">docker/node-worker/Dockerfile</div>
+      <div class="line add">+ # Usa imagem oficial do Node 25</div>
+      <div class="line add">+ FROM node:25</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ # Entra de trabalho</div>
+      <div class="line add">+ WORKDIR /app</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ # Copia arquivos necessários para instalar as dependencia node_modules EM TEMPO DE BUILD</div>
+      <div class="line add">+ COPY src/package*.json ./</div>
+      <div class="line add">+ COPY src/_worker.js ./</div>
+      <div class="line add">+ # O resto do código (app/Jobs, database/connections, utils...) entra pelo volume ./src:/app do compose</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ # Instala dependências + nodemon para "ouvir" as mudanças</div>
+      <div class="line add">+ RUN npm install -g nodemon &amp;&amp; npm install</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ # Não expõe porta: o worker não é servidor HTTP, só consome a fila do RabbitMQ</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ # Comando padrão ao iniciar o container</div>
+      <div class="line add">+ ENTRYPOINT ["nodemon", "_worker.js"]</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">docker-compose.yml (novo serviço)</div>
+      <div class="line add">+   #NODE WORKER</div>
+      <div class="line add">+   nodeworker-container:</div>
+      <div class="line add">+     build:</div>
+      <div class="line add">+       context: .</div>
+      <div class="line add">+       dockerfile: docker/node-worker/Dockerfile</div>
+      <div class="line add">+     env_file:</div>
+      <div class="line add">+       - .env</div>
+      <div class="line add">+       - .env.docker</div>
+      <div class="line add">+     volumes:</div>
+      <div class="line add">+       - ./src:/app</div>
+      <div class="line add">+       - nodemodules-volume:/app/node_modules</div>
+      <div class="line add">+     depends_on:</div>
+      <div class="line add">+       - postgres-container</div>
+      <div class="line add">+       - rabbitmq-container</div>
+      <div class="line add">+       - elasticsearch-container</div>
+      <div class="line add">+     environment:</div>
+      <div class="line add">+       POSTGRES_HOST: postgres_host</div>
+      <div class="line add">+       POSTGRES_PORT: 5432</div>
+      <div class="line add">+       ELASTIC_HOST: elasticsearch_host</div>
+      <div class="line add">+       ELASTIC_PORT: 9200</div>
+      <div class="line add">+       RABBITMQ_HOST: rabbitmq_host</div>
+      <div class="line add">+       RABBITMQ_PORT: 5672</div>
+      <div class="line add">+     restart: unless-stopped</div>
+      <div class="line add">+     networks:</div>
+      <div class="line add">+       app-network:</div>
+      <div class="line add">+         aliases:</div>
+      <div class="line add">+           - nodeworker_host</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>O caminho de um job</h4>
+        <p><code class="inline">ExampleJob.dispatch('default', { name: 'luan' })</code> publica na fila <code class="inline">default</code> a mensagem <code class="inline">{ job: 'ExampleJob', payload: { name: 'luan' } }</code>. O worker consome, procura <code class="inline">jobs["ExampleJob"]</code> (carregado de <code class="inline">app/Jobs</code>) e chama o <code class="inline">handle(payload)</code>. Quem dispara não espera quem executa.</p>
+      </div>
+      <div class="why-card">
+        <h4>O container do worker</h4>
+        <p>Mesmo código (<code class="inline">./src:/app</code>), outro entry point: <code class="inline">nodemon _worker.js</code> em vez de <code class="inline">_web.js</code>. Sem <code class="inline">ports</code>, porque não é servidor HTTP. Recebe <code class="inline">POSTGRES_*</code>, <code class="inline">RABBITMQ_*</code> e <code class="inline">ELASTIC_*</code>: é ele que vai alimentar o Elasticsearch. Sem <code class="inline">--queue</code>, consome a fila <code class="inline">default</code>.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+      <div>
+        <strong>Pegadinhas:</strong>
+        <p>dependência nova (<code class="inline">amqplib</code>) → recriar o <code class="inline">nodemodules-volume</code>, como na etapa 4. No <code class="inline">rabbit.js</code>, o retry espera 4 segundos (<code class="inline">sleep</code> recebe segundos), mas a mensagem imprime "retry em 0.004s": só o texto está errado. O <code class="inline">_worker.js</code> confirma (<code class="inline">ack</code>) a mensagem mesmo quando o job dá erro: job que falha não volta para a fila.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p>Stack completa com 8 containers. Worker: "Worker iniciado. Aguardando mensagens na fila: default". <code class="inline">docker compose run --rm nodecommand-container create-example-job</code> → worker loga "Enviando e-mail de boas-vindas para o usuário luan" e "Job executado: ExampleJob". Com o worker <strong>parado</strong>, 2 jobs disparados ficaram na fila e foram executados assim que ele voltou.</p>
+    </div>
+  </div>
+
+</div>
+</main>
+
+<footer>
+  Aula 07 — Views e Elasticsearch · Frontend 2026.2 · Raio-X do Código (timeline viva — novas etapas entram aqui embaixo)
+</footer>
+
+<script src="../../../assets/raio-x.js"></script>
+</body>
+</html>
