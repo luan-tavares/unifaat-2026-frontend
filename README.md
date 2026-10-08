@@ -8,8 +8,11 @@ Repositório centralizado para todas as aulas do bimestre de Frontend. Aqui voc�
 
 | Aula | Material |
 |------|----------|
+| **Aula 01** - Servidor de Arquivos Estáticos e DOM | [Acesso](./aulas/01/README.md) |
+| **Aula 02** - CSS, Seletores e JS Reativo | [Acesso](./aulas/02/README.md) |
+| **Aula 03** - Vite, Forms e Listeners | [Acesso](./aulas/03/README.md) |
 | **Aula 04** - Navegadores Web e API | [Acesso](./aulas/04/README.md) |
-| **Aula 05** - TypeScript, Generics e API Contextual | [Acesso](./aulas/05/README.md) |
+| **Aula 05** - Pré Compiladores e Typescript | [Acesso](./aulas/05/README.md) |
 
 ---
 
