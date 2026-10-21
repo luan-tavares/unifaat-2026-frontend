@@ -40,6 +40,17 @@ export interface PaginatedResponse<T> {
   total: number;
 }
 
+/** Filtros aceitos pela busca de usuários (POST /users/search). */
+export interface UserSearchFilters {
+  name?: string;
+  email?: string;
+  job_title?: string;
+  bio?: string;
+  city?: string;
+  state?: string;
+  is_active?: boolean;
+}
+
 /** Parâmetros aceitos por qualquer endpoint de listagem paginada. */
 export interface PaginationParams {
   page?: number;
