@@ -28,6 +28,7 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "@types/bootstrap": "^5.2.11",
     "nodemon": "^3.1.14",
     "typescript": "^5.9.3",
     "vite": "^8.2.2"
