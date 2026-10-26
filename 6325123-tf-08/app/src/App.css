@@ -1,0 +1,39 @@
+#root { min-height: 100vh; }
+.page-shell { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 64px 24px 28px; }
+.todo-card { width: min(100%, 580px); padding: 40px; border: 1px solid #e7e8ef; border-radius: 24px; background: #fff; box-shadow: 0 22px 70px rgb(41 45 68 / 9%); }
+.page-header { margin-bottom: 28px; }
+.eyebrow { color: #7775d8; font-size: 11px; font-weight: 800; letter-spacing: .18em; }
+.page-header h1 { margin: 8px 0 4px; color: #202136; font-size: clamp(30px, 8vw, 40px); font-weight: 750; letter-spacing: -.045em; line-height: 1.15; }
+.task-count { color: #898a9d; font-size: 14px; }
+.task-form { display: flex; gap: 10px; padding: 7px; border: 1px solid #e8e9f0; border-radius: 14px; background: #fafaff; }
+.task-form input { min-width: 0; flex: 1; padding: 0 10px; border: 0; outline: 0; color: #27283d; background: transparent; font: inherit; font-size: 14px; }
+.task-form input::placeholder { color: #a0a1b1; }
+.add-button { flex: 0 0 auto; padding: 11px 15px; border: 0; border-radius: 10px; color: #fff; background: #6b68cf; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 140ms ease, transform 140ms ease; }
+.add-button:hover { background: #5c59bd; transform: translateY(-1px); }
+.add-button span { margin-right: 3px; font-size: 17px; vertical-align: -1px; }
+.filters { display: flex; gap: 6px; margin: 26px 0 12px; padding-bottom: 14px; border-bottom: 1px solid #eff0f4; }
+.filter-button { padding: 7px 12px; border: 0; border-radius: 8px; color: #85869a; background: transparent; font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; }
+.filter-button:hover { color: #5552b5; background: #f4f4ff; }
+.filter-button.is-active { color: #5c59bd; background: #f0efff; }
+.task-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.task-item { display: flex; min-height: 52px; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px 8px 14px; border: 1px solid #eff0f5; border-radius: 12px; background: #fff; transition: border-color 140ms ease, background 140ms ease; }
+.task-item:hover { border-color: #d9d8f5; background: #fdfdff; }
+.task-label { display: flex; min-width: 0; flex: 1; align-items: center; gap: 12px; cursor: pointer; }
+.task-label input { width: 17px; height: 17px; margin: 0; accent-color: #6b68cf; cursor: pointer; }
+.task-name { overflow-wrap: anywhere; color: #393a50; font-size: 14px; }
+.is-done .task-name { color: #a4a5b3; text-decoration: line-through; }
+.delete-button { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border: 0; border-radius: 9px; color: #a2a3b2; background: transparent; cursor: pointer; }
+.delete-button:hover { color: #bd526a; background: #fff0f2; }
+.delete-button svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5; }
+.empty-state { padding: 28px 12px; color: #a0a1b1; font-size: 14px; text-align: center; }
+.page-footer { margin-top: auto; padding-top: 36px; color: #a0a1b1; font-size: 12px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+button:focus-visible, input:focus-visible { outline: 3px solid #aaa8f3; outline-offset: 2px; }
+@media (max-width: 520px) {
+  .page-shell { justify-content: flex-start; padding: 32px 14px 20px; }
+  .todo-card { padding: 26px 20px; border-radius: 19px; }
+  .task-form { gap: 4px; }
+  .task-form input { font-size: 13px; }
+  .add-button { padding: 10px; font-size: 12px; }
+  .page-footer { padding-top: 26px; }
+}
