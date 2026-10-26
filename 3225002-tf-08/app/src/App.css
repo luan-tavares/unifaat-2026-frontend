@@ -1,0 +1,121 @@
+.app {
+  max-width: 34rem;
+  margin: 3rem auto;
+  padding: 0 1rem;
+  font-family: system-ui, sans-serif;
+}
+
+h1 {
+  font-size: 1.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.form input {
+  flex: 1;
+  padding: 0.55rem 0.7rem;
+  font: inherit;
+  border: 1px solid #c9c9c9;
+  border-radius: 6px;
+}
+
+button {
+  padding: 0.55rem 0.9rem;
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid #c9c9c9;
+  border-radius: 6px;
+  background: #fff;
+}
+
+button:hover {
+  border-color: #8a8a8a;
+}
+
+.filtros {
+  display: flex;
+  gap: 0.4rem;
+  margin: 1.1rem 0 0.75rem;
+}
+
+.filtros .ativo {
+  background: #1f1f1f;
+  color: #fff;
+  border-color: #1f1f1f;
+}
+
+.lista {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #e3e3e3;
+  border-radius: 6px;
+}
+
+.item .nome {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex: 1;
+  cursor: pointer;
+  /* o texto da tarefa é um alvo de clique; selecionar ao clicar atrapalha */
+  user-select: none;
+}
+
+.item.feita .nome {
+  text-decoration: line-through;
+  color: #8a8a8a;
+}
+
+.vazio,
+.contador {
+  color: #6b6b6b;
+}
+
+.vazio {
+  padding: 0.9rem 0;
+}
+
+.contador {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    background: #161616;
+    color: #ededed;
+  }
+
+  .form input,
+  button {
+    background: #1f1f1f;
+    color: inherit;
+    border-color: #3a3a3a;
+  }
+
+  .filtros .ativo {
+    background: #ededed;
+    color: #161616;
+    border-color: #ededed;
+  }
+
+  .item {
+    border-color: #2e2e2e;
+  }
+}
