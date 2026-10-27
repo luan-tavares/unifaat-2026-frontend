@@ -27,9 +27,69 @@
       <h5>Nova Tarefa</h5>
       <input type="text" id="task-input" class="form-control" placeholder="Digite a tarefa..." />
       <button id="add-task-btn" class="btn btn-primary" type="button">Adicionar</button>
+      <button
+        class="btn btn-outline-primary"
+        type="button"
+        data-bs-toggle="modal"
+        data-bs-target="#assign-task-modal"
+      >Nova tarefa para outro usuário</button>
     </section>
 
   </main>
+
+  <div id="assign-task-success" class="container mb-3" role="status" aria-live="polite" hidden></div>
+
+  <div
+    class="modal fade"
+    id="assign-task-modal"
+    tabindex="-1"
+    aria-labelledby="assign-task-modal-title"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title fs-5" id="assign-task-modal-title">Nova tarefa para outro usuário</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="assign-task-name" class="form-label">Nome da tarefa</label>
+            <input type="text" id="assign-task-name" class="form-control" placeholder="Digite o nome da tarefa..." />
+          </div>
+
+          <div class="row g-2 align-items-end mb-3">
+            <div class="col-md-4">
+              <label for="assign-search-field" class="form-label">Buscar por</label>
+              <select id="assign-search-field" class="form-select">
+                <option value="name">Nome</option>
+                <option value="email">E-mail</option>
+                <option value="job_title">Cargo</option>
+                <option value="city">Cidade</option>
+                <option value="state">UF</option>
+                <option value="bio">Bio</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="assign-search-value" class="form-label">Texto da busca</label>
+              <input type="search" id="assign-search-value" class="form-control" placeholder="Digite para buscar..." />
+            </div>
+            <div class="col-md-2 d-grid">
+              <button type="button" id="assign-search-submit" class="btn btn-secondary">Buscar</button>
+            </div>
+          </div>
+
+          <div id="assign-task-feedback" role="alert" hidden></div>
+          <div id="assign-search-results" aria-live="polite"></div>
+          <div id="assign-selected-user" class="alert alert-info mt-3" aria-live="polite" hidden></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="assign-task-cancel" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" id="assign-task-submit" class="btn btn-primary" disabled>Criar tarefa</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <footer class="bg-primary text-white text-center py-3 mt-auto">
     <div class="small">Frontend 2026.2</div>
