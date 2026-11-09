@@ -9,24 +9,29 @@ import TaskItem from "./TaskItem"
 
 type Props = {
     user: User
+    onTasksReceived: () => void
 }
 
 const DEFAULT_TITLE = "TF-09 · Usuários e tasks"
 
-export default function UserTasks({ user }: Props) {
+export default function UserTasks({ user, onTasksReceived }: Props) {
     const { data, error, isLoading, refetch } = useAxios<PaginatedResponse<Task>>(
         `/users/${user.id}/tasks?page=1&limit=20`
     )
     const [filter, setFilter] = useState("")
     const [isSaving, setIsSaving] = useState(false)
     const [saveError, setSaveError] = useState("")
-    const [responsesText, setResponsesText] = useState("")
-    const responsesRef = useRef(0)
+    const onTasksReceivedRef = useRef(onTasksReceived)
 
-    // Dado de bastidor: conta as respostas recebidas sem renderizar a tela
+    // A ref sempre aponta para o callback mais recente (fora das dependências do efeito abaixo)
+    useEffect(() => {
+        onTasksReceivedRef.current = onTasksReceived
+    })
+
+    // Cada resposta de tasks que chega avisa o App (dono do contador de bastidor)
     useEffect(() => {
         if (data === null) return
-        responsesRef.current += 1
+        onTasksReceivedRef.current()
     }, [data])
 
     // Sincroniza o título da aba com o usuário escolhido e a quantidade de tasks
@@ -53,12 +58,6 @@ export default function UserTasks({ user }: Props) {
         setIsSaving(false)
     }
 
-    function handleShowResponses() {
-        const text = `Respostas de tasks recebidas: ${responsesRef.current}`
-        console.log(text)
-        setResponsesText(text)
-    }
-
     const search = filter.trim().toLowerCase()
     const tasks = data === null ? [] : data.data
     const visibleTasks = tasks.filter(task => task.name.toLowerCase().includes(search))
@@ -82,11 +81,6 @@ export default function UserTasks({ user }: Props) {
                     {visibleTasks.length === 0 && <li className="empty">Nenhuma task encontrada</li>}
                 </ul>
             )}
-
-            <div className="backstage">
-                <button type="button" onClick={handleShowResponses}>Mostrar</button>
-                {responsesText !== "" && <span>{responsesText}</span>}
-            </div>
         </section>
     )
 }
