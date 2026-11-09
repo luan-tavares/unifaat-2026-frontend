@@ -64,14 +64,17 @@ export default function UserTasks({ user, onTasksReceived }: Props) {
 
     return (
         <section className="panel">
-            <h2>Tasks de {user.name}</h2>
+            <h2>
+                <span className="kanji" aria-hidden="true">任務</span>
+                Tasks de {user.name}
+            </h2>
 
             <TaskFilter value={filter} onChange={setFilter} />
 
             {isSaving && <p className="info">Salvando...</p>}
             {saveError !== "" && <p className="error">{saveError}</p>}
 
-            {isLoading && <p>Carregando...</p>}
+            {isLoading && <p className="loading">Carregando...</p>}
             {!isLoading && error !== "" && <ErrorMessage message={error} onRetry={refetch} />}
             {!isLoading && error === "" && data !== null && (
                 <ul className="task-list">

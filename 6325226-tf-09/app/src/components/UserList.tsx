@@ -28,9 +28,12 @@ export default function UserList({ selectedId, onChoose }: Props) {
 
     return (
         <section className="panel">
-            <h2>Usuários</h2>
+            <h2>
+                <span className="kanji" aria-hidden="true">隊士</span>
+                Usuários
+            </h2>
 
-            {isLoading && <p>Carregando...</p>}
+            {isLoading && <p className="loading">Carregando...</p>}
             {!isLoading && error !== "" && <ErrorMessage message={error} onRetry={refetch} />}
             {!isLoading && error === "" && data !== null && (
                 <ul className="user-list">

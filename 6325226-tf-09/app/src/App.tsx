@@ -27,11 +27,18 @@ export default function App() {
 
     return (
         <main className="app">
-            <h1>Usuários e tasks</h1>
+            <header className="hero">
+                <span className="hero-kanji" aria-hidden="true">死神</span>
+                <div>
+                    <p className="hero-eyebrow">Gotei 13 · Registro de missões</p>
+                    <h1>Usuários e tasks</h1>
+                </div>
+            </header>
             <div className="layout">
                 <UserList selectedId={selectedId} onChoose={handleChoose} />
                 {selectedUser === null && (
-                    <section className="panel">
+                    <section className="panel panel-empty">
+                        <span className="kanji-big" aria-hidden="true">卍</span>
                         <p>Escolha um usuário para ver as tasks.</p>
                     </section>
                 )}

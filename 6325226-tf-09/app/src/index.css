@@ -1,58 +1,179 @@
+/* Tema: shihakusho (preto e branco), reiatsu laranja e azul espiritual */
 :root {
-    font-family: system-ui, sans-serif;
-    color: #1f2328;
-    background: #f6f8fa;
+    --bg: #07070a;
+    --panel: #111116;
+    --panel-2: #18181f;
+    --line: #2a2a33;
+    --robe-white: #f2efe8;
+    --text: #e9e6df;
+    --muted: #8d8a95;
+    --reiatsu: #ff7a1a;
+    --reiatsu-soft: rgba(255, 122, 26, 0.18);
+    --spirit: #5cc8ff;
+    --blood: #ff4d5e;
+    --font-title: "Shippori Mincho B1", "Noto Serif JP", Georgia, serif;
+    --font-body: "Noto Sans", system-ui, sans-serif;
+
+    font-family: var(--font-body);
+    color: var(--text);
+    background: var(--bg);
+    color-scheme: dark;
+}
+
+* {
+    box-sizing: border-box;
 }
 
 body {
     margin: 0;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 15% -10%, rgba(255, 122, 26, 0.16), transparent 45%),
+        radial-gradient(circle at 110% 110%, rgba(92, 200, 255, 0.10), transparent 40%),
+        var(--bg);
 }
 
 button {
     font: inherit;
     cursor: pointer;
-    padding: 6px 12px;
-    border: 1px solid #d0d7de;
-    border-radius: 6px;
-    background: #fff;
+    color: var(--text);
+    padding: 8px 14px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+button:hover:not(:disabled) {
+    border-color: var(--reiatsu);
+    box-shadow: 0 0 0 3px var(--reiatsu-soft);
+}
+
+button:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+button:focus-visible,
+input:focus-visible {
+    outline: 2px solid var(--reiatsu);
+    outline-offset: 2px;
 }
 
 button:disabled {
     cursor: not-allowed;
-    opacity: 0.5;
+    opacity: 0.35;
 }
 
 .app {
-    max-width: 960px;
-    margin: 32px auto;
-    padding: 0 16px;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 32px 16px 48px;
 }
 
+/* Cabeçalho */
+.hero {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+}
+
+.hero::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 120px;
+    height: 2px;
+    background: var(--reiatsu);
+    box-shadow: 0 0 12px var(--reiatsu);
+}
+
+.hero-kanji {
+    font-family: var(--font-title);
+    font-size: 3rem;
+    line-height: 1;
+    writing-mode: vertical-rl;
+    color: var(--robe-white);
+    padding: 8px 6px;
+    border: 2px solid var(--robe-white);
+}
+
+.hero-eyebrow {
+    margin: 0 0 4px;
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--reiatsu);
+}
+
+h1 {
+    margin: 0;
+    font-family: var(--font-title);
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    color: var(--robe-white);
+}
+
+/* Layout e painéis (robe preta com gola branca) */
 .layout {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 16px;
+    gap: 20px;
     align-items: start;
 }
 
 .panel {
-    background: #fff;
-    border: 1px solid #d0d7de;
-    border-radius: 8px;
-    padding: 16px;
+    position: relative;
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--robe-white);
+    border-radius: 4px;
+    padding: 18px;
 }
 
 .panel h2 {
-    margin-top: 0;
-    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 14px;
+    font-family: var(--font-title);
+    font-size: 1.2rem;
+    color: var(--robe-white);
 }
 
+.kanji {
+    font-size: 0.85rem;
+    padding: 2px 6px;
+    color: var(--bg);
+    background: var(--reiatsu);
+    border-radius: 2px;
+}
+
+.panel-empty {
+    display: grid;
+    place-items: center;
+    min-height: 240px;
+    text-align: center;
+    color: var(--muted);
+}
+
+.kanji-big {
+    font-family: var(--font-title);
+    font-size: 4rem;
+    line-height: 1;
+    color: var(--line);
+}
+
+/* Listas */
 ul {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
-    gap: 6px;
+    gap: 8px;
 }
 
 .user-item,
@@ -60,58 +181,146 @@ ul {
     width: 100%;
     text-align: left;
     display: flex;
-    gap: 8px;
+    gap: 10px;
+    background: var(--panel);
 }
 
 .user-item {
     flex-direction: column;
     gap: 2px;
+    border-left: 3px solid transparent;
+}
+
+.user-item strong {
+    font-weight: 600;
 }
 
 .user-item span {
-    font-size: 0.85rem;
-    color: #57606a;
+    font-size: 0.82rem;
+    color: var(--muted);
 }
 
 .user-item.selected {
-    border-color: #0969da;
-    background: #ddf4ff;
+    border-color: var(--reiatsu);
+    border-left-width: 3px;
+    background: linear-gradient(90deg, var(--reiatsu-soft), var(--panel) 70%);
+    box-shadow: 0 0 16px rgba(255, 122, 26, 0.15);
+}
+
+.task-item span {
+    width: 1.2em;
+    color: var(--muted);
 }
 
 .task-item.done {
-    color: #57606a;
+    color: var(--muted);
     text-decoration: line-through;
+    text-decoration-color: var(--reiatsu);
 }
 
+.task-item.done span {
+    color: var(--reiatsu);
+}
+
+/* Filtro, paginação e bastidores */
 .pagination,
 .task-filter,
 .backstage {
     display: flex;
     gap: 8px;
     align-items: center;
-    margin-top: 12px;
+    margin-top: 14px;
+}
+
+.pagination span {
+    flex: 1;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
 }
 
 .task-filter {
-    margin: 0 0 12px;
+    margin: 0 0 14px;
 }
 
 .task-filter input {
     flex: 1;
-    padding: 6px 8px;
+    min-width: 0;
+    padding: 8px 10px;
     font: inherit;
-    border: 1px solid #d0d7de;
-    border-radius: 6px;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
 }
 
-.error {
-    color: #cf222e;
+.task-filter input::placeholder {
+    color: var(--muted);
+}
+
+.backstage {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--line);
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+/* Estados */
+.loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--spirit);
+}
+
+.loading::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(92, 200, 255, 0.25);
+    border-top-color: var(--spirit);
+    border-radius: 50%;
+    animation: reiatsu-spin 0.8s linear infinite;
 }
 
 .info {
-    color: #0969da;
+    color: var(--spirit);
+}
+
+.error {
+    color: var(--blood);
+}
+
+div.error {
+    padding: 12px;
+    border: 1px solid rgba(255, 77, 94, 0.4);
+    border-radius: 4px;
+    background: rgba(255, 77, 94, 0.08);
+}
+
+div.error p {
+    margin: 0 0 10px;
+}
+
+div.error button {
+    border-color: var(--blood);
 }
 
 .empty {
-    color: #57606a;
+    color: var(--muted);
+    font-style: italic;
+}
+
+@keyframes reiatsu-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
 }
