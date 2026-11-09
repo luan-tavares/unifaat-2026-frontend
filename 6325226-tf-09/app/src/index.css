@@ -1,0 +1,117 @@
+:root {
+    font-family: system-ui, sans-serif;
+    color: #1f2328;
+    background: #f6f8fa;
+}
+
+body {
+    margin: 0;
+}
+
+button {
+    font: inherit;
+    cursor: pointer;
+    padding: 6px 12px;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    background: #fff;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.app {
+    max-width: 960px;
+    margin: 32px auto;
+    padding: 0 16px;
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    align-items: start;
+}
+
+.panel {
+    background: #fff;
+    border: 1px solid #d0d7de;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.panel h2 {
+    margin-top: 0;
+    font-size: 1.1rem;
+}
+
+ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+}
+
+.user-item,
+.task-item {
+    width: 100%;
+    text-align: left;
+    display: flex;
+    gap: 8px;
+}
+
+.user-item {
+    flex-direction: column;
+    gap: 2px;
+}
+
+.user-item span {
+    font-size: 0.85rem;
+    color: #57606a;
+}
+
+.user-item.selected {
+    border-color: #0969da;
+    background: #ddf4ff;
+}
+
+.task-item.done {
+    color: #57606a;
+    text-decoration: line-through;
+}
+
+.pagination,
+.task-filter,
+.backstage {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 12px;
+}
+
+.task-filter {
+    margin: 0 0 12px;
+}
+
+.task-filter input {
+    flex: 1;
+    padding: 6px 8px;
+    font: inherit;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+}
+
+.error {
+    color: #cf222e;
+}
+
+.info {
+    color: #0969da;
+}
+
+.empty {
+    color: #57606a;
+}
