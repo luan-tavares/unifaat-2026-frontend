@@ -1,0 +1,164 @@
+.app {
+  max-width: 60rem;
+  margin: 2.5rem auto;
+  padding: 0 1rem;
+  font-family: system-ui, sans-serif;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+h1 {
+  font-size: 1.6rem;
+  margin: 0;
+}
+
+h2 {
+  font-size: 1.1rem;
+  margin: 0 0 0.75rem;
+}
+
+.leve {
+  color: #8a8a8a;
+  font-weight: 400;
+}
+
+.colunas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.painel {
+  border: 1px solid #e3e3e3;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid #c9c9c9;
+  border-radius: 6px;
+  background: #fff;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  text-align: left;
+}
+
+.item strong {
+  flex: 1;
+}
+
+.item span {
+  color: #6b6b6b;
+  font-size: 0.85rem;
+}
+
+.item.ativo {
+  border-color: #1f1f1f;
+  background: #1f1f1f;
+  color: #fff;
+}
+
+.item.ativo span {
+  color: #d4d4d4;
+}
+
+.item.feita {
+  text-decoration: line-through;
+  color: #8a8a8a;
+}
+
+.form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+}
+
+.form input {
+  flex: 1;
+  font: inherit;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid #c9c9c9;
+  border-radius: 6px;
+}
+
+.paginacao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #6b6b6b;
+}
+
+.aviso {
+  color: #6b6b6b;
+  padding: 0.75rem 0;
+}
+
+.aviso.erro {
+  color: #b3261e;
+}
+
+@media (max-width: 48rem) {
+  .colunas {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    background: #161616;
+    color: #ededed;
+  }
+
+  .painel {
+    border-color: #2e2e2e;
+  }
+
+  button,
+  .form input {
+    background: #1f1f1f;
+    color: inherit;
+    border-color: #3a3a3a;
+  }
+
+  .item.ativo {
+    background: #ededed;
+    color: #161616;
+    border-color: #ededed;
+  }
+
+  .item.ativo span {
+    color: #4a4a4a;
+  }
+}
