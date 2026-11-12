@@ -1,0 +1,240 @@
+/* Conteúdo centralizado na tela, na horizontal e na vertical */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 16px;
+}
+
+/* Personagens flutuando nas laterais (imagens em public/personagens/) */
+.character {
+  position: fixed;
+  top: 50%;
+  z-index: 0;
+  /* Largura = espaço livre ao lado do conteúdo (960px), com folga */
+  width: clamp(120px, calc((100vw - 960px) / 2 - 48px), 300px);
+  max-height: 80vh;
+  background: no-repeat center / contain;
+  filter: drop-shadow(0 0 24px rgba(157, 140, 255, 0.35));
+  pointer-events: none;
+  translate: 0 -50%;
+  animation: float 6s ease-in-out infinite;
+}
+
+.character--left {
+  transform: translateX(-50%);
+  /* Centro da faixa livre à esquerda */
+  left: calc((100vw - 960px) / 4);
+  /* Foto é larga e baixa: ganha mais largura para ter presença igual à do E.T. */
+  /* As laterais da foto são transparentes, então ela pode passar um pouco da faixa livre */
+  width: clamp(180px, calc((100vw - 960px) / 2 + 40px), 520px);
+  aspect-ratio: 570 / 437;
+  background-image: url("/personagens/eu.png");
+}
+
+.character--right {
+  transform: translateX(50%);
+  right: calc((100vw - 960px) / 4);
+  aspect-ratio: 358 / 697;
+  background-image: url("/personagens/et.png");
+  animation-delay: -3s;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    translate: 0 -50%;
+    rotate: -3deg;
+  }
+  50% {
+    translate: 0 calc(-50% - 22px);
+    rotate: 3deg;
+  }
+}
+
+/* Sem espaço nas laterais: esconde para não cobrir as listas */
+@media (max-width: 1280px) {
+  .character {
+    display: none;
+  }
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.app-header h1 {
+  font-size: 1.6rem;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 40px rgba(109, 59, 214, 0.15);
+}
+
+.panel h2 {
+  font-size: 1.15rem;
+}
+
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.muted {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.status {
+  margin: 0;
+  color: var(--muted);
+}
+
+button {
+  padding: 6px 14px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.user,
+.task {
+  width: 100%;
+  text-align: left;
+}
+
+.user {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 14px;
+}
+
+.user span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.user--selected {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.task {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+}
+
+.task-check {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.task--done {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.task--done .task-check {
+  color: #fff;
+  background: var(--done);
+  border-color: var(--done);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.filter {
+  display: flex;
+  gap: 8px;
+}
+
+.filter input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 12px;
+  background: rgba(5, 4, 15, 0.6);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.error {
+  margin: 0;
+  padding: 10px 14px;
+  color: var(--danger);
+  background: var(--danger-bg);
+  border-radius: 8px;
+}
+
+.error p {
+  margin: 0 0 8px;
+}

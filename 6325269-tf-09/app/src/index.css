@@ -1,0 +1,104 @@
+/* Tema "universo": sempre escuro, painéis translúcidos sobre o céu estrelado */
+:root {
+  --text: #c9c8e0;
+  --text-h: #f4f3ff;
+  --muted: #8e8cb0;
+  --space: #05040f;
+  --surface: rgba(18, 16, 40, 0.72);
+  --surface-strong: rgba(28, 25, 60, 0.85);
+  --border: rgba(160, 150, 255, 0.18);
+  --accent: #9d8cff;
+  --accent-bg: rgba(157, 140, 255, 0.16);
+  --done: #5fd39a;
+  --danger: #ff8a80;
+  --danger-bg: rgba(255, 138, 128, 0.1);
+
+  font: 16px/1.5 system-ui, "Segoe UI", Roboto, sans-serif;
+  color-scheme: dark;
+  color: var(--text);
+  background: var(--space);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--space);
+  /* Nebulosas: manchas de cor bem suaves */
+  background-image:
+    radial-gradient(ellipse 60% 45% at 15% 20%, rgba(109, 59, 214, 0.28), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 85% 75%, rgba(36, 112, 220, 0.24), transparent 70%),
+    radial-gradient(ellipse 40% 30% at 60% 10%, rgba(214, 59, 160, 0.14), transparent 70%),
+    radial-gradient(ellipse at 50% 120%, #140f33, var(--space) 60%);
+  background-attachment: fixed;
+}
+
+/* Duas camadas de estrelas: uma parada e uma que pisca */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::before {
+  background-image:
+    radial-gradient(1px 1px at 20px 30px, #fff, transparent),
+    radial-gradient(1px 1px at 90px 120px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 160px 60px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1.5px 1.5px at 230px 180px, #fff, transparent),
+    radial-gradient(1px 1px at 50px 200px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1px 1px at 280px 20px, rgba(200, 210, 255, 0.8), transparent);
+  background-size: 300px 240px;
+}
+
+body::after {
+  background-image:
+    radial-gradient(2px 2px at 70px 80px, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 320px 260px, rgba(190, 200, 255, 0.9), transparent),
+    radial-gradient(2px 2px at 420px 40px, rgba(255, 230, 250, 0.9), transparent),
+    radial-gradient(1.5px 1.5px at 180px 380px, #fff, transparent);
+  background-size: 520px 460px;
+  animation: twinkle 4s ease-in-out infinite alternate;
+}
+
+@keyframes twinkle {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+h1,
+h2 {
+  color: var(--text-h);
+  margin: 0;
+  line-height: 1.2;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+  }
+}
