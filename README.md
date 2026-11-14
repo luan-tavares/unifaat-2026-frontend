@@ -15,6 +15,9 @@ Repositório centralizado para todas as aulas do bimestre de Frontend. Aqui voc�
 | **Aula 05** - Pré Compiladores e Typescript | [Acesso](./aulas/05/README.md) |
 | **Aula 06** - Revisão Geral | [Acesso](./aulas/06/README.md) |
 | **Aula 07** - Views e Elasticsearch | [Briefing](./aulas/07/briefing.md) · [Raio-X do código](./aulas/07/raio-x/index.html) |
+| **Aula 08** - React: Gerenciamento de Estados | [Briefing](./aulas/08/briefing.md) · [Raio-X do código](./aulas/08/raio-x/index.html) |
+| **Aula 09** - React: Referências e Efeitos | [Briefing](./aulas/09/briefing.md) · [Raio-X do código](./aulas/09/raio-x/index.html) · [TF](./aulas/09/README.md) |
+| **Aula 10** - Mensageria e Websockets | [Briefing](./aulas/10/briefing.md) · [Raio-X do código](./aulas/10/raio-x/index.html) |
 
 Documentação: [rede Docker do projeto](./aulas/rede-docker/index.html) (diagrama interativo dos containers, portas e volumes).
 

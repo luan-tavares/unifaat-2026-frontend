@@ -1,0 +1,374 @@
+/* Diagramas de mensageria (FE, Aula 10): palco de nós posicionados + fios tracejados que
+   "marcham" + pacotes (mensagens) que correm pelos fios. Funciona DENTRO de um widget
+   [data-passos] de slide-interativo.js: cada elemento com data-de / data-ate aparece por passo.
+   Só cores por variável (paletas claro e escuro vêm de slide.css e slide-interativo.css).
+   Papéis (uma cor por parte): prod = quem lança · exch = exchange / notificação · fila = fila / job
+   cons = consumer / worker · ws = túnel WebSocket · cli = cliente (navegador). */
+
+.msg-stage{ position: relative; margin: 0 auto; font-family: var(--font-body); color: var(--ink); }
+.msg-stage svg.fios{ position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 1; }
+
+/* um papel = uma cor (--cor) */
+.prod{ --cor: var(--c-params); }
+.exch{ --cor: var(--c-uso); }
+.fila{ --cor: var(--c-codigo); }
+.cons{ --cor: var(--c-retorno); }
+.ws{ --cor: var(--c-efeito); }
+.cli{ --cor: var(--c-ref); }
+.ruim{ --cor: var(--warn); }
+
+/* ── nós ─────────────────────────────────────────── */
+.nd{
+  position: absolute;
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 3px solid var(--cor, var(--accent));
+  border-radius: 12px;
+  padding: 4px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  font-size: 1rem;
+  line-height: 1.2;
+  z-index: 3;
+}
+.nd > b{
+  font-family: var(--font-mono);
+  font-size: .76rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--cor, var(--accent));
+}
+.nd > span{ font-weight: 600; }
+.nd small{ font-size: .84rem; color: var(--muted-2); font-weight: 500; line-height: 1.2; }
+.nd code, .lb code{ font-family: var(--font-mono); font-size: .88em; }
+.nd.ativo{ box-shadow: 0 0 0 5px var(--cor), 0 0 18px var(--cor); animation: nd-pulsa 1.4s ease-in-out infinite; }
+@keyframes nd-pulsa{ 50%{ box-shadow: 0 0 0 7px var(--cor), 0 0 26px var(--cor); } }
+.nd.fino{ padding: 2px 8px; }
+.nd.alto > b{ margin-bottom: 2px; }
+
+/* a caixa-preta do RabbitMQ: fundo escuro nos dois temas */
+.caixa{
+  position: absolute;
+  box-sizing: border-box;
+  background: var(--bg-chrome);
+  border: 3px dashed var(--c-codigo);
+  border-radius: 18px;
+  color: var(--on-chrome);
+  z-index: 0;
+}
+.caixa > .cap{
+  position: absolute;
+  top: 6px;
+  left: 14px;
+  font-family: var(--font-mono);
+  font-size: .85rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--on-chrome);
+}
+.caixa > .cap em{ font-style: normal; color: var(--term-accent); }
+
+/* pool de consumers (mesma fila) */
+.pool{
+  position: absolute;
+  box-sizing: border-box;
+  border: 3px dashed var(--c-retorno);
+  border-radius: 16px;
+  z-index: 1;
+}
+.pool > .cap{
+  position: absolute;
+  right: 12px;
+  bottom: -13px;
+  background: var(--bg);
+  padding: 0 8px;
+  font-family: var(--font-mono);
+  font-size: .8rem;
+  font-weight: 700;
+  color: var(--c-retorno);
+}
+
+/* etiqueta solta (binding, header, rótulo de fio) */
+.lb{
+  position: absolute;
+  z-index: 4;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: .8rem;
+  font-weight: 600;
+  background: var(--bg);
+  color: var(--ink);
+  border: 2px solid var(--cor, var(--accent));
+  border-radius: 6px;
+  padding: 0 7px;
+}
+.lb.sobre-escuro{ background: var(--bg-chrome); color: var(--on-chrome); }
+.lb.solto{ border: 0; background: transparent; padding: 0; font-size: .95rem; font-family: var(--font-body); }
+
+/* mensagens guardadas dentro de uma fila */
+.msgs{ display: flex; gap: 4px; margin-top: 3px; }
+.msgs i{ width: 16px; height: 16px; border-radius: 3px; background: var(--c-codigo); border: 2px solid var(--bg); box-shadow: 0 0 0 2px var(--c-codigo); }
+
+/* "recebeu": selo dentro do consumer */
+.got{
+  position: absolute;
+  z-index: 5;
+  font-family: var(--font-mono);
+  font-size: .8rem;
+  font-weight: 700;
+  color: var(--c-on);
+  background: var(--cor, var(--c-retorno));
+  border-radius: 6px;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+.got.nao{ background: var(--warn); }
+
+/* aluno (cliente) = bolinha numerada */
+.als{ display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+.al{
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: .78rem; font-weight: 700;
+  background: var(--bg); border: 2px solid var(--c-ref); color: var(--ink);
+}
+.al.eu{ background: var(--c-ref); color: var(--c-on); }
+.al.recebe{ animation: al-recebe 1.2s ease-in-out infinite; }
+@keyframes al-recebe{ 50%{ background: var(--c-efeito); border-color: var(--c-efeito); color: var(--c-on); } }
+
+/* ── fios tracejados que marcham ─────────────────── */
+.msg-stage .fio{
+  fill: none;
+  stroke: var(--cor, var(--accent));
+  stroke-width: 3.2;
+  stroke-dasharray: 10 7;
+  animation: march .6s linear infinite;
+}
+.msg-stage .fio.solido{ stroke-dasharray: none; animation: none; }
+.msg-stage .fio.vagaroso{ animation-duration: 1.4s; }
+.msg-stage .ponta{ fill: var(--cor, var(--accent)); }
+.msg-stage .tunel{ fill: none; stroke: var(--cor); stroke-width: 12; opacity: .22; stroke-linecap: round; }
+
+/* ── pacotes (mensagens) que correm pelos fios ───── */
+.pkt{
+  position: absolute;
+  left: 0; top: 0;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--cor, var(--accent));
+  border: 3px solid var(--bg);
+  box-shadow: 0 0 0 2px var(--cor, var(--accent));
+  z-index: 2;
+  animation: pkt var(--dur, 2.4s) linear var(--atraso, 0s) infinite;
+}
+.pkt.quad{ border-radius: 4px; }
+@keyframes pkt{
+  0%{ offset-distance: 0%; opacity: 0; }
+  8%{ opacity: 1; }
+  90%{ opacity: 1; }
+  100%{ offset-distance: 100%; opacity: 0; }
+}
+
+/* dentro do passo a passo: tudo que tem data-de nasce de display:none, para a animação reiniciar
+   ao aparecer, e sem o translateY do widget (que desalinharia SVG e nós absolutos) */
+.passos .msg-stage [data-de]:not(.vis){ display: none; }
+.passos .msg-stage [data-de]{ transform: none; }
+
+/* X vermelho: "não chega" */
+.xis{
+  position: absolute; z-index: 6;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--warn); color: var(--c-on);
+  font-family: var(--font-mono); font-weight: 700; font-size: 1.25rem;
+}
+.xis.ok{ background: var(--c-retorno); }
+
+/* ── legendas e barra no rodapé do palco ─────────── */
+.msg-leg{ display: flex; gap: 14px; flex-wrap: wrap; font-size: .95rem; color: var(--muted-2); }
+.msg-leg span{ display: inline-flex; align-items: center; gap: 6px; }
+.msg-leg i{ width: 14px; height: 14px; border-radius: 50%; background: var(--cor); display: inline-block; }
+
+/* ── slide lado a lado (fila x notificação) ──────── */
+.lado{ position: absolute; box-sizing: border-box; border: 2px solid var(--rule); border-radius: 14px; background: var(--bg-raised); opacity: .55; }
+.lado-titulo{
+  position: absolute; z-index: 4;
+  font-family: var(--font-mono); font-weight: 700; font-size: 1.05rem; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--cor);
+}
+
+/* ── cartões dos tipos de exchange ───────────────── */
+.tipos{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tipo{ background: var(--surface); border: 3px solid var(--c-uso); border-radius: 12px; padding: 8px 12px 10px; display: grid; grid-template-columns: 1fr; gap: 6px; }
+.tipo h4{ margin: 0; font-family: var(--font-mono); font-size: 1.05rem; color: var(--c-uso); }
+.tipo h4 span{ font-family: var(--font-body); font-weight: 500; color: var(--muted-2); font-size: .95rem; }
+.tipo-d{ display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; }
+.tipo-d .ex{ border: 2px solid var(--c-uso); border-radius: 8px; padding: 2px 10px; font-family: var(--font-mono); font-size: .85rem; background: var(--bg); }
+.tipo-d .qs{ display: flex; flex-direction: column; gap: 4px; }
+.tipo-d .q{
+  display: flex; justify-content: space-between; gap: 8px;
+  border: 2px solid var(--c-codigo); border-radius: 6px; padding: 1px 8px;
+  font-family: var(--font-mono); font-size: .8rem; background: var(--bg);
+}
+.tipo-d .q em{ font-style: normal; color: var(--muted-2); }
+.tipo-d .q.recebe{ background: color-mix(in srgb, var(--c-retorno) 20%, var(--surface)); color: var(--ink); border-color: var(--c-retorno); font-weight: 700; animation: q-recebe 1.6s ease-in-out infinite; }
+.tipo-d .q.recebe em{ color: var(--muted-2); }
+@keyframes q-recebe{ 50%{ box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-retorno) 45%, transparent); } }
+.tipo p{ margin: 0; font-size: .95rem; line-height: 1.3; }
+
+/* ── mock do DevTools: Network → WS ──────────────── */
+.devtools{ border: 3px solid var(--code-border); border-radius: 10px; background: var(--surface); overflow: hidden; font-size: .9rem; }
+.devtools .dt-abas{ display: flex; gap: 0; background: var(--code-bar); border-bottom: 2px solid var(--code-border); font-family: var(--font-mono); font-size: .8rem; }
+.devtools .dt-abas span{ padding: 3px 12px; border-right: 2px solid var(--code-border); }
+.devtools .dt-abas .on{ background: var(--surface); font-weight: 700; color: var(--c-efeito); }
+.devtools .dt-linha{ display: flex; gap: 12px; padding: 4px 12px; font-family: var(--font-mono); font-size: .85rem; border-bottom: 2px solid var(--rule); }
+.devtools .dt-linha b{ color: var(--c-efeito); }
+.devtools .dt-msgs{ padding: 4px 0; display: flex; flex-direction: column; }
+.devtools .m{ display: flex; gap: 10px; padding: 2px 12px; font-family: var(--font-mono); font-size: .85rem; animation: dt-linha 9s linear infinite; opacity: 0; }
+.devtools .m i{ font-style: normal; font-weight: 700; width: 1.2em; }
+.devtools .m.up i{ color: var(--c-retorno); }
+.devtools .m.down i{ color: var(--c-efeito); }
+.devtools .m.up{ background: color-mix(in srgb, var(--c-retorno) 14%, transparent); }
+.devtools .m.down{ background: color-mix(in srgb, var(--c-efeito) 14%, transparent); }
+.devtools .m:nth-child(1){ animation-delay: 0s; }
+.devtools .m:nth-child(2){ animation-delay: 1.3s; }
+.devtools .m:nth-child(3){ animation-delay: 2.6s; }
+.devtools .m:nth-child(4){ animation-delay: 3.9s; }
+.devtools .m:nth-child(5){ animation-delay: 5.2s; }
+@keyframes dt-linha{ 0%{ opacity: 0; transform: translateX(-6px); } 4%, 88%{ opacity: 1; transform: none; } 94%, 100%{ opacity: 0; } }
+
+/* ── protocolo cru (handshake) ───────────────────── */
+.raw{ border: 3px solid var(--code-border); border-radius: 10px; background: var(--code-bg); font-family: var(--font-mono); font-size: .98rem; line-height: 1.45; overflow: hidden; }
+.raw > h5{ margin: 0; padding: 3px 12px; background: var(--code-bar); border-bottom: 2px solid var(--code-border); font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; }
+.raw pre{ margin: 0; padding: 8px 12px; font: inherit; font-weight: 700; white-space: pre; }
+.raw .hl{ color: var(--c-efeito); }
+.raw .ok{ color: var(--c-retorno); }
+.raw .c{ font-weight: 400; font-style: italic; color: var(--code-comment); }
+
+/* ── widget: escalar jobs com mais workers ───────── */
+.escala{ display: grid; grid-template-columns: 1.1fr 1.5fr; gap: 16px; align-items: stretch; }
+.esc-col{ background: var(--surface); border: 3px solid var(--code-border); border-radius: 12px; padding: 10px 14px; display: flex; flex-direction: column; gap: 8px; }
+.esc-col h4{ margin: 0; font-family: var(--font-mono); font-size: .9rem; letter-spacing: .06em; text-transform: uppercase; color: var(--c-codigo); }
+.esc-fila{ display: grid; grid-template-columns: repeat(12, 1fr); gap: 5px; }
+.esc-fila i{ aspect-ratio: 1; border-radius: 4px; border: 2px solid var(--code-border); background: var(--bg); }
+.esc-fila i.on{ background: var(--c-codigo); border-color: var(--c-codigo); }
+.esc-fila.cheia i.on{ background: var(--warn); border-color: var(--warn); }
+.esc-num{ font-family: var(--font-mono); font-size: 2.4rem; font-weight: 700; line-height: 1; }
+.esc-num small{ font-size: 1rem; font-weight: 500; color: var(--muted-2); }
+.esc-workers{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.esc-w{ border: 3px solid var(--c-retorno); border-radius: 10px; padding: 6px 8px; text-align: center; font-family: var(--font-mono); font-size: .85rem; background: var(--bg); }
+.esc-w.off{ border-style: dashed; opacity: .35; }
+.esc-w.on b{ display: block; color: var(--c-retorno); }
+.esc-w.on.ocupado{ background: var(--c-retorno); color: var(--c-on); }
+.esc-w.on.ocupado b{ color: var(--c-on); }
+.esc-veredito{ font-size: 1.15rem; font-weight: 700; min-height: 1.5em; }
+.esc-veredito.ruim{ color: var(--warn); }
+.esc-veredito.bom{ color: var(--c-retorno); }
+.esc-botoes{ display: flex; gap: 10px; }
+.esc-nota{ font-size: .95rem; color: var(--muted-2); margin: 0; }
+
+/* ── slide de resumo em cartões ──────────────────── */
+.resumo{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.resumo > div{ border: 3px solid var(--cor); border-radius: 12px; background: var(--surface); padding: 8px 14px; }
+.resumo h4{ margin: 0 0 2px; font-family: var(--font-mono); font-size: .95rem; letter-spacing: .05em; text-transform: uppercase; color: var(--cor); }
+.resumo p{ margin: 0; font-size: 1.12rem; line-height: 1.3; }
+
+@media (prefers-reduced-motion: reduce){
+  .msg-stage .fio{ animation: none; }
+  .pkt{ animation: none; opacity: 1; offset-distance: 50%; }
+  .nd.ativo{ animation: none; }
+}
+
+/* PDF: nada se mexe; sem pacotes soltos, só os fios e os nós do passo final */
+@media print{
+  .pkt{ display: none !important; }
+  .msg-stage .fio{ animation: none; }
+  .nd.ativo{ animation: none; box-shadow: none; }
+  .devtools .m{ animation: none; opacity: 1; }
+  .al.recebe, .tipo-d .q.recebe{ animation: none; }
+}
+
+/* linha do código acesa pelo passo (data-ativo) */
+.tree .ln{ display: inline; border-radius: 4px; padding: 0 2px; }
+.tree .ln.ativo{ background: var(--bg-raised); box-shadow: 0 0 0 3px var(--c-uso); }
+.esc-w span{ display: none; }
+.esc-w.on span{ display: block; font-weight: 600; }
+
+/* ── controle do passo a passo, embaixo do diagrama: ⏸/▶ + um botão por passo + ‹ › ─────────── */
+.pp-ctl{ display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pp-ctl .w-btn{ font-size: 1rem; padding: 3px 12px; min-width: 2.4em; }
+.pp-ctl .pp-play{ min-width: 8.6em; }
+.pp-passos{ display: inline-flex; gap: 6px; }
+.pp-b.feito{ background: var(--bg-raised); border-color: var(--c-retorno); }
+.pp-b.on{ background: var(--accent); color: var(--accent-ink); border-color: var(--accent); transform: scale(1.12); box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--accent); }
+.pp-dica{ margin-left: auto; font-family: var(--font-mono); font-size: .8rem; color: var(--muted-2); }
+.w.pausado .pp-play{ background: var(--c-retorno); border-color: var(--c-retorno); color: var(--c-on); }
+.w-n{ display: none; }
+@media screen{
+  .deck > .slide:has(.pp-ctl){ padding-top: 26px; padding-bottom: 18px; gap: 8px; }
+  .deck > .slide:has(.pp-ctl) h2{ font-size: 2.15rem; }
+}
+@media print{ .pp-ctl{ display: none !important; } }
+
+/* fila "andando": esteira de mensagens que entram, avançam até a cabeça da fila e saem (consumidas) */
+.esteira{ position: relative; display: block; height: 24px; margin-top: 4px; overflow: hidden; border-bottom: 3px solid var(--c-codigo); }
+.esteira::after{ content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 3px; background: var(--c-retorno); opacity: .9; }
+.esteira i{
+  --d: var(--dist, 126px);
+  position: absolute; left: 0; top: 2px;
+  width: 18px; height: 18px; border-radius: 4px;
+  background: var(--c-codigo); border: 2px solid var(--surface); box-shadow: 0 0 0 2px var(--c-codigo);
+  animation: esteira var(--t, 3s) linear infinite;
+  animation-delay: calc(var(--k) * var(--t) / var(--n) * -1);
+}
+.esteira i:nth-child(even){ background: var(--c-uso); box-shadow: 0 0 0 2px var(--c-uso); }
+@keyframes esteira{
+  0%{ transform: translateX(-24px); opacity: 0; }
+  8%{ transform: translateX(0); opacity: 1; }
+  76%{ transform: translateX(var(--d)); opacity: 1; }
+  90%{ transform: translateX(var(--d)); opacity: 1; }
+  100%{ transform: translateX(calc(var(--d) + 30px)); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce){ .esteira i{ animation: none; opacity: 1; } }
+@media print{
+  .esteira i{ animation: none; opacity: 1; }
+  .esteira i:nth-child(1){ transform: translateX(0); } .esteira i:nth-child(2){ transform: translateX(26px); }
+  .esteira i:nth-child(3){ transform: translateX(52px); } .esteira i:nth-child(4){ transform: translateX(78px); }
+  .esteira i:nth-child(5){ transform: translateX(104px); }
+}
+
+/* a legenda do passo reserva SEMPRE 2 linhas: trocar de passo não muda a altura nem empurra a barra de controle */
+.passos > .w-barra{ align-items: flex-start; }
+.passos > .w-barra .w-leg{ font-size: 1.1rem; line-height: 1.3; height: 2.6em; overflow: hidden; display: block; }
+
+/* ── tela de chat (client A e client B) ─────────── */
+.chat{ position: absolute; box-sizing: border-box; z-index: 3; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--surface); border: 3px solid var(--cor, var(--c-ref)); border-radius: 16px; font-size: 1rem; }
+.chat.ativo{ box-shadow: 0 0 0 5px var(--cor), 0 0 18px var(--cor); }
+.chat-h{ display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: color-mix(in srgb, var(--c-ref) 16%, var(--surface)); border-bottom: 2px solid var(--c-ref); }
+.chat-av{ width: 30px; height: 30px; border-radius: 50%; background: var(--c-ref); color: var(--c-on); display: grid; place-items: center; font-weight: 700; flex: none; }
+.chat-h b{ font-size: 1.05rem; }
+.chat-tag{ font-family: var(--font-mono); font-size: .72rem; color: var(--muted-2); }
+.chat-on{ margin-left: auto; font-size: .78rem; font-weight: 600; color: var(--c-retorno); display: inline-flex; align-items: center; gap: 5px; }
+.chat-on::before{ content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--c-retorno); animation: nd-pulsa 1.6s ease-in-out infinite; }
+.chat-b{ flex: 1; padding: 8px 12px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; background: var(--bg); min-height: 0; }
+.bub{ max-width: 78%; padding: 3px 12px 5px; border-radius: 14px; line-height: 1.25; font-size: 1.02rem; }
+.bub small{ display: block; font-size: .7rem; font-weight: 700; opacity: .8; }
+.bub.eu{ align-self: flex-end; background: var(--c-ref); color: var(--c-on); border-bottom-right-radius: 4px; }
+.bub.outro{ align-self: flex-start; background: var(--bg-raised); color: var(--ink); border-bottom-left-radius: 4px; }
+.bub i{ font-style: normal; font-weight: 700; margin-left: 4px; }
+.bub .novo{ font-style: normal; font-size: .68rem; font-weight: 700; background: var(--c-efeito); color: var(--c-on); border-radius: 8px; padding: 0 6px; margin-left: 6px; animation: nd-pulsa 1.2s ease-in-out infinite; }
+.chat-st{ align-self: flex-end; font-size: .8rem; font-style: italic; color: var(--muted-2); }
+.chat-i{ display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-top: 2px solid var(--code-border); background: var(--surface); }
+.chat-i > span:first-child, .chat-i .txt, .chat-i .ph{ flex: 1; }
+.chat-i .txt, .chat-i .ph{ border: 2px solid var(--code-border); border-radius: 18px; padding: 2px 12px; font-size: .95rem; background: var(--bg); }
+.chat-i .ph{ color: var(--muted-2); }
+.chat-i .txt u{ display: inline-block; width: 2px; height: 1em; margin-left: 2px; background: var(--ink); vertical-align: text-bottom; animation: cursor 1s steps(2) infinite; text-decoration: none; }
+@keyframes cursor{ 50%{ opacity: 0; } }
+.chat-go{ flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--c-ref); color: var(--c-on); display: grid; place-items: center; font-size: .85rem; }
+@media print{ .chat-on::before, .bub .novo, .chat-i .txt u{ animation: none; } }

@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raio-X do Código — Aula 10</title>
+<link rel="stylesheet" href="../../../assets/raio-x.css">
+<script src="../../../assets/tema.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+<style>
+  .toc{ background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 18px 22px; margin: 0 0 40px; }
+  .toc h2{ margin: 0 0 12px; font-size: 1.15rem; }
+  .toc-grid{ display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px 28px; }
+  .toc-group h3{ margin: 0 0 6px; font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-family: var(--font-mono); }
+  .toc-group ol{ margin: 0; padding-left: 28px; }
+  .toc-group li{ margin: 3px 0; line-height: 1.3; }
+  .toc-group a{ color: var(--ink); text-decoration: none; }
+  .toc-group a:hover{ text-decoration: underline; }
+  .entry.destaque{ background: var(--bg-raised); border: 3px solid var(--accent); border-radius: 12px; padding: 18px 22px 22px 22px; }
+  .entry.destaque h2::before{ content: "★ "; color: var(--accent); }
+</style>
+</head>
+<body>
+
+<nav class="topbar"><a class="back" href="../../../index.html">← Voltar</a></nav>
+
+<header>
+  <span class="kicker">Raio-X do Código · Aula 10 · Timeline</span>
+  <h1>Mensageria e Websockets</h1>
+  <p class="meta">
+    <span><i class="fa-solid fa-folder"></i> src/ · docker/</span>
+    <span><i class="fa-solid fa-calendar-days"></i> 16/11/2026</span>
+    <span><i class="fa-solid fa-wrench"></i> 10 etapas</span>
+  </p>
+</header>
+
+<main>
+    <div class="callout">
+      <span class="icon"><i class="fa-solid fa-hourglass-half"></i></span>
+      <div>
+        <strong>Esboço da aula (código ainda não aplicado)</strong>
+        <p>Este raio-x mostra o <strong>código planejado</strong> da Aula 10, extraído do log de deltas. Nada foi aplicado em <code class="inline">src/</code> ainda: quando cada etapa for implementada e testada, o raio-x é atualizado.</p>
+      </div>
+    </div>
+<section class="toc">
+  <h2>Índice</h2>
+  <div class="toc-grid">
+    <div class="toc-group"><h3>RabbitMQ: exchange</h3><ol>
+      <li value="1"><a href="#etapa-1">RabbitMQ: exchange fanout (assertExchange, notify, subscribe)</a></li>
+    </ol></div>
+    <div class="toc-group"><h3>Event (a unidade do websocket)</h3><ol>
+      <li value="2"><a href="#etapa-2">Event: a unidade de execução (createEvent e loadEvents)</a></li>
+      <li value="3"><a href="#etapa-3">Event de exemplo: ChatMessageEvent (app/Events)</a></li>
+    </ol></div>
+    <div class="toc-group"><h3>Entrypoint websocket</h3><ol>
+      <li value="4"><a href="#etapa-4">Entrypoint websocket: _websocket.js com --exchange e --port</a></li>
+      <li value="5"><a href="#etapa-5">Dependência: socket.io</a></li>
+      <li value="6"><a href="#etapa-6">Container: nodewebsocket-container (Dockerfile e compose)</a></li>
+      <li value="7"><a href="#etapa-7">Nginx: repassar o Upgrade para o websocket</a></li>
+    </ol></div>
+    <div class="toc-group"><h3>Evento pesado: o worker processa</h3><ol>
+      <li value="8"><a href="#etapa-8">Evento pesado: o websocket só distribui, o worker processa (upload de imagem)</a></li>
+    </ol></div>
+    <div class="toc-group"><h3>Escala das conexões</h3><ol>
+      <li value="9"><a href="#etapa-9">Nginx: upstream para distribuir as conexões entre réplicas do websocket</a></li>
+    </ol></div>
+    <div class="toc-group"><h3>Frontend (a definir)</h3><ol>
+      <li value="10"><a href="#etapa-10">Frontend: cliente do chat (socket.io-client)</a></li>
+    </ol></div>
+  </div>
+</section>
+
+<div class="timeline">
+
+  <!-- ETAPA 1 -->
+  <div class="entry" id="etapa-1">
+    <div class="entry-dot">1</div>
+    <div class="entry-date">Etapa 1 · RabbitMQ: exchange</div>
+    <h2>RabbitMQ: exchange fanout (assertExchange, notify, subscribe)</h2>
+    <p class="sub">Jobs de um lado (fila + workers), notificações do outro (exchange + consumidores, cada um com a sua fila dinâmica). As três funções recebem o <strong>nome do exchange por parâmetro</strong>.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/database/connections/rabbit.js (acrescentar no módulo e no return)</div>
+      <div class="line add">+     const assertExchange = async (exchange, type = 'fanout', options = { durable: false }) =&gt; {</div>
+      <div class="line add">+         const ch = await createChannel()</div>
+      <div class="line add">+         await ch.assertExchange(exchange, type, options)</div>
+      <div class="line add">+         return ch</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     // producer: publica no exchange; quem entrega é o fanout</div>
+      <div class="line add">+     const notify = async (exchange, event, payload) =&gt; {</div>
+      <div class="line add">+         const ch = await assertExchange(exchange)</div>
+      <div class="line add">+         const message = Buffer.from(JSON.stringify({ event, payload }))</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         return ch.publish(exchange, '', message)</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     // consumer: fila exclusiva DESTE processo, ligada ao exchange</div>
+      <div class="line add">+     const subscribe = async (exchange, onNotification) =&gt; {</div>
+      <div class="line add">+         const ch = await assertExchange(exchange)</div>
+      <div class="line add">+         const { queue } = await ch.assertQueue('', { exclusive: true })</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         await ch.bindQueue(queue, exchange, '')</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         return ch.consume(queue, (msg) =&gt; {</div>
+      <div class="line add">+             if (!msg) {</div>
+      <div class="line add">+                 return</div>
+      <div class="line add">+             }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+             const { event, payload } = JSON.parse(msg.content.toString())</div>
+      <div class="line add">+ </div>
+      <div class="line add">+             onNotification(event, payload)</div>
+      <div class="line add">+         }, { noAck: true })</div>
+      <div class="line add">+     }</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx">      return {</div>
+      <div class="line ctx">          connect,</div>
+      <div class="line ctx">          createChannel,</div>
+      <div class="line ctx">          assertQueue,</div>
+      <div class="line add">+         assertExchange,</div>
+      <div class="line add">+         notify,</div>
+      <div class="line add">+         subscribe,</div>
+      <div class="line ctx">          publish,</div>
+      <div class="line ctx">          consume,</div>
+      <div class="line ctx">          close</div>
+      <div class="line ctx">      };</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>O que muda</h4>
+        <p>O exchange vira explícito: toda mensagem já passava por um (o padrão, <code class="inline">""</code>); agora declaramos um fanout com nome. O exchange vai por <strong>parâmetro</strong>.</p>
+      </div>
+      <div class="why-card">
+        <h4>Fila dinâmica</h4>
+        <p>O <code class="inline">subscribe</code> cria uma fila exclusiva, sem nome, para este processo e a liga ao exchange: N consumidores = N filas no mesmo exchange.</p>
+      </div>
+      <div class="why-card">
+        <h4>Pegadinha</h4>
+        <p>O <code class="inline">rabbit.js</code> guarda UM canal compartilhado; <code class="inline">exclusive</code> faz a fila sumir quando o processo cai.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="icon"><i class="fa-solid fa-hourglass-half"></i></span>
+      <div>
+        <strong>Planejado, ainda não aplicado</strong>
+        <p>Este é o código previsto para a aula (o mesmo do briefing). Quando for aplicado em <code class="inline">src/</code> e testado, a etapa ganha o selo de testado.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ETAPA 2 -->
+  <div class="entry" id="etapa-2">
+    <div class="entry-dot">2</div>
+    <div class="entry-date">Etapa 2 · Event (a unidade do websocket)</div>
+    <h2>Event: a unidade de execução (createEvent e loadEvents)</h2>
+    <p class="sub">O equivalente do <code class="inline">createJob</code> e do <code class="inline">loadJobs</code> para o websocket. O nome do Event é o nome que viaja pelo WebSocket.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/utils/event.js (novo)</div>
+      <div class="line add">+ export function createEvent({ name, handle }) {</div>
+      <div class="line add">+     if (!name || typeof name !== 'string') {</div>
+      <div class="line add">+         throw new Error('Event precisa receber um name válido.')</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     if (typeof handle !== 'function') {</div>
+      <div class="line add">+         throw new Error('Event precisa receber um handle(payload, context) válido.')</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     return { name, handle }</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/utils/loadEvents.js (novo)</div>
+      <div class="line add">+ import fs from 'node:fs/promises'</div>
+      <div class="line add">+ import path from 'node:path'</div>
+      <div class="line add">+ import { pathToFileURL } from 'node:url'</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ export default async function loadEvents(eventsPath) {</div>
+      <div class="line add">+     const files = await fs.readdir(eventsPath)</div>
+      <div class="line add">+     const events = {}</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     for (const file of files) {</div>
+      <div class="line add">+         if (!file.endsWith('.js')) {</div>
+      <div class="line add">+             continue</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         const eventModule = await import(pathToFileURL(path.join(eventsPath, file)).href)</div>
+      <div class="line add">+         const event = eventModule.default</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         if (!event || typeof event.handle !== 'function') {</div>
+      <div class="line add">+             continue</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         events[event.name] = event</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     return events</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Espelho do Job</h4>
+        <p><code class="inline">createEvent</code> e <code class="inline">loadEvents</code> são o equivalente do <code class="inline">createJob</code> e do <code class="inline">loadJobs</code>: unidade nomeada + loader da pasta.</p>
+      </div>
+      <div class="why-card">
+        <h4>O nome viaja</h4>
+        <p>O <code class="inline">name</code> do Event é o nome que viaja pelo WebSocket (<code class="inline">socket.emit('chat:message')</code>).</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="icon"><i class="fa-solid fa-hourglass-half"></i></span>
+      <div>
+        <strong>Planejado, ainda não aplicado</strong>
+        <p>Este é o código previsto para a aula (o mesmo do briefing). Quando for aplicado em <code class="inline">src/</code> e testado, a etapa ganha o selo de testado.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ETAPA 3 -->
+  <div class="entry" id="etapa-3">
+    <div class="entry-dot">3</div>
+    <div class="entry-date">Etapa 3 · Event (a unidade do websocket)</div>
+    <h2>Event de exemplo: ChatMessageEvent (app/Events)</h2>
+    <p class="sub">O Event só chama <code class="inline">context.notify</code> (publica no exchange); <strong>não</strong> faz <code class="inline">io.emit</code>. Não conhece o nome do exchange: ele vem preso no <code class="inline">notify</code> montado pelo entrypoint. Event novo = arquivo novo em <code class="inline">app/Events</code>, sem mexer no entrypoint.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/app/Events/ChatMessageEvent.js (novo)</div>
+      <div class="line add">+ import { createEvent } from '../../utils/event.js'</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ export default createEvent({</div>
+      <div class="line add">+     name: 'chat:message',</div>
+      <div class="line add">+     handle: async (payload, context) =&gt; {</div>
+      <div class="line add">+         const { name, text } = payload</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         if (!text) {</div>
+      <div class="line add">+             return</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         // não entrega na tela: publica no exchange e TODOS os servidores recebem a cópia</div>
+      <div class="line add">+         await context.notify('chat:message', { name, text, sentAt: Date.now() })</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ })</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Só publica</h4>
+        <p>O Event <strong>não</strong> faz <code class="inline">io.emit</code>: chama <code class="inline">context.notify</code> e o exchange distribui para todos os servidores.</p>
+      </div>
+      <div class="why-card">
+        <h4>Um arquivo por Event</h4>
+        <p>Event novo = arquivo novo em <code class="inline">app/Events</code>; o entrypoint não muda, como um Job novo não muda o worker.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="icon"><i class="fa-solid fa-hourglass-half"></i></span>
+      <div>
+        <strong>Planejado, ainda não aplicado</strong>
+        <p>Este é o código previsto para a aula (o mesmo do briefing). Quando for aplicado em <code class="inline">src/</code> e testado, a etapa ganha o selo de testado.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ETAPA 4 -->
+  <div class="entry" id="etapa-4">
+    <div class="entry-dot">4</div>
+    <div class="entry-date">Etapa 4 · Entrypoint websocket</div>
+    <h2>Entrypoint websocket: _websocket.js com --exchange e --port</h2>
+    <p class="sub">Novo entrypoint ao lado de <code class="inline">_web.js</code>, <code class="inline">_worker.js</code> e <code class="inline">_command.js</code>. Carrega os Events, aceita conexões Socket.IO, registra um <code class="inline">socket.on</code> por Event e assina o exchange escolhido para fazer o broadcast (<code class="inline">io.emit</code>) aos clients DESTE servidor.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/_websocket.js (novo)</div>
+      <div class="line add">+ import { Command } from 'commander'</div>
+      <div class="line add">+ import { createServer } from 'node:http'</div>
+      <div class="line add">+ import path from 'node:path'</div>
+      <div class="line add">+ import { fileURLToPath } from 'node:url'</div>
+      <div class="line add">+ import { Server } from 'socket.io'</div>
+      <div class="line add">+ import loadEvents from './utils/loadEvents.js'</div>
+      <div class="line add">+ import rabbit from './database/connections/rabbit.js'</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ const __dirname = path.dirname(fileURLToPath(import.meta.url))</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ const program = new Command()</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ program</div>
+      <div class="line add">+     .name('websocket')</div>
+      <div class="line add">+     .description('Servidor WebSocket (consumer de notificações do RabbitMQ)')</div>
+      <div class="line add">+     .option('--exchange &lt;exchange&gt;', 'Nome do exchange fanout que este servidor assina')</div>
+      <div class="line add">+     .option('--port &lt;port&gt;', 'Porta do servidor WebSocket')</div>
+      <div class="line add">+     .parse(process.argv)</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ const options = program.opts()</div>
+      <div class="line add">+ const exchange = options.exchange || 'notifications'</div>
+      <div class="line add">+ const port = Number(options.port || 3001)</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ const events = await loadEvents(path.join(__dirname, 'app', 'Events'))</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ const httpServer = createServer()</div>
+      <div class="line add">+ const io = new Server(httpServer)</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ await rabbit.connect()</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ // o Event só enxerga "notify"; o exchange fica preso aqui, na hora de montar</div>
+      <div class="line add">+ const notify = (event, payload) =&gt; rabbit.notify(exchange, event, payload)</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ io.on('connection', (socket) =&gt; {</div>
+      <div class="line add">+     console.log(`Cliente conectado: ${socket.id}`)</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     for (const event of Object.values(events)) {</div>
+      <div class="line add">+         socket.on(event.name, (payload) =&gt; event.handle(payload, { socket, notify }))</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     socket.on('disconnect', () =&gt; console.log(`Cliente saiu: ${socket.id}`))</div>
+      <div class="line add">+ })</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ // volta do exchange: cada servidor entrega aos SEUS clients conectados</div>
+      <div class="line add">+ await rabbit.subscribe(exchange, (event, payload) =&gt; io.emit(event, payload))</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ httpServer.listen(port, () =&gt; {</div>
+      <div class="line add">+     console.log(`Websocket iniciado na porta ${port}. Exchange: ${exchange}`)</div>
+      <div class="line add">+ })</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Exchange por parâmetro</h4>
+        <p><code class="inline">--exchange</code> e <code class="inline">--port</code>, como o worker escolhe a fila com <code class="inline">--queue</code>.</p>
+      </div>
+      <div class="why-card">
+        <h4>O autor também recebe</h4>
+        <p>A volta pelo exchange é o único caminho para a mensagem aparecer na tela, igual para todos.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="icon"><i class="fa-solid fa-hourglass-half"></i></span>
+      <div>
+        <strong>Planejado, ainda não aplicado</strong>
+        <p>Este é o código previsto para a aula (o mesmo do briefing). Quando for aplicado em <code class="inline">src/</code> e testado, a etapa ganha o selo de testado.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ETAPA 5 -->
+  <div class="entry" id="etapa-5">
+    <div class="entry-dot">5</div>
+    <div class="entry-date">Etapa 5 · Entrypoint websocket</div>
+    <h2>Dependência: socket.io</h2>
+    <p class="sub">(<code class="inline">socket.io</code> no backend; <code class="inline">socket.io-client</code> no frontend React. Conferir a versão que o <code class="inline">npm install</code> resolver. Como o <code class="inline">node_modules</code> mora em volume nomeado, <strong>rebuild + recriar o volume</strong> <code class="inline">nodemodules-volume</code>, a mesma pegadinha da Aula 07.)</p>
+
+    <div class="diff">
+      <div class="diff-head">diff</div>
+      <div class="line ctx">    "dependencies": {</div>
+      <div class="line add">+     "socket.io": "^4",</div>
+      <div class="line add">+     "socket.io-client": "^4",</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Uma lib em cada ponta</h4>
+        <p><code class="inline">socket.io</code> no backend e <code class="inline">socket.io-client</code> no frontend, do mesmo sabor.</p>
+      </div>
+      <div class="why-card">
+        <h4>node_modules em volume</h4>
+        <p>Dependência nova exige recriar o <code class="inline">nodemodules-volume</code> (a mesma pegadinha da Aula 07).</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="icon"><i class="fa-solid fa-hourglass-half"></i></span>
+      <div>
+        <strong>Planejado, ainda não aplicado</strong>
+        <p>Este é o código previsto para a aula (o mesmo do briefing). Quando for aplicado em <code class="inline">src/</code> e testado, a etapa ganha o selo de testado.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ETAPA 6 -->
+  <div class="entry" id="etapa-6">
+    <div class="entry-dot">6</div>
+    <div class="entry-date">Etapa 6 · Entrypoint websocket</div>
+    <h2>Container: nodewebsocket-container (Dockerfile e compose)</h2>
+    <p class="sub">Outro container, porque o ciclo de vida é outro: o HTTP atende e solta; o websocket mantém conexões abertas por horas. O exchange vai como argumento do ENTRYPOINT (nodemon repassa os args ao script), igual ao <code class="inline">--queue</code> do worker.</p>
+
+    <div class="diff">
+      <div class="diff-head">docker/node-websocket/Dockerfile (novo, espelha o do worker)</div>
+      <div class="line add">+ FROM node:25</div>
+      <div class="line add">+ WORKDIR /app</div>
+      <div class="line add">+ COPY src/package*.json ./</div>
+      <div class="line add">+ COPY src/_websocket.js ./</div>
+      <div class="line add">+ # O resto do código (app/Events, database/connections, utils...) entra pelo volume ./src:/app do compose</div>
+      <div class="line add">+ RUN npm install -g nodemon &amp;&amp; npm install</div>
+      <div class="line add">+ ENTRYPOINT ["nodemon", "_websocket.js"]</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">diff</div>
+      <div class="line add">+   #NODE WEBSOCKET</div>
+      <div class="line add">+   nodewebsocket-container:</div>
+      <div class="line add">+     build:</div>
+      <div class="line add">+       context: .</div>
+      <div class="line add">+       dockerfile: docker/node-websocket/Dockerfile</div>
+      <div class="line add">+     command: ["--exchange", "notifications", "--port", "3001"]</div>
+      <div class="line add">+     env_file:</div>
+      <div class="line add">+       - .env</div>
+      <div class="line add">+       - .env.docker</div>
+      <div class="line add">+     volumes:</div>
+      <div class="line add">+       - ./src:/app</div>
+      <div class="line add">+       - nodemodules-volume:/app/node_modules</div>
+      <div class="line add">+     depends_on:</div>
+      <div class="line add">+       - rabbitmq-container</div>
+      <div class="line add">+     environment:</div>
+      <div class="line add">+       RABBITMQ_HOST: rabbitmq_host</div>
+      <div class="line add">+       RABBITMQ_PORT: 5672</div>
+      <div class="line add">+     restart: unless-stopped</div>
+      <div class="line add">+     networks:</div>
+      <div class="line add">+       app-network:</div>
+      <div class="line add">+         aliases:</div>
+      <div class="line add">+           - nodewebsocket_host</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Outro container</h4>
+        <p>Ciclo de vida diferente: o HTTP atende e solta; o websocket mantém conexões abertas por horas.</p>
+      </div>
+      <div class="why-card">
+        <h4>Args do ENTRYPOINT</h4>
+        <p>O nodemon repassa os argumentos ao script: o <code class="inline">command</code> leva <code class="inline">--exchange</code> e <code class="inline">--port</code>.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="icon"><i class="fa-solid fa-hourglass-half"></i></span>
+      <div>
+        <strong>Planejado, ainda não aplicado</strong>
+        <p>Este é o código previsto para a aula (o mesmo do briefing). Quando for aplicado em <code class="inline">src/</code> e testado, a etapa ganha o selo de testado.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ETAPA 7 -->
+  <div class="entry" id="etapa-7">
+    <div class="entry-dot">7</div>
+    <div class="entry-date">Etapa 7 · Entrypoint websocket</div>
+    <h2>Nginx: repassar o Upgrade para o websocket</h2>
+    <p class="sub">Sem os cabeçalhos <code class="inline">Upgrade</code>/<code class="inline">Connection</code> o handshake não chega ao Node e a conexão fica presa no polling.</p>
+
+    <div class="diff">
+      <div class="diff-head">diff</div>
+      <div class="line add">+     location /socket.io/ {</div>
+      <div class="line add">+         proxy_pass http://nodewebsocket_host:3001;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         proxy_http_version 1.1;</div>
+      <div class="line add">+         proxy_set_header Upgrade $http_upgrade;</div>
+      <div class="line add">+         proxy_set_header Connection "upgrade";</div>
+      <div class="line add">+     }</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Upgrade</h4>
+        <p>Sem <code class="inline">Upgrade</code> e <code class="inline">Connection</code> o handshake não chega ao Node e a conexão fica presa no polling.</p>
+      </div>
+      <div class="why-card">
+        <h4>Mesma origem</h4>
+        <p>O <code class="inline">io()</code> do frontend não precisa de URL nem de CORS.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="icon"><i class="fa-solid fa-hourglass-half"></i></span>
+      <div>
+        <strong>Planejado, ainda não aplicado</strong>
+        <p>Este é o código previsto para a aula (o mesmo do briefing). Quando for aplicado em <code class="inline">src/</code> e testado, a etapa ganha o selo de testado.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ETAPA 8 -->
+  <div class="entry" id="etapa-8">
+    <div class="entry-dot">8</div>
+    <div class="entry-date">Etapa 8 · Evento pesado: o worker processa</div>
+    <h2>Evento pesado: o websocket só distribui, o worker processa (upload de imagem)</h2>
+    <p class="sub">Regra: o entrypoint websocket só conecta e distribui eventos; nada pesado roda nele (Node tem um event loop só: uma conta pesada congela TODOS os túneis do processo). Websocket e worker são containers diferentes no MESMO RabbitMQ. Exemplo: upload de imagem no chat (o arquivo vai por HTTP para o storage; o Event leva só a referência).</p>
+
+    <div class="diff">
+      <div class="diff-head">src/app/Events/ChatImageEvent.js (novo)</div>
+      <div class="line add">+ import { createEvent } from '../../utils/event.js'</div>
+      <div class="line add">+ import ProcessChatImageJob from '../Jobs/ProcessChatImageJob.js'</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ export default createEvent({</div>
+      <div class="line add">+     name: 'chat:image',</div>
+      <div class="line add">+     handle: async (payload, context) =&gt; {</div>
+      <div class="line add">+         const { room, file, author } = payload</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         // não processa nada: entrega a imagem (a referência) a um worker e responde na hora</div>
+      <div class="line add">+         await ProcessChatImageJob.dispatch('images', { room, file, author })</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         context.socket.emit('chat:image:queued', { room })</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ })</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/app/Jobs/ProcessChatImageJob.js (novo)</div>
+      <div class="line add">+ import { createJob } from '../../utils/job.js'</div>
+      <div class="line add">+ import rabbit from '../../database/connections/rabbit.js'</div>
+      <div class="line add">+ import ChatImageService from '../Services/ChatImageService.js'</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ export default createJob({</div>
+      <div class="line add">+     name: 'ProcessChatImageJob',</div>
+      <div class="line add">+     handle: async (payload) =&gt; {</div>
+      <div class="line add">+         const { room, file, author } = payload</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         // o trabalho pesado roda AQUI, no worker: valida, redimensiona, gera a miniatura</div>
+      <div class="line add">+         const image = await ChatImageService.process(file)</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         // o resultado vai para OUTRO exchange; cada websocket recebe uma cópia na sua fila dinâmica</div>
+      <div class="line add">+         await rabbit.notify('results', 'chat:image:ready', { room, author, url: image.url, thumb: image.thumb })</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ })</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/_websocket.js (acrescentar a segunda assinatura)</div>
+      <div class="line add">+ program.option('--results &lt;exchange&gt;', 'Exchange de onde chegam os resultados dos workers')</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ const results = options.results || 'results'</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ // cria a fila dinâmica DESTE servidor no results e entrega aos SEUS clients</div>
+      <div class="line add">+ await rabbit.subscribe(results, (event, payload) =&gt; io.emit(event, payload))</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/utils/job.js (dispatch: fechar só a conexão que ele mesmo abriu; sem isso o dispatch derruba a assinatura do exchange no websocket)</div>
+      <div class="line add">+         const jaAberta = rabbit.isConnected()</div>
+      <div class="line add">+ </div>
+      <div class="line ctx">          await rabbit.connect()</div>
+      <div class="line ctx"></div>
+      <div class="line ctx">          try {</div>
+      <div class="line ctx">              return await rabbit.publish(queue, { job: name, payload }, options)</div>
+      <div class="line ctx">          } finally {</div>
+      <div class="line rem">-             await rabbit.close()</div>
+      <div class="line add">+             if (!jaAberta) {</div>
+      <div class="line add">+                 await rabbit.close()</div>
+      <div class="line add">+             }</div>
+      <div class="line ctx">          }</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/database/connections/rabbit.js (acrescentar isConnected e no return)</div>
+      <div class="line add">+     const isConnected = () =&gt; connection !== null;</div>
+      <div class="line ctx">  ...</div>
+      <div class="line add">+         isConnected,</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>O websocket só distribui</h4>
+        <p>Conta pesada trava o event loop: <strong>todos</strong> os túneis do processo congelam. O Event só entrega o trabalho.</p>
+      </div>
+      <div class="why-card">
+        <h4>Mesmo RabbitMQ</h4>
+        <p>Job na fila <code class="inline">images</code>, resultado em <strong>outro exchange</strong> (<code class="inline">results</code>); cada websocket recebe numa fila dinâmica própria.</p>
+      </div>
+      <div class="why-card">
+        <h4>Pegadinha do dispatch</h4>
+        <p>Hoje fecha a conexão ao terminar: no websocket só pode fechar se foi ele quem abriu.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="icon"><i class="fa-solid fa-hourglass-half"></i></span>
+      <div>
+        <strong>Planejado, ainda não aplicado</strong>
+        <p>Este é o código previsto para a aula (o mesmo do briefing). Quando for aplicado em <code class="inline">src/</code> e testado, a etapa ganha o selo de testado.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ETAPA 9 -->
+  <div class="entry" id="etapa-9">
+    <div class="entry-dot">9</div>
+    <div class="entry-date">Etapa 9 · Escala das conexões</div>
+    <h2>Nginx: upstream para distribuir as conexões entre réplicas do websocket</h2>
+    <p class="sub"></p>
+
+    <div class="diff">
+      <div class="diff-head">docker/nginx/default.conf.template (substitui o proxy_pass direto da Etapa 07)</div>
+      <div class="line add">+     upstream websocket_servers {</div>
+      <div class="line add">+         ip_hash;                          # sticky (só importa no polling do Socket.IO)</div>
+      <div class="line add">+         server nodewebsocket_host:3001;   # o Docker devolve o IP de cada réplica</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line ctx">      location /socket.io/ {</div>
+      <div class="line rem">-         proxy_pass http://nodewebsocket_host:3001;</div>
+      <div class="line add">+         proxy_pass http://websocket_servers;</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>O nginx também escala</h4>
+        <p>Distribui as conexões entre as réplicas (<code class="inline">upstream</code>); a conexão fica presa à réplica escolhida.</p>
+      </div>
+      <div class="why-card">
+        <h4>Sala de aula</h4>
+        <p><code class="inline">ip_hash</code> põe a turma toda (mesmo IP) numa réplica só: para a demo, client só WebSocket e round-robin.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="icon"><i class="fa-solid fa-hourglass-half"></i></span>
+      <div>
+        <strong>Planejado, ainda não aplicado</strong>
+        <p>Este é o código previsto para a aula (o mesmo do briefing). Quando for aplicado em <code class="inline">src/</code> e testado, a etapa ganha o selo de testado.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ETAPA 10 -->
+  <div class="entry" id="etapa-10">
+    <div class="entry-dot">10</div>
+    <div class="entry-date">Etapa 10 · Frontend (a definir)</div>
+    <h2>Frontend: cliente do chat (socket.io-client)</h2>
+    <p class="sub">Briefing só mostra o trecho mínimo; a tela do chat (React) ainda não foi desenhada.</p>
+
+    <div class="diff">
+      <div class="diff-head">ts</div>
+      <div class="line ctx">  import { io } from "socket.io-client"</div>
+      <div class="line ctx"></div>
+      <div class="line ctx">  const socket = io()    // sem URL: mesma origem, caminho /socket.io</div>
+      <div class="line ctx"></div>
+      <div class="line ctx">  socket.emit("chat:message", { name: "Ana", text: "oi, turma" })     // cliente → servidor</div>
+      <div class="line ctx">  socket.on("chat:message", (payload) =&gt; { ... })                    // servidor → cliente</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>A definir</h4>
+        <p>Só o trecho mínimo do <code class="inline">socket.io-client</code>: <code class="inline">io()</code> sem URL (mesma origem), <code class="inline">emit</code> e <code class="inline">on</code>.</p>
+      </div>
+      <div class="why-card">
+        <h4>Efeito com limpeza</h4>
+        <p>Na tela React, o <code class="inline">useEffect</code> abre a conexão e a limpeza fecha (<code class="inline">socket.disconnect()</code>), como na Aula 09.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="icon"><i class="fa-solid fa-hourglass-half"></i></span>
+      <div>
+        <strong>Planejado, ainda não aplicado</strong>
+        <p>Este é o código previsto para a aula (o mesmo do briefing). Quando for aplicado em <code class="inline">src/</code> e testado, a etapa ganha o selo de testado.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+
+<footer>
+  Aula 10 — Mensageria e Websockets · Frontend 2026.2 · Raio-X do Código (timeline viva — novas etapas entram aqui embaixo)
+</footer>
+
+<script src="../../../assets/raio-x.js"></script>
+</body>
+</html>

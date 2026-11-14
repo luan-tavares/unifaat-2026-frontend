@@ -474,6 +474,20 @@
     color: var(--accent);
   }
   .cover-num{ color: var(--accent); }
+  /* a MATÉRIA, como label acima do título (modelo-padrão: toda capa traz a disciplina) */
+  .cover-materia{
+    align-self: flex-start;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: clamp(1.1rem, 2vw, 1.5rem);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border-left: 6px solid var(--accent);
+    padding: 2px 0 2px 14px;
+    max-width: none;
+  }
   .cover-prof{
     font-weight: 700;
     font-size: clamp(1.6rem, 3vw, 2.3rem);

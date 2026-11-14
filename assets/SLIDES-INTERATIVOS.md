@@ -65,3 +65,14 @@ Se o padrão mudar, mude **aqui** e nos dois arquivos de `assets/`, nunca dentro
 - `.mock-tela` (`.mock-barra`, `.mock-corpo`, `.mock-estados`, `.mk-*`, `.mock-log .l`): um quadro simples de "tela do projeto" em HTML/CSS, sem screenshot. As linhas do `.mock-log` aparecem em sequência por animação CSS em loop (`animation-delay` por `nth-child`), sem botão; no PDF todas aparecem.
 - `.fluxo .cx.erro`: caixa de passo "ERRADO" (borda e número na cor `--warn`).
 - `.dois-fixos`: duas colunas (código | mock) que **não empilham** no PDF, ao contrário de `.two-col`.
+
+## Diagramas de mensageria (Aula 10)
+- `assets/slide-mensageria.css` (+ `.js` do widget `[data-escala]`): palco de nós absolutos (`.nd`), fios tracejados que marcham (`.fio`), pacotes que correm pelos fios (`.pkt`, `offset-path`), caixa-preta (`.caixa`), pool (`.pool`), etiquetas (`.lb`). Dentro de um `[data-passos]` os elementos usam `data-de`/`data-ate`/`data-ativo` como nos outros widgets. Carregar `slide-mensageria.css` depois de `slide-interativo.css` e o `.js` entre `slide-interativo.js` e `slide.js`.
+- Uma cor por papel: `prod` (azul) · `exch` (roxo, exchange/notificação) · `fila` (laranja) · `cons` (verde, worker/consumer) · `ws` (rosa, túnel) · `cli` (ciano, cliente) · `ruim` (aviso).
+- Os slides da Aula 10 são **gerados** por `.claude/scripts/slides10_build.py` (helpers `nd`, `line`, `pkt`, `stage`, `passos`): mexa nas coordenadas lá e rode o script.
+- PDF: pacotes somem, ficam fios e nós do passo `data-print`.
+
+## Modelo-padrão (Aula 10): como começar uma aula nova
+- `python3 .claude/scripts/slides_modelo.py NN "Título" Disciplina` gera o esqueleto (capa com a matéria, 1 diagrama de exemplo, TF). A biblioteca é `.claude/scripts/slides_lib.py`; a aula de referência é `slides10_build.py`.
+- Controle do passo a passo (⏸/▶, botão por passo, ‹ ›) já vem em `passos()`. Legenda: no máximo 2 linhas.
+- Visão geral do padrão: `PADRAO-FORMATOS.md` (seção "Modelo-padrão").
