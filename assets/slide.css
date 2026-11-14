@@ -446,7 +446,7 @@
   .deck > .slide{ max-width: none; margin: 0 auto; width: 100%; }
   .hud{ left: var(--sidebar-w); }
 
-  @media (max-width: 719px){
+  @media screen and (max-width: 719px), screen and (orientation: portrait){
     :root{ --sidebar-w: 0px; }
     .sidebar{ display:none; }
   }
@@ -508,7 +508,7 @@
   h1, h2, .lede, .body-text, .payoff, ul.points li, .callout p{ overflow-wrap: anywhere; }
   .term-body{ max-width: 100%; }
 
-  @media (max-width: 719px){
+  @media screen and (max-width: 719px), screen and (orientation: portrait){
     .deck{ padding-left: 16px; padding-right: 16px; padding-bottom: 96px; }
     .slide{ min-height: calc(100vh - 170px); gap: 16px; }
     h1{ font-size: clamp(1.9rem, 9.5vw, 2.8rem); line-height: 1.12; }
@@ -531,7 +531,7 @@
   }
 
   /* celular: a coluna de miniaturas vira só uma barra com o "Voltar" no topo */
-  @media (max-width: 719px){
+  @media screen and (max-width: 719px), screen and (orientation: portrait){
     .sidebar{
       display: flex; flex-direction: row; align-items: center;
       position: sticky; top: 0; bottom: auto; left: auto;
@@ -711,7 +711,7 @@
   body.prova .slide td code, body.prova .slide li code, body.prova .slide p code{ white-space: normal; }
   body.prova .slide hr{ display:none; }
   @media print{ body.prova .slide{ height:auto !important; min-height:7.5in; overflow: visible !important; } }
-  @media (max-width: 719px){
+  @media screen and (max-width: 719px), screen and (orientation: portrait){
     body.prova .slide p, body.prova .slide li{ font-size: 1.15rem; }
     body.prova .slide h3{ font-size: 1.7rem; }
     body.prova .slide table{ font-size: 0.95rem; }
@@ -736,7 +736,7 @@
   .back:hover, .back-link:hover, .sidebar-back:hover{ border-color: var(--accent-2); color: var(--accent-2); transform: translateX(-2px); text-decoration:none; }
   .back:focus-visible, .back-link:focus-visible, .sidebar-back:focus-visible{ outline: 2px solid var(--accent-2); outline-offset: 2px; }
   .sidebar-back{ position: sticky; top: 0; z-index: 2; box-shadow: 0 0 0 8px var(--bg-raised); background: var(--bg); }
-  @media (max-width: 719px){ .sidebar-back{ position: static; margin: 10px 12px; box-shadow:none; } }
+  @media screen and (max-width: 719px), screen and (orientation: portrait){ .sidebar-back{ position: static; margin: 10px 12px; box-shadow:none; } }
 
   /* gesto horizontal é do slide.js; a rolagem vertical continua do navegador */
   .deck{ touch-action: pan-y pinch-zoom; }
@@ -750,7 +750,7 @@
   @media print{ .slide.from-right, .slide.from-left{ animation: none; transform: none; opacity: 1; } }
 
   /* celular: rodapé limpo (contador + rótulo numa linha só) e dica de arrastar em aviso que some sozinho */
-  @media (max-width: 719px){
+  @media screen and (max-width: 719px), screen and (orientation: portrait){
     .hud-mid{ min-width: 0; }
     .hud-meta{ gap: 10px; min-width: 0; }
     .hud-meta > span:first-child{ min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

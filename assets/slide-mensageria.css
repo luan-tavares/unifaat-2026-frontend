@@ -278,6 +278,8 @@
 .resumo h4{ margin: 0 0 2px; font-family: var(--font-mono); font-size: .95rem; letter-spacing: .05em; text-transform: uppercase; color: var(--cor); }
 .resumo p{ margin: 0; font-size: 1.12rem; line-height: 1.3; }
 
+/* fora do celular a dica de arrastar não aparece */
+.msg-dica{ display: none; }
 @media (prefers-reduced-motion: reduce){
   .msg-stage .fio{ animation: none; }
   .pkt{ animation: none; opacity: 1; offset-distance: 50%; }
@@ -372,3 +374,22 @@
 @keyframes cursor{ 50%{ opacity: 0; } }
 .chat-go{ flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--c-ref); color: var(--c-on); display: grid; place-items: center; font-size: .85rem; }
 @media print{ .chat-on::before, .bub .novo, .chat-i .txt u{ animation: none; } }
+
+/* ── slide-cel: celular (tela estreita ou em pé) ─────────────────────────────────────────────── */
+@media screen and (max-width: 719px), screen and (orientation: portrait){
+  .msg-scroll{ overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; padding-bottom: 6px; }
+  .msg-stage{ margin: 0; }
+  .msg-dica{ display: block; text-align: center; font-family: var(--font-mono); font-size: .78rem; color: var(--muted-2); margin: 2px 0 8px; }
+  .passos > .w-barra .w-leg{ height: auto; min-height: 2.6em; font-size: 1.05rem; }
+  .pp-ctl{ gap: 6px; }
+  .pp-ctl .w-btn{ min-width: 2.6em; padding: 6px 10px; }
+  .pp-dica{ display: none; }
+  .escala, .tipos, .resumo{ grid-template-columns: 1fr; }
+  .esc-workers{ grid-template-columns: repeat(2, 1fr); }
+  .fluxo-dois{ grid-template-columns: minmax(0, 1fr) !important; }
+  .fluxo-dois > *{ min-width: 0; }
+  .lb{ white-space: normal; }
+  .raw{ overflow-x: auto; max-width: 100%; }
+  .raw pre{ white-space: pre-wrap; word-break: break-word; }
+  .devtools{ max-width: 100%; }
+}

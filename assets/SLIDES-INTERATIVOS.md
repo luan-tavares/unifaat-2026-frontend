@@ -76,3 +76,10 @@ Se o padrão mudar, mude **aqui** e nos dois arquivos de `assets/`, nunca dentro
 - `python3 .claude/scripts/slides_modelo.py NN "Título" Disciplina` gera o esqueleto (capa com a matéria, 1 diagrama de exemplo, TF). A biblioteca é `.claude/scripts/slides_lib.py`; a aula de referência é `slides10_build.py`.
 - Controle do passo a passo (⏸/▶, botão por passo, ‹ ›) já vem em `passos()`. Legenda: no máximo 2 linhas.
 - Visão geral do padrão: `PADRAO-FORMATOS.md` (seção "Modelo-padrão").
+
+## slide-cel: celular (responsivo)
+- **Em pé ou tela estreita (< 720 px)** vale o layout vertical fluido do `slide.css` (cada slide uma coluna, rolagem da página); o palco 16:9 (`slide-16x9.css`) só vale em **paisagem com ≥ 720 px**. Mesma regra do ES.
+- **Gestos:** arrastar para o lado troca de slide (dica que some sozinha); áreas que rolam na horizontal (código, tabelas, diagramas) **não roubam** o gesto.
+- **Diagramas (`.msg-stage`, largura fixa em px):** no celular ficam em `.msg-scroll` (rola para o lado) com zoom mínimo 0,62 e a dica "arraste o diagrama · ou gire o celular"; em paisagem o palco inteiro é escalado.
+- **Widgets** (`.cena`, `.rr`, `.abas`, `.fluxo-dois`, `.escala`...) viram coluna única; botões maiores (40 px); legenda do passo sem altura fixa; tabelas e `pre` rolam por dentro; nada pode estourar a largura da tela.
+- Teste rápido: `google-chrome --headless --window-size=390,900 --screenshot=...` (em pé) e `844,390` (deitado).

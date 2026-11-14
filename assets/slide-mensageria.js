@@ -149,6 +149,45 @@
   }
   $all(document, '[data-passos]').forEach(initControles);
 
+  /* ── slide-cel: no celular (tela estreita ou em pé) o slide vira uma coluna fluida (slide.css). O palco de
+        diagrama tem largura fixa em px: ele encolhe (zoom) até um mínimo legível dentro de uma área que ROLA
+        para o lado (o gesto de arrastar do slide.js respeita essa rolagem). Em paisagem o palco 16:9 inteiro
+        já é escalado por slide-16x9.js e aqui o fator fica 1. ── */
+  var MINIMO = 0.62;
+
+  function embrulharPalcos(){
+    $all(document, '.deck .msg-stage').forEach(function(st){
+      if(st.parentElement.classList.contains('msg-scroll')) return;
+      var rolagem = document.createElement('div');
+      rolagem.className = 'msg-scroll';
+      st.parentNode.insertBefore(rolagem, st);
+      rolagem.appendChild(st);
+      var dica = document.createElement('div');
+      dica.className = 'msg-dica';
+      dica.textContent = '↔ arraste o diagrama para o lado · ou gire o celular';
+      rolagem.parentNode.insertBefore(dica, rolagem.nextSibling);
+    });
+  }
+
+  function ajustarPalcos(){
+    $all(document, '.deck .msg-stage').forEach(function(st){
+      var rolagem = st.parentElement;
+      var largura = parseFloat(st.style.width);
+      if(!rolagem || !largura) return;
+      var livre = rolagem.clientWidth;
+      if(livre === 0) return;            // slide escondido
+      var fator = Math.min(1, Math.max(MINIMO, livre / largura));
+      var novo = fator < 0.999 ? String(fator.toFixed(4)) : '';
+      if(novo !== st.style.zoom) st.style.zoom = novo;
+    });
+  }
+  embrulharPalcos();
+  window.addEventListener('resize', ajustarPalcos);
+  window.addEventListener('orientationchange', ajustarPalcos);
+  window.addEventListener('hashchange', function(){ setTimeout(ajustarPalcos, 50); });
+  setInterval(ajustarPalcos, 400);
+  ajustarPalcos();
+
   $all(document, '[data-escala]').forEach(initEscala);
 
   // P (para/retoma) vale também para este widget

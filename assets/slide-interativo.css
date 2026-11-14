@@ -544,3 +544,24 @@ pre.cod .hl{ color: var(--accent); font-weight: 700; }
 .dois-fixos{ display: grid; grid-template-columns: 1.15fr 1fr; gap: 14px; align-items: start; }
 .dois-fixos .mock-corpo{ padding: 8px 10px; }
 .dois-fixos .mock-log{ font-size: .78rem; padding: 6px 8px; }
+
+/* ── slide-cel: widgets em coluna única no celular (tela estreita ou em pé) ─────────────────── */
+@media screen and (max-width: 719px), screen and (orientation: portrait){
+  .cena, .cena.duas, .cena.mem, .rr, .abas, .dois-fixos{ grid-template-columns: minmax(0, 1fr) !important; }
+  .cena > *, .rr > *, .abas > *{ min-width: 0; }
+  .sem-info, .estado-chip{ flex-wrap: wrap; max-width: 100%; box-sizing: border-box; }
+  .memoria-corpo{ gap: 24px; }
+  .w-btn, .w-barra button, .abas-nav .w-btn{ min-height: 40px; }
+  .w-leg{ font-size: 1.02rem; }
+  .fluxo .cx{ font-size: 1rem; }
+  /* nada estoura a largura: tabelas e código rolam por dentro; botões quebram linha */
+  .data-table{ display: block; max-width: 100%; overflow-x: auto; }
+  .painel{ min-width: 0; max-width: 100%; }
+  .painel-corpo, pre.cod, .tree{ overflow-x: auto; max-width: 100%; }
+  .w-btn{ max-width: 100%; white-space: normal; }
+}
+
+/* celular deitado (pouca altura): rodapé limpo, sem a dica de teclas por cima do contador */
+@media screen and (max-height: 520px){
+  .hud .hint{ display: none !important; }
+}
