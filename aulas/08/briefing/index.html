@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Briefing · Aula 08 — React: Gerenciamento de Estados</title>
+<link rel="stylesheet" href="../../../assets/briefing.css">
+<script src="../../../assets/tema.js"></script>
+</head>
+<body>
+<div class="layout">
+  <aside class="side">
+    <a class="back" href="../../../index.html">← Voltar</a>
+    <details class="toc" open><summary>Nesta página</summary><ol><li class="l1"><a href="#topo">08 - React: Gerenciamento de Estados</a></li><li class="l2"><a href="#s1-introdução">1 - Introdução</a></li><li class="l2"><a href="#s2-memória-heap-call-stack-e-os-tipos-do-javascript">2 - Memória: Heap, Call Stack e os Tipos do JavaScript</a></li><li class="l3"><a href="#s2-1-todo-programa-precisa-de-memória">2.1 - Todo Programa Precisa de Memória</a></li><li class="l3"><a href="#s2-2-call-stack-a-pilha-de-chamadas">2.2 - Call Stack: a Pilha de Chamadas</a></li><li class="l3"><a href="#s2-3-heap-a-região-dinâmica">2.3 - Heap: a Região Dinâmica</a></li><li class="l3"><a href="#s2-4-primitivos-x-referências">2.4 - Primitivos x Referências</a></li><li class="l3"><a href="#s2-5-comparar-e-alterar-o-que-o-react-vai-cobrar-de-nós">2.5 - Comparar e Alterar: o Que o React Vai Cobrar de Nós</a></li><li class="l2"><a href="#s3-apresentando-o-react">3 - Apresentando o React</a></li><li class="l3"><a href="#s3-1-por-que-organizar-um-frontend-é-mais-difícil-que-um-backend">3.1 - Por Que Organizar um Frontend É Mais Difícil Que um Backend</a></li><li class="l3"><a href="#s3-2-imperativo-x-declarativo">3.2 - Imperativo x Declarativo</a></li><li class="l3"><a href="#s3-3-o-que-o-react-resolve">3.3 - O Que o React Resolve</a></li><li class="l3"><a href="#s3-4-a-proposta-componentes">3.4 - A Proposta: Componentes</a></li><li class="l2"><a href="#s4-jsx-e-tsx">4 - JSX e TSX</a></li><li class="l3"><a href="#s4-1-o-que-é-jsx">4.1 - O Que É JSX</a></li><li class="l3"><a href="#s4-2-jsx-x-tsx">4.2 - <code>.jsx</code> x <code>.tsx</code></a></li><li class="l2"><a href="#s5-anatomia-de-um-componente">5 - Anatomia de um Componente</a></li><li class="l3"><a href="#s5-1-as-três-partes">5.1 - As Três Partes</a></li><li class="l3"><a href="#s5-2-props-são-somente-leitura">5.2 - Props São Somente Leitura</a></li><li class="l3"><a href="#s5-3-conteúdo-aninhado-children">5.3 - Conteúdo Aninhado: <code>children</code></a></li><li class="l3"><a href="#s5-4-renderização-condicional-e-listas">5.4 - Renderização Condicional e Listas</a></li><li class="l2"><a href="#s6-instalando-react-e-typescript">6 - Instalando React e TypeScript</a></li><li class="l3"><a href="#s6-1-os-pacotes">6.1 - Os Pacotes</a></li><li class="l3"><a href="#s6-2-o-caminho-rápido-o-template-do-vite">6.2 - O Caminho Rápido: o Template do Vite</a></li><li class="l3"><a href="#s6-3-plugin-no-vite">6.3 - Plugin no Vite</a></li><li class="l3"><a href="#s6-4-o-tsconfig-rapidamente">6.4 - O <code>tsconfig</code>, Rapidamente</a></li><li class="l3"><a href="#s6-5-montando-o-react-na-página">6.5 - Montando o React na Página</a></li><li class="l2"><a href="#s7-estado">7 - Estado</a></li><li class="l3"><a href="#s7-1-o-conceito-zero-alan-turing-e-a-máquina-de-estados">7.1 - O Conceito Zero: Alan Turing e a Máquina de Estados</a></li><li class="l3"><a href="#s7-2-o-que-é-estado-e-o-que-é-gerenciamento-de-estado">7.2 - O Que É Estado e o Que É Gerenciamento de Estado</a></li><li class="l3"><a href="#s7-3-por-que-uma-variável-comum-não-serve">7.3 - Por Que Uma Variável Comum Não Serve</a></li><li class="l3"><a href="#s7-4-usestate">7.4 - <code>useState</code></a></li><li class="l3"><a href="#s7-5-o-ciclo-o-estado-muda-o-componente-inteiro-roda-de-novo">7.5 - O Ciclo: o Estado Muda, o Componente Inteiro Roda de Novo</a></li><li class="l3"><a href="#s7-6-cada-renderização-enxerga-uma-foto-do-estado">7.6 - Cada Renderização Enxerga Uma "Foto" do Estado</a></li><li class="l3"><a href="#s7-7-estado-com-objetos-e-arrays-nunca-alterar-no-lugar">7.7 - Estado com Objetos e Arrays: Nunca Alterar no Lugar</a></li><li class="l2"><a href="#s8-generics-nos-componentes">8 - Generics nos Componentes</a></li><li class="l3"><a href="#s8-1-usestatet">8.1 - <code>useState&lt;T&gt;</code></a></li><li class="l3"><a href="#s8-2-tipando-parâmetros-o-type-props">8.2 - Tipando Parâmetros: o <code>type Props</code></a></li><li class="l3"><a href="#s8-3-componentes-genéricos">8.3 - Componentes Genéricos</a></li><li class="l2"><a href="#s9-juntando-tudo-parâmetros-e-estados-fazendo-o-componente-rodar">9 - Juntando Tudo: Parâmetros e Estados Fazendo o Componente Rodar</a></li><li class="l3"><a href="#s9-1-o-fluxo-de-dados">9.1 - O Fluxo de Dados</a></li><li class="l3"><a href="#s9-2-o-exemplo-completo-o-crud-de-tasks-em-react">9.2 - O Exemplo Completo: o CRUD de Tasks em React</a></li><li class="l3"><a href="#s9-3-seguindo-uma-renderização-passo-a-passo">9.3 - Seguindo uma Renderização, Passo a Passo</a></li><li class="l3"><a href="#s9-4-o-react-dentro-de-uma-view-ejs">9.4 - O React Dentro de uma View EJS</a></li><li class="l3"><a href="#s9-5-o-que-fica-para-a-próxima-aula">9.5 - O Que Fica Para a Próxima Aula</a></li><li class="l2"><a href="#questoes">Questões do TA</a></li></ol></details>
+  </aside>
+  <main class="doc">
+    <header class="cover" id="topo">
+      <p class="eyebrow">UNIFAAT · 2026.2 · Briefing para produção de conteúdo</p>
+      <h1><span class="cn">08</span> - React: Gerenciamento de Estados</h1>
+      <dl class="ficha">
+        <div><dt>Professor</dt><dd>Luan Tavares Lourenço</dd></div>
+        <div><dt>Disciplina</dt><dd>Frontend</dd></div>
+        <div><dt>Aula</dt><dd>08</dd></div>
+        <div><dt>Opção do TA</dt><dd>Texto</dd></div>
+      </dl>
+    </header>
+<h2 id="s1-introdução"><span class="hn">1</span>Introdução</h2>
+<p>Até a Aula 07 o frontend do curso foi construído "na mão": o JavaScript procura elementos no DOM, escuta eventos, altera <code>innerText</code>, cria e remove nós. Funciona, e foi importante para entender o que o navegador faz de verdade. O problema aparece quando a tela cresce: cada pedaço de informação passa a morar em vários lugares ao mesmo tempo (numa variável, no DOM, num atributo, no <code>localStorage</code>), e o programador vira o responsável por manter todos eles sincronizados. É nesse ponto que entra o React.</p>
+<p>Esta aula apresenta o React por um caminho incomum: ela começa <strong>por baixo</strong>, na memória. Antes de falar de componente, falamos de call stack, heap, tipos primitivos e tipos de referência, porque o comportamento do React (por que ele exige <code>setEstado</code>, por que proíbe alterar um array no lugar, por que compara valores por referência) é consequência direta de como a memória funciona. Quem entende a memória entende o React sem decorar regras.</p>
+<p>Depois disso a aula apresenta o React, o que ele resolve e a proposta dele; as extensões <code>.jsx</code> e <code>.tsx</code> (usaremos <code>.tsx</code>, já que temos TypeScript); a anatomia de um componente (parâmetros, código e <code>return</code>); e como instalar tudo, incluindo os tipos do React e o <code>tsconfig</code>. Em seguida vem o centro da aula: <strong>estado</strong>. Começamos pelo conceito zero da computação, a máquina de Alan Turing, para entender o que é estado de verdade antes de ver o <code>useState</code>. Fechamos com os generics aplicados a componentes e com exemplos em que parâmetros e estados, juntos, fazem todo o código do componente rodar.</p>
+<p>A aula é conduzida com explicações animadas em passos (passo 1, 2, 3), mostrando na própria tela o que acontece na memória e no ciclo do componente. Dois pontos ficam <strong>de fora de propósito</strong> e são o tema da próxima aula: <strong>referências</strong> (<code>useRef</code>) e <strong>efeitos</strong> (<code>useEffect</code>). Eles só fazem sentido depois que o estado estiver sólido.</p>
+<h2 id="s2-memória-heap-call-stack-e-os-tipos-do-javascript"><span class="hn">2</span>Memória: Heap, Call Stack e os Tipos do JavaScript</h2>
+<h3 id="s2-1-todo-programa-precisa-de-memória"><span class="hn">2.1</span>Todo Programa Precisa de Memória</h3>
+<p>Quando um programa JavaScript roda, as variáveis, os objetos e as funções precisam existir em algum lugar: na memória RAM. O motor do JavaScript (o V8, no Chrome e no Node) organiza essa memória em duas regiões que a gente precisa conhecer: a <strong>call stack</strong> (pilha de chamadas) e o <strong>heap</strong>. A explicação abaixo é um <strong>modelo mental</strong>: o V8 faz otimizações que mudam detalhes internos, mas o modelo explica corretamente todo o comportamento que um programador observa.</p>
+<h3 id="s2-2-call-stack-a-pilha-de-chamadas"><span class="hn">2.2</span>Call Stack: a Pilha de Chamadas</h3>
+<p>A call stack é a região organizada da memória, que funciona como uma pilha de pratos (<strong>LIFO</strong>: o último a entrar é o primeiro a sair). Toda vez que uma função é chamada, o motor empilha um <strong>frame</strong> (quadro) contendo os parâmetros recebidos e as variáveis locais daquela chamada. Quando a função retorna, o frame é desempilhado e <strong>tudo o que havia nele deixa de existir</strong>.</p>
+<pre class="code"><code>function dobro(n) {
+    const resultado = n * 2
+    return resultado
+}
+
+function principal() {
+    const x = 10
+    const y = dobro(x)
+    console.log(y)
+}
+
+principal()</code></pre>
+<p>O passo a passo, do ponto de vista da pilha:</p>
+<ol><li><code>principal()</code> é chamada: frame de <code>principal</code> entra na pilha, com <code>x</code> e <code>y</code>;</li><li><code>x = 10</code> é gravado no frame de <code>principal</code>;</li><li><code>dobro(x)</code> é chamada: frame de <code>dobro</code> entra por cima, com <code>n = 10</code> e <code>resultado</code>;</li><li><code>dobro</code> retorna <code>20</code>: o frame de <code>dobro</code> é descartado, e <code>n</code> e <code>resultado</code> somem;</li><li><code>y = 20</code> é gravado no frame de <code>principal</code>;</li><li><code>principal</code> termina: o frame dela é descartado, e a pilha fica vazia.</li></ol>
+<p>Duas consequências importantes. A primeira: a pilha tem tamanho limitado, e uma recursão sem fim estoura esse limite (o famoso <strong>stack overflow</strong>). A segunda, que vai voltar com força no React: <strong>variáveis locais de uma função morrem quando ela termina</strong>. Cada nova chamada começa com frame novo, sem lembrar nada da chamada anterior.</p>
+<h3 id="s2-3-heap-a-região-dinâmica"><span class="hn">2.3</span>Heap: a Região Dinâmica</h3>
+<p>O heap é uma região grande e sem a organização da pilha. É onde vivem os valores que <strong>não cabem na regra "nasce e morre junto com a função"</strong>: objetos, arrays e funções. Um objeto criado dentro de uma função pode continuar existindo depois que ela retorna, desde que alguém ainda aponte para ele. Quando <strong>nenhuma variável alcança mais</strong> o objeto, o <strong>garbage collector</strong> (coletor de lixo) libera aquele espaço.</p>
+<pre class="code"><code>function createTask() {
+    const task = { name: "Estudar React", is_done: false }
+    return task
+}
+
+const mine = createTask()
+console.log(mine.name)</code></pre>
+<p>O frame de <code>createTask</code> foi descartado no <code>return</code>, mas o objeto <code>{ name, is_done }</code> continua vivo no heap, porque <code>mine</code> ainda aponta para ele.</p>
+<h3 id="s2-4-primitivos-x-referências"><span class="hn">2.4</span>Primitivos x Referências</h3>
+<p>É aqui que as duas regiões se ligam aos tipos do JavaScript:</p>
+<p>| Categoria | Tipos | O que a variável guarda |</p>
+<p>|---|---|---|</p>
+<p>| <strong>Primitivos</strong> | <code>number</code>, <code>string</code>, <code>boolean</code>, <code>null</code>, <code>undefined</code>, <code>bigint</code>, <code>symbol</code> | o <strong>próprio valor</strong> (imutável) |</p>
+<p>| <strong>Referência</strong> | objetos, arrays, funções (e tudo que deriva deles) | um <strong>endereço</strong> que aponta para o objeto no heap |</p>
+<p>Na variável de um tipo primitivo mora o valor. Na variável de um tipo de referência mora apenas um <strong>endereço</strong>; o objeto de verdade está no heap. Veja a diferença na cópia:</p>
+<pre class="code"><code>let idade = 20
+let copia = idade
+copia = 21
+
+console.log(idade)  // 20 — copiou o VALOR; as duas variáveis são independentes
+console.log(copia)  // 21</code></pre>
+<pre class="code"><code>const a = { nome: "Ana" }
+const b = a
+b.nome = "Bia"
+
+console.log(a.nome)  // "Bia" — copiou o ENDEREÇO; a e b apontam para o MESMO objeto
+console.log(a === b) // true</code></pre>
+<p>Em <code>const b = a</code> ninguém copiou o objeto: foi copiado o endereço. Existe <strong>um</strong> objeto no heap e <strong>duas</strong> variáveis apontando para ele. Alterar por <code>b</code> altera o que <code>a</code> enxerga.</p>
+<h3 id="s2-5-comparar-e-alterar-o-que-o-react-vai-cobrar-de-nós"><span class="hn">2.5</span>Comparar e Alterar: o Que o React Vai Cobrar de Nós</h3>
+<p>Os operadores <code>===</code> e <code>Object.is</code> comparam o <strong>conteúdo da variável</strong>: o valor, nos primitivos, e o endereço, nas referências. Por isso:</p>
+<pre class="code"><code>console.log(5 === 5)                       // true  — mesmo valor
+console.log("oi" === "oi")                 // true  — mesmo valor
+console.log({ n: 1 } === { n: 1 })         // false — dois objetos, dois endereços
+console.log([1, 2] === [1, 2])             // false — dois arrays, dois endereços</code></pre>
+<p>E para "alterar" um objeto sem mexer no original, criamos um <strong>novo objeto</strong> (novo endereço) copiando o conteúdo com o operador spread:</p>
+<pre class="code"><code>const task = { name: "Estudar", is_done: false }
+const atualizada = { ...task, is_done: true }
+
+console.log(task.is_done)         // false — o original ficou intacto
+console.log(atualizada.is_done)     // true
+console.log(task === atualizada)    // false — endereços diferentes</code></pre>
+<p>Com arrays é igual: <code>[...lista, novo]</code> cria um array novo, e <code>lista.map(...)</code> e <code>lista.filter(...)</code> também devolvem arrays novos. Já <code>lista.push(novo)</code> altera o array <strong>no lugar</strong>, sem mudar o endereço. Essa distinção (alterar no lugar x criar um novo) é exatamente o que decide se o React percebe uma mudança. Guarde essa ideia: ela volta na seção de estado.</p>
+<h2 id="s3-apresentando-o-react"><span class="hn">3</span>Apresentando o React</h2>
+<h3 id="s3-1-por-que-organizar-um-frontend-é-mais-difícil-que-um-backend"><span class="hn">3.1</span>Por Que Organizar um Frontend É Mais Difícil Que um Backend</h3>
+<p>Um controller de backend tem um ciclo curto e previsível: chega uma requisição, o código lê dados, monta a resposta e <strong>termina</strong>. Cada requisição começa do zero, com o frame limpo da pilha. O estado de longa duração mora fora do código, no banco.</p>
+<p>O frontend é o oposto: é um processo <strong>vivo e longo</strong>. A página fica aberta por minutos ou horas, e durante esse tempo:</p>
+<ul><li>o usuário gera eventos em qualquer ordem (clique, digitação, scroll, tecla, redimensionar);</li><li>dados chegam do servidor a qualquer momento, e depois de requisições feitas em momentos diferentes;</li><li>a mesma informação aparece em vários lugares da tela (o nome do usuário no cabeçalho, no perfil e numa lista);</li><li><strong>a fonte da verdade está espalhada</strong>: um valor numa variável JavaScript, outro no <code>value</code> de um <code>input</code>, outro numa classe CSS, outro no <code>localStorage</code>.</li></ul>
+<p>O resultado é o mesmo que a gente sentiu nas aulas anteriores: quanto mais a tela cresce, mais difícil lembrar de "atualizar tudo que depende disso". Esquecer um ponto gera tela incoerente: o contador mostra 3 num lugar e 2 em outro. O backend tem a vantagem de nunca precisar *manter* uma tela consistente ao longo do tempo; o frontend precisa.</p>
+<h3 id="s3-2-imperativo-x-declarativo"><span class="hn">3.2</span>Imperativo x Declarativo</h3>
+<p>O JavaScript que escrevemos até aqui é <strong>imperativo</strong>: descrevemos <strong>como</strong> mudar a tela, passo a passo.</p>
+<pre class="code"><code>let contador = 0
+
+const botao = document.querySelector("#botao")
+const saida = document.querySelector("#saida")
+
+botao.addEventListener("click", () =&gt; {
+    contador++
+    saida.innerText = String(contador)
+})</code></pre>
+<p>Repare que há dois lugares com o número: a variável <code>contador</code> e o texto dentro de <code>#saida</code>. O código precisa atualizar os dois, na ordem certa. Se uma segunda parte da tela também exibir o contador, é mais uma linha para lembrar.</p>
+<p>Existe um jeito mais <strong>antigo</strong> de escrever, o <strong>declarativo</strong>: em vez de ligar o evento por código, ele é <strong>declarado na própria tag</strong> do HTML, no atributo <code>onclick</code>.</p>
+<pre class="code"><code>&lt;button onclick="somar()"&gt;
+    Cliques: &lt;span id="saida"&gt;0&lt;/span&gt;
+&lt;/button&gt;</code></pre>
+<p>Quem dispara a ação está escrito no próprio HTML, sem <code>addEventListener</code>. Era assim antigamente, e esse estilo caiu em desuso (a recomendação passou a ser separar o HTML do JavaScript). O <strong>React voltou com essa ideia</strong>: no JSX, o evento volta a ser declarado na tag, com <code>onClick={...}</code>, mas agora combinado com a regra de que a tela é consequência do dado, e o React se encarrega de alterar só o que mudou.</p>
+<pre class="code"><code>import { useState } from "react"
+
+export function Contador() {
+    const [contador, setContador] = useState(0)
+
+    return (
+        &lt;button onClick={() =&gt; setContador(contador + 1)}&gt;
+            Cliques: {contador}
+        &lt;/button&gt;
+    )
+}</code></pre>
+<p>Só existe <strong>uma</strong> fonte da verdade (o <code>contador</code>). Ninguém escreve "atualize o texto do botão": a tela é <strong>consequência</strong> do dado.</p>
+<h3 id="s3-3-o-que-o-react-resolve"><span class="hn">3.3</span>O Que o React Resolve</h3>
+<p>A ideia central cabe numa linha: <strong>a interface é uma função do estado</strong>.</p>
+<pre class="code"><code>UI = f(estado)</code></pre>
+<p>Dado um mesmo estado, o React sempre produz a mesma tela. Quando o estado muda, o React executa a função de novo, compara a tela nova com a anterior e <strong>altera no DOM somente o que mudou</strong>. O programador deixa de escrever "o que fazer no DOM quando o botão for clicado" e passa a escrever "como a tela se parece para cada estado possível". É uma troca de problema: manter dezenas de pontos sincronizados vira descrever um único ponto, e a sincronização é tarefa do React.</p>
+<h3 id="s3-4-a-proposta-componentes"><span class="hn">3.4</span>A Proposta: Componentes</h3>
+<p>Para manter organização em telas grandes, o React divide a interface em <strong>componentes</strong>: pedaços independentes e reutilizáveis, cada um responsável por uma parte da tela. Um componente é uma <strong>função</strong> que recebe dados de entrada (os <strong>parâmetros</strong>, chamados de <code>props</code>) e <strong>retorna</strong> a descrição da tela daquele pedaço.</p>
+<p>A tela de tasks do nosso projeto, por exemplo, vira uma árvore de componentes:</p>
+<pre class="code"><code>&lt;TaskApp&gt;                  ← a tela
+  ├── &lt;TaskForm&gt;   ← campo de texto + botão
+  └── &lt;TaskList&gt;
+        ├── &lt;TaskItem&gt;
+        ├── &lt;TaskItem&gt;
+        └── &lt;TaskItem&gt;</code></pre>
+<p>Cada componente cuida só do que é dele, e o encaixe entre eles é feito pelos parâmetros. O mesmo <code>TaskItem</code> serve para qualquer task; só muda o dado que recebe.</p>
+<h2 id="s4-jsx-e-tsx"><span class="hn">4</span>JSX e TSX</h2>
+<h3 id="s4-1-o-que-é-jsx"><span class="hn">4.1</span>O Que É JSX</h3>
+<p>O <code>return</code> de um componente parece HTML dentro do JavaScript. Não é HTML: é <strong>JSX</strong> (JavaScript XML), uma extensão de sintaxe que o compilador (no nosso caso o Vite) transforma em chamadas de função comuns do JavaScript. O navegador nunca vê o JSX; ele recebe o resultado já compilado.</p>
+<pre class="code"><code>const name = &lt;h1 className="destaque"&gt;Olá, React&lt;/h1&gt;</code></pre>
+<p>vira, depois de compilado, algo equivalente a uma chamada de função que <strong>descreve</strong> um <code>h1</code> com a classe <code>destaque</code> e o texto <code>Olá, React</code>. O resultado dessa chamada é um objeto comum (que vive no heap, claro) e é esse objeto que o React compara e transforma em DOM de verdade.</p>
+<p>As diferenças em relação ao HTML que mais pegam quem está começando:</p>
+<ul><li>**<code>className</code>** em vez de <code>class</code> (porque <code>class</code> é palavra reservada do JavaScript);</li><li>**<code>onClick</code><strong>, </strong><code>onChange</code>** (camelCase) em vez de <code>onclick</code>, e recebem uma <strong>função</strong>, não uma string;</li><li>**chaves <code>{ }</code>** abrem uma expressão JavaScript dentro do JSX: <code>&lt;p&gt;Total: {itens.length}&lt;/p&gt;</code>;</li><li><strong>todo elemento precisa ser fechado</strong>, inclusive os vazios: <code>&lt;input /&gt;</code>, <code>&lt;img /&gt;</code>;</li><li>o componente retorna <strong>um único elemento raiz</strong> (se precisar de vários, usa-se um *fragment*: <code>&lt;&gt;</code> ... <code>&lt;/&gt;</code>).</li></ul>
+<h3 id="s4-2-jsx-x-tsx"><span class="hn">4.2</span><code>.jsx</code> x <code>.tsx</code></h3>
+<p>A extensão do arquivo diz ao compilador o que esperar dentro dele:</p>
+<p>| Extensão | Linguagem | JSX permitido? |</p>
+<p>|---|---|---|</p>
+<p>| <code>.js</code> | JavaScript | não |</p>
+<p>| <code>.jsx</code> | JavaScript | <strong>sim</strong> |</p>
+<p>| <code>.ts</code> | TypeScript | não |</p>
+<p>| <code>.tsx</code> | TypeScript | <strong>sim</strong> |</p>
+<p>Um arquivo <code>.ts</code> não aceita JSX: o <code>&lt;</code> seria interpretado como operador de comparação ou como *type assertion*. Por isso, **qualquer arquivo que contenha JSX precisa terminar em <code>x</code><strong>. Como o curso usa TypeScript, </strong>usaremos <code>.tsx</code>** para componentes, e continuamos usando <code>.ts</code> para arquivos que não têm interface (tipos, utilitários, chamadas de API).</p>
+<h2 id="s5-anatomia-de-um-componente"><span class="hn">5</span>Anatomia de um Componente</h2>
+<h3 id="s5-1-as-três-partes"><span class="hn">5.1</span>As Três Partes</h3>
+<p>Todo componente, por maior que seja, tem a mesma anatomia: <strong>parâmetros</strong>, <strong>código</strong> e <strong>retorno</strong>.</p>
+<pre class="code"><code>type SaudacaoProps = {
+    nome: string
+    idade?: number
+}
+
+export function Saudacao({ nome, idade }: SaudacaoProps) {
+    <span class="cm">// 2) CÓDIGO: JavaScript/TypeScript comum, roda a cada renderização</span>
+    const rotulo = (idade ?? 0) &gt;= 18 ? "maior de idade" : "menor de idade"
+
+    <span class="cm">// 3) RETORNO: o JSX que descreve a tela</span>
+    return (
+        &lt;p&gt;
+            Olá, {nome} ({rotulo})
+        &lt;/p&gt;
+    )
+}</code></pre>
+<ol><li><strong>Parâmetros</strong>: o componente recebe <strong>um único objeto</strong>, o <code>props</code>. Aqui o desestruturamos direto na assinatura (<code>{ nome, idade }</code>) e tipamos com o <code>type SaudacaoProps</code>. Campos opcionais usam <code>?</code>.</li><li><strong>Código</strong>: tudo que vem antes do <code>return</code> é TypeScript comum: cálculos, <code>if</code>, funções auxiliares. É a parte que <strong>roda de novo a cada renderização</strong>.</li><li><strong>Retorno</strong>: é o que <strong>renderiza</strong>. O JSX devolvido pelo <code>return</code> vira a tela, usando as variáveis do código acima; a cada renderização o React recebe um JSX novo.</li></ol>
+<p>Para usar o componente, escrevemos uma tag cujo nome é o da função (<strong>sempre com letra maiúscula</strong>; é assim que o React distingue <code>&lt;Saudacao /&gt;</code> de uma tag HTML como <code>&lt;section&gt;</code>) e passamos os parâmetros como atributos:</p>
+<pre class="code"><code>&lt;Saudacao nome="Ana" idade={20} /&gt;</code></pre>
+<p>Texto fixo vai entre aspas; qualquer outro valor (número, booleano, variável, função, objeto) vai entre chaves.</p>
+<h3 id="s5-2-props-são-somente-leitura"><span class="hn">5.2</span>Props São Somente Leitura</h3>
+<p>Um componente <strong>não pode alterar</strong> os parâmetros que recebeu. O dado pertence ao componente de cima; o filho só <strong>lê</strong>. Essa regra é a mesma que vimos no heap: se o filho alterasse um objeto recebido, estaria mudando um objeto no heap que também pertence ao pai, sem o React ficar sabendo. Quando o filho precisa provocar uma mudança, ele recebe do pai uma <strong>função</strong> (um callback) e a chama; quem altera o dado continua sendo o dono dele.</p>
+<p>Essa é a <strong>inversão de controle</strong> que já conhecemos: o pai <strong>injeta</strong> a função (<code>onToggle={toggle}</code>, passando a referência, sem executá-la), e a filha apenas <strong>executa</strong> <code>onToggle(task)</code> quando o clique acontece. A filha decide <strong>quando</strong> chamar; o pai decide <strong>o que</strong> acontece. É o mesmo mecanismo do <code>addEventListener</code> (nós entregamos a função, o navegador a chama no evento) e dos middlewares do Express. Por trás está o que vimos na memória: a função é um objeto no heap, e o que viaja pelo parâmetro é o seu endereço.</p>
+<h3 id="s5-3-conteúdo-aninhado-children"><span class="hn">5.3</span>Conteúdo Aninhado: <code>children</code></h3>
+<p>Além dos parâmetros nomeados, todo componente recebe uma prop especial, <code>children</code>, que é o conteúdo escrito <strong>entre a tag de abertura e a de fechamento</strong>:</p>
+<pre class="code"><code>import type { ReactNode } from "react"
+
+type CartaoProps = {
+    name: string
+    children: ReactNode
+}
+
+export function Cartao({ name, children }: CartaoProps) {
+    return (
+        &lt;section className="cartao"&gt;
+            &lt;h2&gt;{name}&lt;/h2&gt;
+            {children}
+        &lt;/section&gt;
+    )
+}</code></pre>
+<pre class="code"><code>&lt;Cartao titulo="Tasks de hoje"&gt;
+    &lt;p&gt;Nenhuma task pendente.&lt;/p&gt;
+&lt;/Cartao&gt;</code></pre>
+<p><code>ReactNode</code> é o tipo do React para "qualquer coisa que o React sabe desenhar": texto, número, elemento JSX, lista deles, <code>null</code>.</p>
+<h3 id="s5-4-renderização-condicional-e-listas"><span class="hn">5.4</span>Renderização Condicional e Listas</h3>
+<p>Como o JSX só aceita <strong>expressões</strong> (e <code>if</code> é um comando, não uma expressão), as duas necessidades mais comuns têm idiomas próprios:</p>
+<pre class="code"><code><span class="cm">// Condicional: o &amp;&amp; devolve o JSX se a condição for verdadeira</span>
+{tasks.length === 0 &amp;&amp; &lt;p&gt;Nenhuma task.&lt;/p&gt;}
+
+<span class="cm">// Lista: map transforma cada item em um elemento; key identifica cada um</span>
+&lt;ul&gt;
+    {tasks.map(task =&gt; (
+        &lt;li key={task.id}&gt;{task.name}&lt;/li&gt;
+    ))}
+&lt;/ul&gt;</code></pre>
+<p>A <code>key</code> precisa ser <strong>única e estável</strong> (um <code>id</code>, nunca o índice quando a lista pode mudar de ordem). É com ela que o React descobre qual item mudou, em vez de reconstruir a lista inteira.</p>
+<h2 id="s6-instalando-react-e-typescript"><span class="hn">6</span>Instalando React e TypeScript</h2>
+<h3 id="s6-1-os-pacotes"><span class="hn">6.1</span>Os Pacotes</h3>
+<p>O React é dividido em dois pacotes, porque o "núcleo" não depende de navegador:</p>
+<ul><li>**<code>react</code>**: o núcleo, com os componentes, os hooks (<code>useState</code> e companhia) e o JSX;</li><li>**<code>react-dom</code>**: a ponte com o navegador, que sabe transformar o resultado do React em DOM de verdade.</li></ul>
+<p>Para o TypeScript entender esses pacotes, instalamos também os <strong>tipos</strong> (que, como já vimos com outras bibliotecas, vêm em pacotes <code>@types/...</code>), e o plugin do Vite que sabe compilar JSX:</p>
+<pre class="code"><code>npm install react react-dom
+npm install -D @types/react @types/react-dom @vitejs/plugin-react</code></pre>
+<h3 id="s6-2-o-caminho-rápido-o-template-do-vite"><span class="hn">6.2</span>O Caminho Rápido: o Template do Vite</h3>
+<p>Para começar um projeto novo, o próprio Vite gera tudo já configurado, com TypeScript:</p>
+<pre class="code"><code>npm create vite@latest meu-app -- --template react-ts
+cd meu-app
+npm install
+npm run dev</code></pre>
+<p>Num projeto que já existe (como o nosso, que já usa o Vite), o caminho é adicionar os pacotes acima e ajustar duas configurações, mostradas a seguir.</p>
+<h3 id="s6-3-plugin-no-vite"><span class="hn">6.3</span>Plugin no Vite</h3>
+<pre class="code"><code>import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+    plugins: [react()],
+})</code></pre>
+<p>Sem o plugin, o Vite não sabe o que fazer com o JSX. Com ele, o JSX é compilado, e o Vite mantém o <strong>HMR</strong>: ao salvar um componente, a tela atualiza sem recarregar a página.</p>
+<h3 id="s6-4-o-tsconfig-rapidamente"><span class="hn">6.4</span>O <code>tsconfig</code>, Rapidamente</h3>
+<p>O <code>tsconfig.json</code> que já usamos precisa de duas mudanças:</p>
+<pre class="code"><code>{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "isolatedModules": true
+  },
+  "include": ["resources/js/**/*.ts", "resources/js/**/*.tsx"]
+}</code></pre>
+<ul><li>**<code>"jsx": "react-jsx"</code><strong>: ensina o TypeScript a entender o JSX e usa a transformação moderna, que </strong>dispensa** <code>import React from "react"</code> no topo de cada arquivo. (O valor antigo, <code>"react"</code>, exigia esse import.)</li><li>**<code>include</code> com <code>*.tsx</code>**: sem isso o TypeScript ignora os arquivos de componente.</li></ul>
+<p>Os demais campos continuam como no projeto. O <code>"strict": true</code> segue ligado e é ele que faz o TypeScript reclamar quando um estado pode ser <code>null</code>, o que vamos aproveitar bastante.</p>
+<h3 id="s6-5-montando-o-react-na-página"><span class="hn">6.5</span>Montando o React na Página</h3>
+<p>O React precisa de <strong>um único elemento</strong> do HTML para se pendurar. Todo o resto da tela é gerado a partir dele:</p>
+<pre class="code"><code>&lt;body&gt;
+    &lt;div id="root"&gt;&lt;/div&gt;
+    &lt;script type="module" src="/js/main.tsx"&gt;&lt;/script&gt;
+&lt;/body&gt;</code></pre>
+<pre class="code"><code>import { createRoot } from "react-dom/client"
+import { Contador } from "./Contador"
+
+createRoot(document.getElementById("root")!).render(&lt;Contador /&gt;)</code></pre>
+<p>O <code>!</code> depois de <code>getElementById(...)</code> é o *non-null assertion* do TypeScript: afirmamos que o elemento existe (o método devolve <code>HTMLElement | null</code>). A partir daqui, o <code>&lt;Contador /&gt;</code> é a raiz da árvore de componentes.</p>
+<h2 id="s7-estado"><span class="hn">7</span>Estado</h2>
+<h3 id="s7-1-o-conceito-zero-alan-turing-e-a-máquina-de-estados"><span class="hn">7.1</span>O Conceito Zero: Alan Turing e a Máquina de Estados</h3>
+<p>Para entender estado em React, vale voltar ao começo da computação. Em 1936, <strong>Alan Turing</strong> descreveu uma máquina abstrata (hoje chamada <strong>máquina de Turing</strong>) para definir matematicamente o que significa "calcular". Ela tem poucas peças:</p>
+<ul><li>uma <strong>fita</strong> infinita dividida em células, cada uma com um símbolo;</li><li>um <strong>cabeçote</strong> que lê e escreve o símbolo da célula atual e anda uma célula para a esquerda ou para a direita;</li><li>um <strong>estado atual</strong>, escolhido entre um conjunto finito de estados;</li><li>uma <strong>tabela de transição</strong>: dado o *estado atual* e o *símbolo lido*, ela diz qual símbolo escrever, para onde andar e <strong>qual será o próximo estado</strong>.</li></ul>
+<p>A peça que nos interessa é o <strong>estado</strong>. É ele que dá "memória" à máquina: com o <strong>mesmo símbolo</strong> na fita, a máquina faz coisas diferentes dependendo do estado em que está. O estado é, em uma frase, <strong>tudo o que o sistema precisa lembrar sobre o passado para decidir o que fazer agora</strong>. Todo computador, do relógio digital ao navegador, é descendente dessa ideia.</p>
+<p>Outro jeito de enxergar o estado é como o famoso <strong>snapshot</strong> (uma foto) do sistema naquele instante, exatamente a ideia por trás de um <strong>commit do Git</strong>: cada commit não guarda "o que mudou", e sim o projeto inteiro naquele momento, e o que leva de um commit ao próximo é uma mudança. Com o estado é igual: ele é a foto completa do que o programa sabe agora, e cada evento produz a foto seguinte. Essa imagem volta na seção 7.6, quando vermos que cada renderização enxerga uma "foto" do estado.</p>
+<p>Quem já programou com orientação a objetos conhece o conceito por outro nome: o <strong>estado de um objeto</strong> são os valores <strong>atuais das propriedades</strong> daquele objeto instanciado a partir de uma classe.</p>
+<pre class="code"><code>class Task {
+    isDone = false
+
+    constructor(public name: string) {}
+
+    complete() {
+        this.isDone = true
+    }
+}
+
+const task = new Task("Estudar") // estado: { name: "Estudar", isDone: false }
+task.complete()                  // estado: { name: "Estudar", isDone: true }</code></pre>
+<p>Duas instâncias da mesma classe podem estar em estados diferentes, e um método (o evento) leva o objeto de um estado ao próximo. No React o estado do componente segue a mesma lógica, só que guardado pelo React em vez de numa propriedade de classe.</p>
+<p>Um exemplo do dia a dia é o semáforo, que é uma <strong>máquina de estados</strong> pequena:</p>
+<pre class="code"><code>        passa o tempo            passa o tempo            passa o tempo
+VERDE ─────────────────▶ AMARELO ─────────────────▶ VERMELHO ───────────┐
+  ▲                                                                      │
+  └──────────────────────────────────────────────────────────────────────┘</code></pre>
+<p>O "evento" é o mesmo nos três casos (passou o tempo), mas o resultado depende do estado atual. Em TypeScript, essa tabela de transição é um objeto, e os estados possíveis são uma união de literais:</p>
+<pre class="code"><code>type Semaforo = "verde" | "amarelo" | "vermelho"
+
+const proximo: Record&lt;Semaforo, Semaforo&gt; = {
+    verde: "amarelo",
+    amarelo: "vermelho",
+    vermelho: "verde"
+}
+
+console.log(proximo["verde"]) // "amarelo"</code></pre>
+<h3 id="s7-2-o-que-é-estado-e-o-que-é-gerenciamento-de-estado"><span class="hn">7.2</span>O Que É Estado e o Que É Gerenciamento de Estado</h3>
+<p><strong>Estado</strong> é qualquer dado que <strong>muda ao longo do tempo</strong> e cuja mudança precisa <strong>ser refletida na tela</strong>: o texto digitado num campo, a lista de tarefas, o item selecionado, se um modal está aberto, se uma requisição está carregando.</p>
+<p>Já <strong>gerenciar estado</strong> é responder, para cada dado, a quatro perguntas:</p>
+<ol><li><strong>Quem é o dono?</strong> (qual componente guarda o dado);</li><li><strong>Quem pode ler?</strong> (quais componentes recebem esse dado por parâmetro);</li><li><strong>Quem pode mudar?</strong> (quem tem acesso à função que altera);</li><li><strong>Quem precisa ser avisado</strong> quando mudar (quem precisa ser redesenhado).</li></ol>
+<p>Sem uma biblioteca como o React, essas quatro perguntas ficavam espalhadas pelo código (era o que fazíamos com <code>addEventListener</code> e <code>innerText</code>). O React centraliza as respostas: o dono declara o estado; os outros recebem por parâmetro; e a mudança só acontece por um caminho oficial, que avisa a todos.</p>
+<h3 id="s7-3-por-que-uma-variável-comum-não-serve"><span class="hn">7.3</span>Por Que Uma Variável Comum Não Serve</h3>
+<p>Vamos tentar fazer um contador com uma variável comum:</p>
+<pre class="code"><code><span class="cm">// ERRADO: o `let` só existe aqui para mostrar o problema; em componente usamos `const`</span>
+export function ContadorQuebrado() {
+    let contador = 0
+
+    function incrementar() {
+        contador++
+        console.log(contador)
+    }
+
+    return &lt;button onClick={incrementar}&gt;Cliques: {contador}&lt;/button&gt;
+}</code></pre>
+<p>Ao clicar, o console mostra <code>1</code>, <code>2</code>, <code>3</code>, mas a <strong>tela continua em "Cliques: 0"</strong>. Há dois motivos independentes, e os dois já conhecemos:</p>
+<ol><li><strong>O React não foi avisado.</strong> Mudar uma variável local não dispara nenhuma renderização. O React só roda a função do componente de novo quando alguém avisa que o estado mudou.</li><li><strong>Mesmo que a função rodasse de novo, a variável voltaria a zero.</strong> Lembre da call stack: um componente é uma função, e cada execução dela ganha um <strong>frame novo</strong>, com <code>let contador = 0</code> executado do zero. O frame da execução anterior foi descartado, e o <code>contador</code> morreu junto com ele.</li></ol>
+<p>Ou seja: o dado precisa <strong>sobreviver às execuções da função</strong> (estar fora da pilha, no heap) e a mudança dele precisa <strong>avisar o React</strong>. É exatamente isso que o <code>useState</code> faz.</p>
+<h3 id="s7-4-usestate"><span class="hn">7.4</span><code>useState</code></h3>
+<pre class="code"><code>import { useState } from "react"
+
+export function Contador() {
+    const [contador, setContador] = useState(0)
+
+    return (
+        &lt;button onClick={() =&gt; setContador(contador + 1)}&gt;
+            Cliques: {contador}
+        &lt;/button&gt;
+    )
+}</code></pre>
+<p><code>useState(0)</code> devolve um <strong>par</strong> (por isso a desestruturação de array):</p>
+<ul><li>o <strong>valor atual</strong> do estado (<code>contador</code>);</li><li>a <strong>função que altera</strong> o estado (<code>setContador</code>): o único caminho oficial.</li></ul>
+<p>O <code>0</code> é o <strong>valor inicial</strong>, usado apenas na primeira renderização. Por baixo dos panos, o React guarda esse valor numa estrutura que ele mesmo mantém <strong>no heap</strong>, associada àquela instância do componente. A função do componente nasce e morre a cada execução na pilha, mas o estado fica guardado do lado de fora, esperando a próxima.</p>
+<p>Uma regra decorre disso: o React identifica cada <code>useState</code> pela <strong>ordem das chamadas</strong> dentro do componente. Por isso os hooks só podem ser chamados no <strong>nível de cima</strong> da função, nunca dentro de <code>if</code>, laço ou função aninhada; se a ordem mudasse de uma execução para outra, o React entregaria o valor errado a cada variável.</p>
+<h3 id="s7-5-o-ciclo-o-estado-muda-o-componente-inteiro-roda-de-novo"><span class="hn">7.5</span>O Ciclo: o Estado Muda, o Componente Inteiro Roda de Novo</h3>
+<p>Este é o ponto central da aula. Quando alguém chama <code>setContador(1)</code>, acontece sempre a mesma sequência:</p>
+<ol><li><strong>Evento</strong>: o usuário clica no botão e o React chama o <code>onClick</code>;</li><li>**<code>setContador(contador + 1)</code><strong>: o React registra o novo valor do estado e </strong>agenda uma nova renderização**;</li><li><strong>A função do componente é executada de novo, inteira</strong>, do início ao <code>return</code>: um frame novo na pilha, o código todo roda outra vez;</li><li>**O <code>useState</code> devolve o valor novo** (não mais o inicial), então <code>contador</code> agora vale <code>1</code> nessa execução;</li><li>**O <code>return</code> produz um JSX novo**, que descreve a tela para esse estado;</li><li><strong>O React compara</strong> o JSX novo com o anterior e <strong>altera no DOM só o que mudou</strong> (aqui, o texto do botão);</li><li>A função termina, o frame é descartado, e o componente fica esperando o próximo evento.</li></ol>
+<p>Cada execução da função é chamada de <strong>renderização</strong>. Perceba como tudo se encaixa: <strong>estado e parâmetros são as entradas, o JSX é a saída, e todo o código no meio roda a cada renderização</strong>. Se um valor derivado depende do estado, basta calculá-lo no código, sem precisar de outro estado:</p>
+<pre class="code"><code>export function Carrinho() {
+    const [quantidade, setQuantidade] = useState(1)
+
+    <span class="cm">// Derivado: recalculado a cada renderização, sempre coerente com o estado</span>
+    const total = quantidade * 29.9
+    const rotulo = quantidade === 1 ? "item" : "itens"
+
+    return (
+        &lt;div&gt;
+            &lt;p&gt;{quantidade} {rotulo}: R$ {total.toFixed(2)}&lt;/p&gt;
+            &lt;button onClick={() =&gt; setQuantidade(quantidade + 1)}&gt;+&lt;/button&gt;
+            &lt;button onClick={() =&gt; setQuantidade(quantidade - 1)} disabled={quantidade === 1}&gt;-&lt;/button&gt;
+        &lt;/div&gt;
+    )
+}</code></pre>
+<p>Aqui só existe <strong>um</strong> estado (<code>quantidade</code>); <code>total</code> e <code>rotulo</code> são calculados a cada renderização e, por isso, nunca ficam dessincronizados. Esta é a vitória sobre o modelo imperativo da seção 3.2.</p>
+<h3 id="s7-6-cada-renderização-enxerga-uma-foto-do-estado"><span class="hn">7.6</span>Cada Renderização Enxerga Uma "Foto" do Estado</h3>
+<p>Dentro de uma renderização, o valor de <code>contador</code> <strong>não muda</strong>: é uma constante daquela execução da função. Isso explica um comportamento que costuma surpreender:</p>
+<pre class="code"><code>function somarTres() {
+    setContador(contador + 1)
+    setContador(contador + 1)
+    setContador(contador + 1)
+}</code></pre>
+<p>Se <code>contador</code> vale <code>0</code>, cada linha pede <code>setContador(1)</code>, e o resultado final é <strong>1</strong>, e não 3. As três linhas enxergaram a mesma "foto" (<code>contador === 0</code>). Quando o novo valor depende do <strong>anterior</strong>, passamos ao <code>setContador</code> uma <strong>função</strong>, que o React chama com o valor mais recente:</p>
+<pre class="code"><code>function somarTres() {
+    setContador(atual =&gt; atual + 1)
+    setContador(atual =&gt; atual + 1)
+    setContador(atual =&gt; atual + 1)
+}</code></pre>
+<p>Agora o resultado é <strong>3</strong>: cada chamada recebe o resultado da anterior. Regra prática: <strong>se o novo estado depende do antigo, use sempre a forma de função.</strong> Na dúvida, use-a também nos demais casos: ela nunca erra.</p>
+<h3 id="s7-7-estado-com-objetos-e-arrays-nunca-alterar-no-lugar"><span class="hn">7.7</span>Estado com Objetos e Arrays: Nunca Alterar no Lugar</h3>
+<p>Voltamos ao que construímos na seção 2. O React decide se precisa renderizar de novo comparando o valor novo com o antigo, e essa comparação (<code>Object.is</code>) funciona como o <code>===</code>: <strong>para objetos e arrays, ela compara endereços.</strong></p>
+<pre class="code"><code>type Task = { id: number; name: string; is_done: boolean }
+
+const [tasks, setTasks] = useState&lt;Task[]&gt;([])
+
+<span class="cm">// ERRADO: altera o array no lugar. O endereço continua o mesmo, o React</span>
+<span class="cm">// compara endereço com endereço, vê "igual" e NÃO redesenha a tela.</span>
+function adicionarErrado(nova: Task) {
+    tasks.push(nova)
+    setTasks(tasks)
+}
+
+<span class="cm">// CERTO: cria um array NOVO (endereço novo). O React percebe a diferença.</span>
+function adicionar(nova: Task) {
+    setTasks([...tasks, nova])
+}</code></pre>
+<p>Os mesmos três movimentos cobrem quase todos os casos:</p>
+<pre class="code"><code><span class="cm">// Adicionar: spread</span>
+setTasks([...tasks, nova])
+
+<span class="cm">// Remover: filter devolve um array novo</span>
+setTasks(tasks.filter(task =&gt; task.id !== id))
+
+<span class="cm">// Alterar um item: map devolve um array novo, e o item alterado é um objeto novo</span>
+setTasks(tasks.map(task =&gt; {
+    if (task.id !== id) return task
+    return { ...task, is_done: !task.is_done }
+}))</code></pre>
+<p>O princípio chama-se <strong>imutabilidade</strong>: o estado nunca é editado, apenas <strong>substituído</strong> por uma cópia atualizada. É o que faz o React saber, com uma comparação de endereço barata, que algo mudou.</p>
+<h2 id="s8-generics-nos-componentes"><span class="hn">8</span>Generics nos Componentes</h2>
+<h3 id="s8-1-usestatet"><span class="hn">8.1</span><code>useState&lt;T&gt;</code></h3>
+<p>O <code>useState</code> é uma função genérica, como as que estudamos na revisão da Aula 06. Simplificando sua assinatura:</p>
+<pre class="code"><code>function useState&lt;S&gt;(inicial: S): [S, (novo: S | ((atual: S) =&gt; S)) =&gt; void]</code></pre>
+<p>O parâmetro de tipo <code>S</code> é o tipo do estado: o primeiro elemento do par é um <code>S</code>, e a função que altera aceita um <code>S</code> ou uma função de <code>S</code> para <code>S</code> (a forma funcional da seção 7.6). Na maioria das vezes o TypeScript <strong>infere</strong> <code>S</code> a partir do valor inicial:</p>
+<pre class="code"><code>const [contador, setContador] = useState(0)        // S = number
+const [nome, setNome] = useState("")               // S = string
+const [isOpen, setIsOpen] = useState(false)        // S = boolean</code></pre>
+<p>Quando o valor inicial <strong>não diz tudo</strong> sobre o tipo, informamos o generic explicitamente entre <code>&lt; &gt;</code>:</p>
+<pre class="code"><code><span class="cm">// Array vazio: sem o generic, o TypeScript infere never[] e não aceita nenhum item</span>
+const [tasks, setTasks] = useState&lt;Task[]&gt;([])
+
+<span class="cm">// Ainda não há valor: começa em null e depois vira uma Task</span>
+const [selecionada, setSelecionada] = useState&lt;Task | null&gt;(null)
+
+<span class="cm">// Estado como união de literais: só aceita os três valores do semáforo</span>
+const [cor, setCor] = useState&lt;Semaforo&gt;("vermelho")</code></pre>
+<p>Com o generic correto, o TypeScript protege o estado: <code>setCor("azul")</code> é erro de compilação, e <code>selecionada.name</code> só compila depois de provar que <code>selecionada</code> não é <code>null</code>.</p>
+<h3 id="s8-2-tipando-parâmetros-o-type-props"><span class="hn">8.2</span>Tipando Parâmetros: o <code>type Props</code></h3>
+<p>O generic dos parâmetros é o próprio tipo do objeto <code>props</code>, como já vimos na seção 5. A convenção é um <code>type NomeDoComponenteProps</code> logo acima do componente. Funções (callbacks) também entram nesse tipo, e é assim que o filho avisa o pai:</p>
+<pre class="code"><code>type TaskItemProps = {
+    task: Task
+    onToggle: (task: Task) =&gt; void
+}
+
+function TaskItem({ task, onToggle }: TaskItemProps) {
+    const decoracao = task.is_done ? "line-through" : "none"
+
+    return (
+        &lt;li style={{ textDecoration: decoracao }} onClick={() =&gt; onToggle(task)}&gt;
+            {task.name}
+        &lt;/li&gt;
+    )
+}</code></pre>
+<h3 id="s8-3-componentes-genéricos"><span class="hn">8.3</span>Componentes Genéricos</h3>
+<p>Quando o componente precisa funcionar com <strong>qualquer tipo</strong> de dado, o próprio componente vira genérico, igual a uma função genérica. Uma lista reaproveitável, que serve para tarefas, usuários ou qualquer outra coisa:</p>
+<pre class="code"><code>import type { ReactNode } from "react"
+
+type ListaProps&lt;T&gt; = {
+    itens: T[]
+    chave: (item: T) =&gt; string | number
+    renderItem: (item: T) =&gt; ReactNode
+}
+
+export function Lista&lt;T&gt;({ itens, chave, renderItem }: ListaProps&lt;T&gt;) {
+    return (
+        &lt;ul&gt;
+            {itens.map(item =&gt; (
+                &lt;li key={chave(item)}&gt;{renderItem(item)}&lt;/li&gt;
+            ))}
+        &lt;/ul&gt;
+    )
+}</code></pre>
+<p>Na hora de usar, o TypeScript **infere <code>T</code>** a partir de <code>itens</code>, e já tipa os callbacks:</p>
+<pre class="code"><code>&lt;Lista
+    itens={tasks}
+    chave={task =&gt; task.id}
+    renderItem={task =&gt; task.name}
+/&gt;</code></pre>
+<p>Aqui <code>T</code> é <code>Task</code>, então <code>task.name</code> é conferido pelo compilador; trocar <code>itens</code> por uma lista de usuários troca <code>T</code> para <code>Usuario</code> sem mudar uma linha do componente.</p>
+<p>Um detalhe de sintaxe que só existe em <code>.tsx</code>: numa função de seta genérica, o <code>&lt;T&gt;</code> seria confundido com uma tag JSX. A saída é uma vírgula: <code>const Lista = &lt;T,&gt;(props: ListaProps&lt;T&gt;) =&gt; { ... }</code>. Com <code>function</code>, como acima, o problema não existe.</p>
+<h2 id="s9-juntando-tudo-parâmetros-e-estados-fazendo-o-componente-rodar"><span class="hn">9</span>Juntando Tudo: Parâmetros e Estados Fazendo o Componente Rodar</h2>
+<h3 id="s9-1-o-fluxo-de-dados"><span class="hn">9.1</span>O Fluxo de Dados</h3>
+<p>O desenho final cabe em duas regras:</p>
+<ul><li><strong>Para baixo, por parâmetros</strong>: o dono do estado passa o dado para os filhos como <code>props</code>;</li><li><strong>Para cima, por callbacks</strong>: o filho chama uma função recebida por parâmetro, e quem altera o estado é o dono.</li></ul>
+<pre class="code"><code>        ┌──────────────────────────┐
+        │  TaskApp                 │  ← dono do estado (tasks, name)
+        │  useState(...)           │
+        └─────┬──────────▲─────────┘
+     task     │          │   onToggle(task)
+   (props ↓)  │          │   (callback ↑)
+        ┌─────▼──────────┴─────────┐
+        │  TaskItem                │  ← só lê props e chama a função
+        └──────────────────────────┘</code></pre>
+<h3 id="s9-2-o-exemplo-completo-o-crud-de-tasks-em-react"><span class="hn">9.2</span>O Exemplo Completo: o CRUD de Tasks em React</h3>
+<p>Vamos reescrever a tela de tasks do projeto (a mesma do CRUD das aulas anteriores) como componentes. Os tipos e as funções de API são os que já existem em <code>resources/js/types/api.ts</code> e <code>resources/js/api/</code>: nada de backend novo. O componente raiz é o dono do estado e faz o C, o U e o D do CRUD; o R (a leitura) é a lista desenhada a partir do estado.</p>
+<pre class="code"><code>import { useState } from "react"
+import type { Task } from "../types/api"
+import { taskCreateApi } from "../api/taskCreateApi"
+import { taskUpdateApi } from "../api/taskUpdateApi"
+import { taskDeleteApi } from "../api/taskDeleteApi"
+
+type TaskItemProps = {
+    task: Task
+    onToggle: (task: Task) =&gt; void
+    onDelete: (id: number) =&gt; void
+}
+
+function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {
+    const decoration = task.is_done ? "line-through" : "none"
+
+    return (
+        &lt;li className="list-group-item d-flex justify-content-between"&gt;
+            &lt;span style={{ textDecoration: decoration }} onClick={() =&gt; onToggle(task)}&gt;
+                {task.name}
+            &lt;/span&gt;
+            &lt;button className="btn btn-sm btn-danger" onClick={() =&gt; onDelete(task.id)}&gt;
+                Excluir
+            &lt;/button&gt;
+        &lt;/li&gt;
+    )
+}
+
+type TaskAppProps = {
+    idUser: number
+    initialTasks: Task[]
+}
+
+export function TaskApp({ idUser, initialTasks }: TaskAppProps) {
+    const [tasks, setTasks] = useState&lt;Task[]&gt;(initialTasks)
+    const [name, setName] = useState("")
+
+    const pending = tasks.filter(task =&gt; !task.is_done).length
+
+    <span class="cm">// C: create</span>
+    async function create() {
+        if (name.trim() === "") return
+
+        const created = await taskCreateApi(idUser, { name })
+        setTasks(current =&gt; [...current, created])
+        setName("")
+    }
+
+    <span class="cm">// U: update (marcar/desmarcar como feita)</span>
+    async function toggle(task: Task) {
+        const updated = await taskUpdateApi(idUser, task.id, { is_done: !task.is_done })
+        setTasks(current =&gt; current.map(item =&gt; {
+            if (item.id !== updated.id) return item
+            return updated
+        }))
+    }
+
+    <span class="cm">// D: delete</span>
+    async function remove(id: number) {
+        await taskDeleteApi(idUser, id)
+        setTasks(current =&gt; current.filter(task =&gt; task.id !== id))
+    }
+
+    return (
+        &lt;section&gt;
+            &lt;div className="input-group mb-3"&gt;
+                &lt;input
+                    className="form-control"
+                    value={name}
+                    onChange={event =&gt; setName(event.target.value)}
+                /&gt;
+                &lt;button className="btn btn-primary" onClick={create}&gt;Adicionar&lt;/button&gt;
+            &lt;/div&gt;
+
+            &lt;p&gt;{pending} pendente(s)&lt;/p&gt;
+
+            &lt;ul className="list-group"&gt;
+                {tasks.map(task =&gt; (
+                    &lt;TaskItem key={task.id} task={task} onToggle={toggle} onDelete={remove} /&gt;
+                ))}
+            &lt;/ul&gt;
+        &lt;/section&gt;
+    )
+}</code></pre>
+<p>Acompanhe o código com o que aprendemos:</p>
+<ul><li><strong>Dois estados</strong> (<code>tasks</code> e <code>name</code>), com o generic <code>&lt;Task[]&gt;</code> explícito porque o valor inicial vem de fora;</li><li><code>initialTasks</code> chega por <strong>parâmetro</strong> e vira o valor inicial do estado (a origem dele é a View, na seção 9.4);</li><li><code>value={name}</code> + <code>onChange</code> fazem do <code>input</code> um <strong>campo controlado</strong>: o estado é a fonte da verdade, e o campo apenas o exibe;</li><li><code>pending</code> é <strong>derivado</strong>: recalculado a cada renderização, sem estado próprio;</li><li>as funções de API devolvem o <code>Task</code> que o servidor gravou (com o <code>id</code> de verdade), e é <strong>esse</strong> objeto que entra no estado;</li><li>como as chamadas são assíncronas, usamos a <strong>forma de função</strong> (<code>setTasks(current =&gt; ...)</code>) da seção 7.6: quando a resposta chega, o <code>tasks</code> do momento do clique já pode estar velho, e <code>current</code> é sempre o valor mais recente;</li><li>nenhuma operação altera o array no lugar: sempre geram um <strong>novo</strong> (seção 7.7);</li><li><code>TaskItem</code> recebe tudo por <strong>parâmetro</strong> e avisa o pai por <strong>callback</strong>; ele não tem estado nenhum.</li></ul>
+<h3 id="s9-3-seguindo-uma-renderização-passo-a-passo"><span class="hn">9.3</span>Seguindo uma Renderização, Passo a Passo</h3>
+<p>Com a lista vazia, o usuário digita "Estudar React" e clica em *Adicionar*:</p>
+<ol><li>A cada letra digitada, <code>onChange</code> chama <code>setName</code>; a função <code>TaskApp</code> roda de novo e o <code>input</code> mostra o valor atualizado;</li><li>O clique chama <code>create</code>: <code>name</code> vale <code>"Estudar React"</code> (a "foto" desta renderização) e a função faz o POST em <code>/users/{idUser}/tasks</code>;</li><li>A resposta chega com o <code>Task</code> criado (um objeto novo no <strong>heap</strong>, com <code>id</code> e <code>is_done: false</code>);</li><li><code>setTasks(current =&gt; [...current, created])</code> entrega ao React um <strong>array novo</strong> (endereço novo) e <code>setName("")</code> pede o campo vazio;</li><li>O React agenda <strong>uma</strong> nova renderização com os dois estados atualizados;</li><li><code>TaskApp</code> roda de novo: <code>pending</code> vale <code>1</code>, o <code>.map</code> produz um <code>&lt;TaskItem /&gt;</code>, e o <code>input</code> volta vazio;</li><li>O React compara o resultado com o anterior e acrescenta ao DOM <strong>apenas</strong> o novo <code>&lt;li&gt;</code> e o texto do contador.</li></ol>
+<p>Clicar no nome da task repete o ciclo: <code>toggle</code> chama o PUT, o servidor devolve a task com <code>is_done</code> invertido, <code>map</code> gera um array novo com aquele objeto trocado, e tudo que depende de <code>is_done</code> (o risco no texto e o contador de pendentes) é recalculado sozinho. Excluir é o mesmo caminho com <code>filter</code>.</p>
+<h3 id="s9-4-o-react-dentro-de-uma-view-ejs"><span class="hn">9.4</span>O React Dentro de uma View EJS</h3>
+<p>Na Aula 07 a tela de login virou uma <strong>View</strong>: o servidor monta o HTML com EJS e o Nginx/Express o entrega depois de passar pelos middlewares (por exemplo, o de sessão). O React não substitui isso: ele ocupa <strong>um pedaço</strong> dessa View. O servidor continua responsável pela página, pela proteção por middleware e por entregar os dados iniciais; o React cuida da parte da tela que precisa reagir a eventos.</p>
+<p>A View <code>resources/views/tasks.ejs</code> ganha um elemento âncora (o <code>root</code> da seção 6.5) e carrega o entry compilado pelo helper <code>vite()</code>:</p>
+<pre class="code"><code>&lt;head&gt;
+  &lt;%- vite(["css/app.css", "js/app.ts", "js/pages/tasks.tsx"]) %&gt;
+&lt;/head&gt;
+
+&lt;body class="d-flex flex-column min-vh-100 bg-light"&gt;
+  &lt;header class="bg-primary text-white py-4 px-4 shadow-sm"&gt;
+    &lt;h1 class="h3 m-0"&gt;Tasks de &lt;%= user.name %&gt;&lt;/h1&gt;
+  &lt;/header&gt;
+
+  &lt;main class="container flex-grow-1 py-5"&gt;
+    &lt;%# O servidor entrega o id do usuário e as tasks já lidas do banco %&gt;
+    &lt;div id="root"
+         data-id-user="&lt;%= user.id %&gt;"
+         data-tasks="&lt;%= JSON.stringify(tasks) %&gt;"&gt;&lt;/div&gt;
+  &lt;/main&gt;
+&lt;/body&gt;</code></pre>
+<p>O <code>&lt;%= ... %&gt;</code> do EJS <strong>escapa</strong> o conteúdo, então o JSON pode ir com segurança dentro do atributo. A rota é <code>GET /tasks</code>, protegida por um middleware de página que é o espelho do <code>RedirectIfAuthenticatedMiddleware</code> da Aula 07: sem cookie <code>auth_token</code> válido, redireciona para <code>/login</code> <strong>antes</strong> de o HTML existir.</p>
+<pre class="code"><code>router.get('/tasks', RedirectIfGuestMiddleware, TasksViewController);</code></pre>
+<pre class="code"><code>export default async function TasksViewController(request, response) {
+    const user = await UserModel.findByPk(request.user.id);
+
+    if (!user) {
+        return response.redirect("/login");
+    }
+
+    const tasks = await TaskModel.findAll({
+        where: { id_user: user.id },
+        order: [["id", "ASC"]],
+        raw: true
+    });
+
+    return response.status(200).render("tasks", { user, tasks });
+}</code></pre>
+<p>E o entry <code>resources/js/pages/tasks.tsx</code> lê os <code>data-*</code> do <code>root</code> e monta o componente:</p>
+<pre class="code"><code>import { createRoot } from "react-dom/client"
+import type { Task } from "../types/api"
+import { TaskApp } from "../components/TaskApp"
+
+const root = document.getElementById("root")!
+const idUser = Number(root.dataset.idUser)
+const initialTasks: Task[] = JSON.parse(root.dataset.tasks ?? "[]")
+
+createRoot(root).render(&lt;TaskApp idUser={idUser} initialTasks={initialTasks} /&gt;)</code></pre>
+<p>Três coisas para guardar:</p>
+<ul><li><strong>O dado inicial vira parâmetro</strong>: a View entrega as tasks, e o <code>TaskApp</code> as recebe como <code>initialTasks</code>. Daí em diante, o dono do dado é o <strong>estado</strong> do componente;</li><li><strong>Dá para comparar os dois mundos</strong>: um *partial* do EJS (<code>include("partials/header")</code>) também reaproveita um pedaço e recebe dados, mas roda <strong>uma vez no servidor</strong> e entrega HTML pronto. O componente React roda <strong>no navegador, de novo a cada mudança de estado</strong>;</li><li>**Para o Vite compilar o <code>.tsx</code>**, o plugin do React entra no <code>vite.config.js</code> (seção 6.3), a nova entrada entra no <code>rollupOptions.input</code> ao lado das entradas já existentes, e o <code>tsconfig</code> inclui <code>*.tsx</code> (seção 6.4).</li></ul>
+<h3 id="s9-5-o-que-fica-para-a-próxima-aula"><span class="hn">9.5</span>O Que Fica Para a Próxima Aula</h3>
+<p>Este briefing não cobre dois recursos que completam o quadro e serão o tema da próxima aula:</p>
+<ul><li>**Referências (<code>useRef</code>)<strong>: um valor que sobrevive às renderizações (como o estado), mas </strong>sem** disparar uma nova renderização quando muda; usado, por exemplo, para acessar um elemento do DOM;</li><li>**Efeitos (<code>useEffect</code>)<strong>: código que precisa rodar </strong>por causa** de uma renderização (buscar dados na API, assinar um evento), em vez de rodar durante o cálculo do JSX.</li></ul>
+<p>Os dois funcionam como saídas controladas do ciclo "estado → renderização → tela" que acabamos de estudar, e só têm sentido depois que esse ciclo estiver claro.</p>
+<h2 id="questoes"><span class="hn">TA</span>Questões do TA</h2>
+<article class="questao"><h3><span class="qn">Questão 1</span></h3><p>Considere o código:</p><p>```javascript</p><p>const a = { nome: "Ana" }</p><p>const b = a</p><p>b.nome = "Bia"</p><p>console.log(a.nome)</p><p><code>`</code></p><p>Sobre o comportamento desse código, é correto afirmar que:</p><ol class="alts"><li class="alt"><span class="ltr">A</span><span class="txt">Imprime <code>"Ana"</code>, porque <code>const b = a</code> copia o objeto inteiro para uma nova região do heap, deixando <code>a</code> e <code>b</code> independentes.</span></li><li class="alt ok"><span class="ltr">B</span><span class="txt">Imprime <code>"Bia"</code>, porque objetos são tipos de referência: <code>a</code> e <code>b</code> guardam o mesmo endereço, que aponta para um único objeto no heap, e alterar por uma variável é visível pela outra.</span><span class="gab">gabarito</span></li><li class="alt"><span class="ltr">C</span><span class="txt">Imprime <code>"Bia"</code>, porque tanto objetos quanto números primitivos ficam sempre no heap e são copiados por referência.</span></li><li class="alt"><span class="ltr">D</span><span class="txt">Gera erro, porque uma variável declarada com <code>const</code> não pode ser usada para alterar nenhuma propriedade do objeto.</span></li><li class="alt"><span class="ltr">E</span><span class="txt">Imprime <code>undefined</code>, porque o frame da call stack onde <code>b</code> foi criado é descartado antes do <code>console.log</code>.</span></li></ol><p class="mix">Misturar alternativas: sim</p></article>
+<article class="questao"><h3><span class="qn">Questão 2</span></h3><p>Sobre o React, o JSX e a anatomia de um componente, é correto afirmar que:</p><ol class="alts"><li class="alt"><span class="ltr">A</span><span class="txt">Um componente pode receber qualquer quantidade de parâmetros posicionais, e um arquivo <code>.ts</code> aceita JSX normalmente, desde que o <code>tsconfig</code> esteja configurado.</span></li><li class="alt"><span class="ltr">B</span><span class="txt">O navegador interpreta o JSX diretamente, sem nenhuma etapa de compilação, e por isso o Vite só é necessário para servir os arquivos.</span></li><li class="alt"><span class="ltr">C</span><span class="txt">O componente deve alterar diretamente as <code>props</code> recebidas para comunicar mudanças ao componente pai.</span></li><li class="alt ok"><span class="ltr">D</span><span class="txt">Um componente é uma função que recebe um único objeto de parâmetros (<code>props</code>), executa código TypeScript comum e retorna JSX; como o curso usa TypeScript, os arquivos que contêm JSX usam a extensão <code>.tsx</code>.</span><span class="gab">gabarito</span></li><li class="alt"><span class="ltr">E</span><span class="txt">O nome de um componente deve começar com letra minúscula, para que o React o diferencie das tags HTML.</span></li></ol><p class="mix">Misturar alternativas: sim</p></article>
+<article class="questao"><h3><span class="qn">Questão 3</span></h3><p>Um aluno escreveu um contador usando <code>let contador = 0</code> dentro do componente e <code>contador++</code> no clique do botão. Ao clicar, o valor muda no console, mas a tela continua mostrando <code>0</code>. Sobre o problema e sua solução, é correto afirmar que:</p><ol class="alts"><li class="alt"><span class="ltr">A</span><span class="txt">O problema é o <code>++</code>; trocar por <code>contador = contador + 1</code> resolve, pois o React detecta atribuições.</span></li><li class="alt"><span class="ltr">B</span><span class="txt">O problema é a ausência da <code>key</code>; adicionar <code>key</code> ao botão faz o React redesenhar a tela.</span></li><li class="alt ok"><span class="ltr">C</span><span class="txt">Uma variável local é recriada a cada execução da função (cada execução tem um frame novo na call stack) e alterá-la não avisa o React; com <code>useState</code>, o valor fica guardado fora da função e o <code>setContador</code> agenda uma nova renderização, que executa o componente inteiro de novo com o valor atualizado.</span><span class="gab">gabarito</span></li><li class="alt"><span class="ltr">D</span><span class="txt">O problema é o <code>console.log</code>; sem ele a tela é atualizada automaticamente.</span></li><li class="alt"><span class="ltr">E</span><span class="txt">Basta declarar a variável com <code>const</code> fora do componente, pois assim o React passa a monitorar suas alterações.</span></li></ol><p class="mix">Misturar alternativas: sim</p></article>
+<article class="questao"><h3><span class="qn">Questão 4</span></h3><p>Considere o estado <code>const [tasks, setTasks] = useState&lt;Task[]&gt;([])</code>. Sobre atualizá-lo e sobre o generic, é correto afirmar que:</p><ol class="alts"><li class="alt ok"><span class="ltr">A</span><span class="txt"><code>setTasks([...tasks, nova])</code> cria um array novo, com endereço diferente, e o React percebe a mudança; já <code>tasks.push(nova); setTasks(tasks)</code> mantém o mesmo endereço e não provoca nova renderização. O generic <code>&lt;Task[]&gt;</code> é necessário porque, sem ele, o array vazio seria inferido como <code>never[]</code>.</span><span class="gab">gabarito</span></li><li class="alt"><span class="ltr">B</span><span class="txt"><code>tasks.push(nova); setTasks(tasks)</code> é a forma recomendada, pois evita copiar o array e o React compara o conteúdo item a item.</span></li><li class="alt"><span class="ltr">C</span><span class="txt">O generic <code>&lt;Task[]&gt;</code> é opcional, porque o TypeScript sempre infere <code>Task[]</code> a partir de um array vazio.</span></li><li class="alt"><span class="ltr">D</span><span class="txt"><code>setTasks</code> só aceita um novo array se ele tiver exatamente o mesmo tamanho do anterior.</span></li><li class="alt"><span class="ltr">E</span><span class="txt">Os dois jeitos, <code>push</code> seguido de <code>setTasks(tasks)</code> e <code>setTasks([...tasks, nova])</code>, são equivalentes, pois o React sempre compara o conteúdo dos arrays.</span></li></ol><p class="mix">Misturar alternativas: sim</p></article>
+  </main>
+</div>
+<script src="../../../assets/briefing.js"></script>
+</body>
+</html>

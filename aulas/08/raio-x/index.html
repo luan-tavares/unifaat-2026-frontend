@@ -1,0 +1,2024 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raio-X do Código — Aula 08</title>
+<link rel="stylesheet" href="../../../assets/raio-x.css">
+<script src="../../../assets/tema.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+<style>
+  .toc{ background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 18px 22px; margin: 0 0 40px; }
+  .toc h2{ margin: 0 0 12px; font-size: 1.15rem; }
+  .toc-grid{ display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px 28px; }
+  .toc-group h3{ margin: 0 0 6px; font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-family: var(--font-mono); }
+  .toc-group ol{ margin: 0; padding-left: 28px; }
+  .toc-group li{ margin: 3px 0; line-height: 1.3; }
+  .toc-group a{ color: var(--ink); text-decoration: none; }
+  .toc-group a:hover{ text-decoration: underline; }
+  .entry.destaque{ background: var(--bg-raised); border: 3px solid var(--accent); border-radius: 12px; padding: 18px 22px 22px 22px; }
+  .entry.destaque h2::before{ content: "★ "; color: var(--accent); }
+</style>
+</head>
+<body>
+
+<nav class="topbar"><a class="back" href="../../../index.html">← Voltar</a></nav>
+
+<header>
+  <span class="kicker">Raio-X do Código · Aula 08 · Timeline</span>
+  <h1>React: Gerenciamento de Estados</h1>
+  <p class="meta">
+    <span><i class="fa-solid fa-folder"></i> src/ · docker/node24-vite-compiler/</span>
+    <span><i class="fa-solid fa-calendar-days"></i> 26/10/2026</span>
+    <span><i class="fa-solid fa-wrench"></i> 23 etapas</span>
+  </p>
+</header>
+
+<main>
+<section class="toc">
+  <h2>Índice</h2>
+  <div class="toc-grid">
+    <div class="toc-group"><h3>Setup do React</h3><ol>
+      <li value="1"><a href="#etapa-1">Instalar o React</a></li>
+      <li value="2"><a href="#etapa-2">O Vite passa a entender JSX</a></li>
+      <li value="3"><a href="#etapa-3">O TypeScript passa a entender JSX</a></li>
+    </ol></div>
+    <div class="toc-group"><h3>Componentes</h3><ol>
+      <li value="4"><a href="#etapa-4">TaskItem: o item da lista</a></li>
+      <li value="5"><a href="#etapa-5">TaskApp: o dono do estado</a></li>
+      <li value="6"><a href="#etapa-6">Montar o React na página</a></li>
+      <li value="7"><a href="#etapa-7">Header e Alert</a></li>
+    </ol></div>
+    <div class="toc-group"><h3>TF07</h3><ol>
+      <li value="8"><a href="#etapa-8">Tipos e API da busca de usuários</a></li>
+      <li value="9"><a href="#etapa-9">Lista de resultados da busca</a></li>
+      <li value="10"><a href="#etapa-10">O modal: estados e a busca</a></li>
+      <li value="11"><a href="#etapa-11">O modal: escolher e criar a tarefa</a></li>
+      <li value="12"><a href="#etapa-12">O modal entra na tela de tasks</a></li>
+    </ol></div>
+    <div class="toc-group"><h3>Usuários</h3><ol>
+      <li value="13"><a href="#etapa-13">A View de usuários: rota, controller e EJS</a></li>
+      <li value="14"><a href="#etapa-14">UsersApp: a lista, a página e as tasks do usuário</a></li>
+      <li value="15"><a href="#etapa-15">Montar a tela de usuários</a></li>
+    </ol></div>
+    <div class="toc-group"><h3>Login</h3><ol>
+      <li value="16"><a href="#etapa-16">LoginForm: o formulário como componente</a></li>
+      <li value="17"><a href="#etapa-17">O login na View: shell, entry e Vite</a></li>
+    </ol></div>
+    <div class="toc-group"><h3>Layout</h3><ol>
+      <li value="18"><a href="#etapa-18">Um layout só para as telas</a></li>
+    </ol></div>
+    <div class="toc-group"><h3>Views protegidas por JWT</h3><ol>
+      <li value="19"><a href="#etapa-19">Toda página é uma View protegida pelo JWT ★</a></li>
+      <li value="20"><a href="#etapa-20">O controller usa o usuário do token</a></li>
+      <li value="21"><a href="#etapa-21">Quem já tem sessão vai direto para as tasks</a></li>
+      <li value="22"><a href="#etapa-22">Sair de verdade</a></li>
+    </ol></div>
+  </div>
+</section>
+
+<div class="timeline">
+
+  <!-- ETAPA 1 -->
+  <div class="entry" id="etapa-1">
+    <div class="entry-dot">1</div>
+    <div class="entry-date">Etapa 1 · Setup do React</div>
+    <h2>Instalar o React</h2>
+    <p class="sub">O frontend ganha o <code class="inline">react</code> (núcleo), o <code class="inline">react-dom</code> (ponte com o navegador), os tipos e o plugin do Vite.</p>
+
+    <div class="tree">cd src<br>
+npm install react react-dom<br>
+npm install -D @types/react @types/react-dom @vitejs/plugin-react</div>
+
+    <div class="diff">
+      <div class="diff-head">src/package.json</div>
+      <div class="line ctx">      "pg": "^8.20.0",</div>
+      <div class="line add">+     "react": "^19.3.1",</div>
+      <div class="line add">+     "react-dom": "^19.3.1",</div>
+      <div class="line ctx">      "sequelize": "^6.37.8",</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx">    "devDependencies": {</div>
+      <div class="line add">+     "@types/react": "^19.3.0",</div>
+      <div class="line add">+     "@types/react-dom": "^19.3.0",</div>
+      <div class="line add">+     "@vitejs/plugin-react": "^6.1.2",</div>
+      <div class="line ctx">      "nodemon": "^3.1.14",</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Dois pacotes</h4>
+        <p><code class="inline">react</code> não sabe nada de navegador; <code class="inline">react-dom</code> transforma o que o React descreve em DOM de verdade.</p>
+      </div>
+      <div class="why-card">
+        <h4>devDependencies</h4>
+        <p><code class="inline">@types/*</code> e o plugin só existem em tempo de build: o navegador recebe só o JavaScript compilado.</p>
+      </div>
+      <div class="why-card">
+        <h4>package-lock.json</h4>
+        <p>O <code class="inline">npm install</code> também atualiza o <code class="inline">src/package-lock.json</code> (versões exatas de tudo que entrou). Ele vai no mesmo commit e não se edita à mão.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">npm install</code> sem erro; react e react-dom 19.3.1. Atenção: o <code class="inline">nodemodules-volume</code> do Docker precisa ser recriado para o container enxergar o React (não feito).</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 2 -->
+  <div class="entry" id="etapa-2">
+    <div class="entry-dot">2</div>
+    <div class="entry-date">Etapa 2 · Setup do React</div>
+    <h2>O Vite passa a entender JSX</h2>
+    <p class="sub">Sem o plugin o Vite não compila JSX. <code class="inline">react()</code> entra nos plugins dos dois <code class="inline">vite.config.js</code>.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/vite.config.js</div>
+      <div class="line ctx">  import { defineConfig } from 'vite'</div>
+      <div class="line add">+ import react from '@vitejs/plugin-react'</div>
+      <div class="line ctx">  import path from 'node:path'</div>
+      <div class="line ctx">  import fs from 'node:fs'</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx">      root: 'resources',</div>
+      <div class="line ctx">      plugins: [</div>
+      <div class="line add">+         react(),</div>
+      <div class="line ctx">          copyStaticAssets('resources', '../public', ['404.html', 'example.json', 'img'])</div>
+      <div class="line ctx">      ],</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">docker/node24-vite-compiler/vite.config.js</div>
+      <div class="line ctx">  import { defineConfig } from 'vite'</div>
+      <div class="line add">+ import react from '@vitejs/plugin-react'</div>
+      <div class="line ctx">  import path from 'node:path'</div>
+      <div class="line ctx">  import fs from 'node:fs'</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx">      root: 'resources',</div>
+      <div class="line ctx">      plugins: [</div>
+      <div class="line add">+         react(),</div>
+      <div class="line ctx">          copyStaticAssets('resources', '../public', ['404.html', 'example.json', 'img'])</div>
+      <div class="line ctx">      ],</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Dois arquivos</h4>
+        <p>Um é do dia a dia (<code class="inline">src/</code>), o outro é do container que compila e alimenta as Views. Esquecer o do Docker quebra o build lá.</p>
+      </div>
+      <div class="why-card">
+        <h4>O que o plugin faz</h4>
+        <p>Compila o JSX e liga o Fast Refresh: salvar um componente atualiza a tela sem perder o estado.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p>Verificado junto com a etapa 6: o <code class="inline">vite build</code> só compila <code class="inline">.tsx</code> porque o plugin está ligado.</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 3 -->
+  <div class="entry" id="etapa-3">
+    <div class="entry-dot">3</div>
+    <div class="entry-date">Etapa 3 · Setup do React</div>
+    <h2>O TypeScript passa a entender JSX</h2>
+    <p class="sub">Duas linhas no <code class="inline">tsconfig.json</code>: <code class="inline">jsx: react-jsx</code> e o <code class="inline">include</code> com <code class="inline">*.tsx</code>.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/tsconfig.json</div>
+      <div class="line ctx">      "moduleResolution": "Bundler",</div>
+      <div class="line ctx">      "lib": ["ES2020", "DOM", "DOM.Iterable"],</div>
+      <div class="line add">+     "jsx": "react-jsx",</div>
+      <div class="line ctx">      "strict": true,</div>
+      <div class="line ctx">      "noEmit": true,</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx">      "isolatedModules": true</div>
+      <div class="line ctx">    },</div>
+      <div class="line rem">-   "include": ["resources/js/**/*.ts"]</div>
+      <div class="line add">+   "include": ["resources/js/**/*.ts", "resources/js/**/*.tsx"]</div>
+      <div class="line ctx">  }</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>react-jsx</h4>
+        <p>Transformação moderna: dispensa <code class="inline">import React</code> em cada arquivo.</p>
+      </div>
+      <div class="why-card">
+        <h4>include *.tsx</h4>
+        <p>Sem isso o <code class="inline">tsc</code> ignora os componentes e ninguém percebe os erros de tipo.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">npx tsc --noEmit</code> sem erro.</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 4 -->
+  <div class="entry" id="etapa-4">
+    <div class="entry-dot">4</div>
+    <div class="entry-date">Etapa 4 · Componentes</div>
+    <h2>TaskItem: o item da lista</h2>
+    <p class="sub">Um componente que só lê <code class="inline">props</code> e avisa o pai por callback. É a anatomia: parâmetros, código e retorno.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/components/TaskItem.tsx</div>
+      <div class="line add">+ import type { Task } from "../types/api"</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ type TaskItemProps = {</div>
+      <div class="line add">+     task: Task</div>
+      <div class="line add">+     onToggle: (task: Task) =&gt; void</div>
+      <div class="line add">+     onDelete: (id: number) =&gt; void</div>
+      <div class="line add">+ }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ export function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {</div>
+      <div class="line add">+     const decoration = task.is_done ? "line-through" : "none"</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     return (</div>
+      <div class="line add">+         &lt;li className="list-group-item d-flex justify-content-between"&gt;</div>
+      <div class="line add">+             &lt;span style={{ textDecoration: decoration }} onClick={() =&gt; onToggle(task)}&gt;</div>
+      <div class="line add">+                 {task.name}</div>
+      <div class="line add">+             &lt;/span&gt;</div>
+      <div class="line add">+             &lt;button className="btn btn-sm btn-danger" onClick={() =&gt; onDelete(task.id)}&gt;</div>
+      <div class="line add">+                 Excluir</div>
+      <div class="line add">+             &lt;/button&gt;</div>
+      <div class="line add">+         &lt;/li&gt;</div>
+      <div class="line add">+     )</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Parâmetros</h4>
+        <p><code class="inline">task</code>, <code class="inline">onToggle</code> e <code class="inline">onDelete</code> chegam num único objeto, tipado com <code class="inline">TaskItemProps</code>.</p>
+      </div>
+      <div class="why-card">
+        <h4>Só const</h4>
+        <p><code class="inline">decoration</code> é derivado do parâmetro: <code class="inline">const</code>, sem <code class="inline">let</code>.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">npx tsc --noEmit</code> e <code class="inline">npx vite build</code> sem erro. Não testado com servidor e banco (sem Docker, migrate ou seed nesta etapa).</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 5 -->
+  <div class="entry" id="etapa-5">
+    <div class="entry-dot">5</div>
+    <div class="entry-date">Etapa 5 · Componentes</div>
+    <h2>TaskApp: o dono do estado</h2>
+    <p class="sub">O CRUD de tasks com <code class="inline">useState</code>: cria, marca e exclui chamando as APIs que já existiam.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/components/TaskApp.tsx</div>
+      <div class="line add">+ import { useState } from "react"</div>
+      <div class="line add">+ import type { Task } from "../types/api"</div>
+      <div class="line add">+ import { taskCreateApi } from "../api/taskCreateApi"</div>
+      <div class="line add">+ import { taskUpdateApi } from "../api/taskUpdateApi"</div>
+      <div class="line add">+ import { taskDeleteApi } from "../api/taskDeleteApi"</div>
+      <div class="line add">+ import { TaskItem } from "./TaskItem"</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ type TaskAppProps = {</div>
+      <div class="line add">+     idUser: number</div>
+      <div class="line add">+     initialTasks: Task[]</div>
+      <div class="line add">+ }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ export function TaskApp({ idUser, initialTasks }: TaskAppProps) {</div>
+      <div class="line add">+     const [tasks, setTasks] = useState&lt;Task[]&gt;(initialTasks)</div>
+      <div class="line add">+     const [name, setName] = useState("")</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     const pending = tasks.filter(task =&gt; !task.is_done).length</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     // C: create</div>
+      <div class="line add">+     async function create() {</div>
+      <div class="line add">+         if (name.trim() === "") return</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         const created = await taskCreateApi(idUser, { name })</div>
+      <div class="line add">+         setTasks(current =&gt; [...current, created])</div>
+      <div class="line add">+         setName("")</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     // U: update (marcar/desmarcar como feita)</div>
+      <div class="line add">+     async function toggle(task: Task) {</div>
+      <div class="line add">+         const updated = await taskUpdateApi(idUser, task.id, { is_done: !task.is_done })</div>
+      <div class="line add">+         setTasks(current =&gt; current.map(item =&gt; {</div>
+      <div class="line add">+             if (item.id !== updated.id) return item</div>
+      <div class="line add">+             return updated</div>
+      <div class="line add">+         }))</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     // D: delete</div>
+      <div class="line add">+     async function remove(id: number) {</div>
+      <div class="line add">+         await taskDeleteApi(idUser, id)</div>
+      <div class="line add">+         setTasks(current =&gt; current.filter(task =&gt; task.id !== id))</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     return (</div>
+      <div class="line add">+         &lt;section&gt;</div>
+      <div class="line add">+             &lt;div className="input-group mb-3"&gt;</div>
+      <div class="line add">+                 &lt;input</div>
+      <div class="line add">+                     className="form-control"</div>
+      <div class="line add">+                     value={name}</div>
+      <div class="line add">+                     onChange={event =&gt; setName(event.target.value)}</div>
+      <div class="line add">+                 /&gt;</div>
+      <div class="line add">+                 &lt;button className="btn btn-primary" onClick={create}&gt;Adicionar&lt;/button&gt;</div>
+      <div class="line add">+             &lt;/div&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+             &lt;p&gt;{pending} pendente(s)&lt;/p&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+             &lt;ul className="list-group"&gt;</div>
+      <div class="line add">+                 {tasks.map(task =&gt; (</div>
+      <div class="line add">+                     &lt;TaskItem key={task.id} task={task} onToggle={toggle} onDelete={remove} /&gt;</div>
+      <div class="line add">+                 ))}</div>
+      <div class="line add">+             &lt;/ul&gt;</div>
+      <div class="line add">+         &lt;/section&gt;</div>
+      <div class="line add">+     )</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Array novo</h4>
+        <p><code class="inline">[...current, created]</code>, <code class="inline">map</code> e <code class="inline">filter</code> criam um endereço novo: é isso que o React compara.</p>
+      </div>
+      <div class="why-card">
+        <h4>Forma de função</h4>
+        <p>As APIs são assíncronas; <code class="inline">setTasks(current =&gt; ...)</code> parte do valor mais recente.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">npx tsc --noEmit</code> e <code class="inline">npx vite build</code> sem erro. Não testado com servidor e banco (sem Docker, migrate ou seed nesta etapa).</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 6 -->
+  <div class="entry" id="etapa-6">
+    <div class="entry-dot">6</div>
+    <div class="entry-date">Etapa 6 · Componentes</div>
+    <h2>Montar o React na página</h2>
+    <p class="sub">O entry lê os <code class="inline">data-*</code> do <code class="inline">#root</code> e chama <code class="inline">createRoot(...).render(...)</code>; entra no <code class="inline">rollupOptions.input</code>.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/pages/tasks.tsx</div>
+      <div class="line add">+ import { createRoot } from "react-dom/client"</div>
+      <div class="line add">+ import type { Task } from "../types/api"</div>
+      <div class="line add">+ import { TaskApp } from "../components/TaskApp"</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ // A View (resources/views/tasks.ejs) entrega o id do usuário e as tasks</div>
+      <div class="line add">+ // já lidas do banco nos data-* do #root; o React só monta o componente.</div>
+      <div class="line add">+ const root = document.getElementById("root")!</div>
+      <div class="line add">+ const idUser = Number(root.dataset.idUser)</div>
+      <div class="line add">+ const initialTasks: Task[] = JSON.parse(root.dataset.tasks ?? "[]")</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ createRoot(root).render(&lt;TaskApp idUser={idUser} initialTasks={initialTasks} /&gt;)</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/vite.config.js (rollupOptions.input)</div>
+      <div class="line ctx">                  "./resources/css/app.css",</div>
+      <div class="line ctx">                  "./resources/js/app.ts",</div>
+      <div class="line rem">-                 "./resources/js/pages/login.ts"</div>
+      <div class="line add">+                 "./resources/js/pages/login.ts",</div>
+      <div class="line add">+                 "./resources/js/pages/tasks.tsx"</div>
+      <div class="line ctx">              ],</div>
+      <div class="line ctx">              output: {</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">docker/node24-vite-compiler/vite.config.js (rollupOptions.input)</div>
+      <div class="line ctx">                  "./resources/css/app.css",</div>
+      <div class="line ctx">                  "./resources/js/app.ts",</div>
+      <div class="line rem">-                 "./resources/js/pages/login.ts"</div>
+      <div class="line add">+                 "./resources/js/pages/login.ts",</div>
+      <div class="line add">+                 "./resources/js/pages/tasks.tsx"</div>
+      <div class="line ctx">              ],</div>
+      <div class="line ctx">              output: {</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Sem entrada, sem script</h4>
+        <p>O helper <code class="inline">vite()</code> da View só acha no manifest o que está em <code class="inline">input</code>.</p>
+      </div>
+      <div class="why-card">
+        <h4>Dado inicial</h4>
+        <p>O servidor entrega as tasks no <code class="inline">data-tasks</code>; o React só monta o componente.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p>O <code class="inline">vite build</code> colocou <code class="inline">js/pages/tasks.tsx</code> no manifest, em <code class="inline">src/tasks.&lt;hash&gt;.js</code>.</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 7 -->
+  <div class="entry" id="etapa-7">
+    <div class="entry-dot">7</div>
+    <div class="entry-date">Etapa 7 · Componentes</div>
+    <h2>Header e Alert</h2>
+    <p class="sub">Dois componentes compartilhados: o cabeçalho (marca, links, nome do usuário, Sair) e a mensagem de sucesso ou erro.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/components/Header.tsx</div>
+      <div class="line add">+ type HeaderProps = {</div>
+      <div class="line add">+     userName: string</div>
+      <div class="line add">+     active: "tasks" | "users"</div>
+      <div class="line add">+ }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ export function Header({ userName, active }: HeaderProps) {</div>
+      <div class="line add">+     const tasksClass = active === "tasks" ? "nav-link active fw-bold" : "nav-link"</div>
+      <div class="line add">+     const usersClass = active === "users" ? "nav-link active fw-bold" : "nav-link"</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     return (</div>
+      <div class="line add">+         &lt;header className="bg-primary text-white d-flex flex-wrap justify-content-between align-items-center gap-3 py-3 px-4 shadow-sm"&gt;</div>
+      <div class="line add">+             &lt;h1 className="h4 m-0"&gt;Tasks&lt;/h1&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+             &lt;nav className="nav"&gt;</div>
+      <div class="line add">+                 &lt;a className={`${tasksClass} text-white`} href="/tasks"&gt;Minhas tasks&lt;/a&gt;</div>
+      <div class="line add">+                 &lt;a className={`${usersClass} text-white`} href="/usuarios"&gt;Usuários&lt;/a&gt;</div>
+      <div class="line add">+             &lt;/nav&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+             &lt;div className="d-flex align-items-center gap-3"&gt;</div>
+      <div class="line add">+                 &lt;span className="small"&gt;{userName}&lt;/span&gt;</div>
+      <div class="line add">+                 &lt;a className="btn btn-light btn-sm" href="/logout"&gt;Sair&lt;/a&gt;</div>
+      <div class="line add">+             &lt;/div&gt;</div>
+      <div class="line add">+         &lt;/header&gt;</div>
+      <div class="line add">+     )</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/components/Alert.tsx</div>
+      <div class="line add">+ type AlertProps = {</div>
+      <div class="line add">+     variant: "success" | "danger" | "warning"</div>
+      <div class="line add">+     message: string</div>
+      <div class="line add">+     onClose: () =&gt; void</div>
+      <div class="line add">+ }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ export function Alert({ variant, message, onClose }: AlertProps) {</div>
+      <div class="line add">+     return (</div>
+      <div class="line add">+         &lt;div className={`alert alert-${variant} d-flex justify-content-between align-items-center`} role="alert"&gt;</div>
+      <div class="line add">+             &lt;span&gt;{message}&lt;/span&gt;</div>
+      <div class="line add">+             &lt;button type="button" className="btn-close" aria-label="Fechar" onClick={onClose}&gt;&lt;/button&gt;</div>
+      <div class="line add">+         &lt;/div&gt;</div>
+      <div class="line add">+     )</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/components/TaskApp.tsx</div>
+      <div class="line ctx">  import { TaskItem } from "./TaskItem"</div>
+      <div class="line add">+ import { Header } from "./Header"</div>
+      <div class="line ctx"></div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx">      idUser: number</div>
+      <div class="line add">+     userName: string</div>
+      <div class="line ctx">      initialTasks: Task[]</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx"></div>
+      <div class="line rem">- export function TaskApp({ idUser, initialTasks }: TaskAppProps) {</div>
+      <div class="line add">+ export function TaskApp({ idUser, userName, initialTasks }: TaskAppProps) {</div>
+      <div class="line ctx">      const [tasks, setTasks] = useState&lt;Task[]&gt;(initialTasks)</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx">      return (</div>
+      <div class="line rem">-         &lt;section&gt;</div>
+      <div class="line rem">-             &lt;div className="input-group mb-3"&gt;</div>
+      <div class="line rem">-                 &lt;input</div>
+      <div class="line rem">-                     className="form-control"</div>
+      <div class="line rem">-                     value={name}</div>
+      <div class="line rem">-                     onChange={event =&gt; setName(event.target.value)}</div>
+      <div class="line rem">-                 /&gt;</div>
+      <div class="line rem">-                 &lt;button className="btn btn-primary" onClick={create}&gt;Adicionar&lt;/button&gt;</div>
+      <div class="line rem">-             &lt;/div&gt;</div>
+      <div class="line add">+         &lt;&gt;</div>
+      <div class="line add">+             &lt;Header userName={userName} active="tasks" /&gt;</div>
+      <div class="line ctx"></div>
+      <div class="line rem">-             &lt;p&gt;{pending} pendente(s)&lt;/p&gt;</div>
+      <div class="line add">+             &lt;main className="container flex-grow-1 py-5"&gt;</div>
+      <div class="line add">+                 &lt;section&gt;</div>
+      <div class="line add">+                     &lt;div className="input-group mb-3"&gt;</div>
+      <div class="line add">+                         &lt;input</div>
+      <div class="line add">+                             className="form-control"</div>
+      <div class="line add">+                             value={name}</div>
+      <div class="line add">+                             onChange={event =&gt; setName(event.target.value)}</div>
+      <div class="line add">+                         /&gt;</div>
+      <div class="line add">+                         &lt;button className="btn btn-primary" onClick={create}&gt;Adicionar&lt;/button&gt;</div>
+      <div class="line add">+                     &lt;/div&gt;</div>
+      <div class="line ctx"></div>
+      <div class="line rem">-             &lt;ul className="list-group"&gt;</div>
+      <div class="line rem">-                 {tasks.map(task =&gt; (</div>
+      <div class="line rem">-                     &lt;TaskItem key={task.id} task={task} onToggle={toggle} onDelete={remove} /&gt;</div>
+      <div class="line rem">-                 ))}</div>
+      <div class="line rem">-             &lt;/ul&gt;</div>
+      <div class="line rem">-         &lt;/section&gt;</div>
+      <div class="line add">+                     &lt;p&gt;{pending} pendente(s)&lt;/p&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+                     &lt;ul className="list-group"&gt;</div>
+      <div class="line add">+                         {tasks.map(task =&gt; (</div>
+      <div class="line add">+                             &lt;TaskItem key={task.id} task={task} onToggle={toggle} onDelete={remove} /&gt;</div>
+      <div class="line add">+                         ))}</div>
+      <div class="line add">+                     &lt;/ul&gt;</div>
+      <div class="line add">+                 &lt;/section&gt;</div>
+      <div class="line add">+             &lt;/main&gt;</div>
+      <div class="line add">+         &lt;/&gt;</div>
+      <div class="line ctx">      )</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/pages/tasks.tsx</div>
+      <div class="line ctx">  const idUser = Number(root.dataset.idUser)</div>
+      <div class="line add">+ const userName = root.dataset.userName ?? ""</div>
+      <div class="line ctx">  const initialTasks: Task[] = JSON.parse(root.dataset.tasks ?? "[]")</div>
+      <div class="line ctx"></div>
+      <div class="line rem">- createRoot(root).render(&lt;TaskApp idUser={idUser} initialTasks={initialTasks} /&gt;)</div>
+      <div class="line add">+ createRoot(root).render(&lt;TaskApp idUser={idUser} userName={userName} initialTasks={initialTasks} /&gt;)</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Quem desenha o cabeçalho</h4>
+        <p>Antes era HTML no <code class="inline">tasks.ejs</code>; agora é um componente, reaproveitado por todas as telas logadas.</p>
+      </div>
+      <div class="why-card">
+        <h4>Alert</h4>
+        <p><code class="inline">variant</code>, <code class="inline">message</code> e <code class="inline">onClose</code>: o pai decide o texto e quando fechar.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">npx tsc --noEmit</code> e <code class="inline">npx vite build</code> sem erro. Não testado com servidor e banco (sem Docker, migrate ou seed nesta etapa).</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 8 -->
+  <div class="entry" id="etapa-8">
+    <div class="entry-dot">8</div>
+    <div class="entry-date">Etapa 8 · TF07</div>
+    <h2>Tipos e API da busca de usuários</h2>
+    <p class="sub"><code class="inline">UserSearchFilters</code> descreve os filtros e <code class="inline">userSearchApi</code> chama <code class="inline">POST /users/search</code> tipada com o generic que já existia.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/types/api.ts</div>
+      <div class="line ctx">    id_user: number;</div>
+      <div class="line add">+ }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ /**</div>
+      <div class="line add">+  * Filtros aceitos pela busca de usuários (POST /users/search).</div>
+      <div class="line add">+  * Texto = "contém", sem diferenciar maiúscula. Todos opcionais.</div>
+      <div class="line add">+  */</div>
+      <div class="line add">+ export interface UserSearchFilters {</div>
+      <div class="line add">+   name?: string;</div>
+      <div class="line add">+   email?: string;</div>
+      <div class="line add">+   job_title?: string;</div>
+      <div class="line add">+   bio?: string;</div>
+      <div class="line add">+   city?: string;</div>
+      <div class="line add">+   state?: string;</div>
+      <div class="line add">+   is_active?: boolean;</div>
+      <div class="line ctx">  }</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/api/userSearchApi.ts</div>
+      <div class="line add">+ import clientApi from "./_clientApi";</div>
+      <div class="line add">+ import type { PaginatedResponse, User, UserSearchFilters } from "../types/api";</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ export async function userSearchApi(</div>
+      <div class="line add">+   filters: UserSearchFilters,</div>
+      <div class="line add">+   page: number,</div>
+      <div class="line add">+   limit: number</div>
+      <div class="line add">+ ): Promise&lt;PaginatedResponse&lt;User&gt;&gt; {</div>
+      <div class="line add">+   const { data } = await clientApi.post&lt;PaginatedResponse&lt;User&gt;&gt;("/users/search", {</div>
+      <div class="line add">+     filters,</div>
+      <div class="line add">+     page,</div>
+      <div class="line add">+     limit,</div>
+      <div class="line add">+   });</div>
+      <div class="line add">+ </div>
+      <div class="line add">+   return data;</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Reaproveitar o generic</h4>
+        <p>A resposta tem o mesmo formato de <code class="inline">PaginatedResponse&lt;T&gt;</code>: aqui <code class="inline">T</code> é <code class="inline">User</code>.</p>
+      </div>
+      <div class="why-card">
+        <h4>Backend pronto</h4>
+        <p>A busca (Elasticsearch → ids → WHERE IN) já existe; o trabalho é todo do frontend.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">npx tsc --noEmit</code> e <code class="inline">npx vite build</code> sem erro. Não testado com servidor e banco (sem Docker, migrate ou seed nesta etapa).</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 9 -->
+  <div class="entry" id="etapa-9">
+    <div class="entry-dot">9</div>
+    <div class="entry-date">Etapa 9 · TF07</div>
+    <h2>Lista de resultados da busca</h2>
+    <p class="sub"><code class="inline">UserSearchResults</code> só desenha: nome, e-mail, cargo, cidade/UF, o total e o botão Escolher.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/components/UserSearchResults.tsx</div>
+      <div class="line add">+ import type { User } from "../types/api"</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ type UserSearchResultsProps = {</div>
+      <div class="line add">+     users: User[] | null</div>
+      <div class="line add">+     total: number</div>
+      <div class="line add">+     selectedId: number | null</div>
+      <div class="line add">+     onChoose: (user: User) =&gt; void</div>
+      <div class="line add">+ }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ export function UserSearchResults({ users, total, selectedId, onChoose }: UserSearchResultsProps) {</div>
+      <div class="line add">+     // null = ainda não buscou: não desenha nada</div>
+      <div class="line add">+     if (users === null) return null</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     if (users.length === 0) {</div>
+      <div class="line add">+         return &lt;p className="text-muted mb-0"&gt;Nenhum usuário encontrado&lt;/p&gt;</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     return (</div>
+      <div class="line add">+         &lt;&gt;</div>
+      <div class="line add">+             &lt;p className="small text-muted mb-2"&gt;{total} usuários encontrados&lt;/p&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+             &lt;ul className="list-group"&gt;</div>
+      <div class="line add">+                 {users.map(user =&gt; {</div>
+      <div class="line add">+                     const isSelected = user.id === selectedId</div>
+      <div class="line add">+ </div>
+      <div class="line add">+                     return (</div>
+      <div class="line add">+                         &lt;li key={user.id} className="list-group-item d-flex justify-content-between align-items-center"&gt;</div>
+      <div class="line add">+                             &lt;span&gt;</div>
+      <div class="line add">+                                 &lt;strong&gt;{user.name}&lt;/strong&gt; · {user.email}</div>
+      <div class="line add">+                                 &lt;br /&gt;</div>
+      <div class="line add">+                                 &lt;small className="text-muted"&gt;</div>
+      <div class="line add">+                                     {user.job_title ?? "sem cargo"} · {user.city ?? "sem cidade"}/{user.state ?? "--"}</div>
+      <div class="line add">+                                 &lt;/small&gt;</div>
+      <div class="line add">+                             &lt;/span&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+                             &lt;button</div>
+      <div class="line add">+                                 type="button"</div>
+      <div class="line add">+                                 className="btn btn-sm btn-outline-primary"</div>
+      <div class="line add">+                                 disabled={isSelected}</div>
+      <div class="line add">+                                 onClick={() =&gt; onChoose(user)}</div>
+      <div class="line add">+                             &gt;</div>
+      <div class="line add">+                                 {isSelected ? "Escolhido" : "Escolher"}</div>
+      <div class="line add">+                             &lt;/button&gt;</div>
+      <div class="line add">+                         &lt;/li&gt;</div>
+      <div class="line add">+                     )</div>
+      <div class="line add">+                 })}</div>
+      <div class="line add">+             &lt;/ul&gt;</div>
+      <div class="line add">+         &lt;/&gt;</div>
+      <div class="line add">+     )</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/utils/getErrorMessage.ts</div>
+      <div class="line add">+ import { AxiosError } from "axios";</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ /** Mensagem de erro da API (campo "error") ou o texto padrão informado. */</div>
+      <div class="line add">+ export function getErrorMessage(error: unknown, fallback: string): string {</div>
+      <div class="line add">+   if (!(error instanceof AxiosError)) return fallback;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+   const data: { error?: string } | undefined = error.response?.data;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+   return data?.error ?? fallback;</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>null, vazio e lista</h4>
+        <p><code class="inline">null</code> = ainda não buscou; lista vazia = "Nenhum usuário encontrado"; senão o total e os itens.</p>
+      </div>
+      <div class="why-card">
+        <h4>Escolher é callback</h4>
+        <p>O componente não guarda a escolha: avisa o pai por <code class="inline">onChoose</code>.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">npx tsc --noEmit</code> e <code class="inline">npx vite build</code> sem erro. Não testado com servidor e banco (sem Docker, migrate ou seed nesta etapa).</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 10 -->
+  <div class="entry" id="etapa-10">
+    <div class="entry-dot">10</div>
+    <div class="entry-date">Etapa 10 · TF07</div>
+    <h2>O modal: estados e a busca</h2>
+    <p class="sub">O <code class="inline">AssignTaskModal</code> guarda tudo em estado e a busca é um handler explícito (<code class="inline">handleSearch</code>), sem <code class="inline">useEffect</code>.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/components/AssignTaskModal.tsx (estados e busca)</div>
+      <div class="line add">+ import { useState } from "react"</div>
+      <div class="line add">+ import type { FormEvent } from "react"</div>
+      <div class="line add">+ import type { Task, User, UserSearchFilters } from "../types/api"</div>
+      <div class="line add">+ import { userSearchApi } from "../api/userSearchApi"</div>
+      <div class="line add">+ import { taskCreateApi } from "../api/taskCreateApi"</div>
+      <div class="line add">+ import { getErrorMessage } from "../utils/getErrorMessage"</div>
+      <div class="line add">+ import { UserSearchResults } from "./UserSearchResults"</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ type SearchField = "name" | "email" | "job_title" | "city" | "state" | "bio"</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ const FIELDS: { value: SearchField, label: string }[] = [</div>
+      <div class="line add">+     { value: "name", label: "Nome" },</div>
+      <div class="line add">+     { value: "email", label: "E-mail" },</div>
+      <div class="line add">+     { value: "job_title", label: "Cargo" },</div>
+      <div class="line add">+     { value: "city", label: "Cidade" },</div>
+      <div class="line add">+     { value: "state", label: "UF" },</div>
+      <div class="line add">+     { value: "bio", label: "Bio" },</div>
+      <div class="line add">+ ]</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ type AssignTaskModalProps = {</div>
+      <div class="line add">+     isOpen: boolean</div>
+      <div class="line add">+     onClose: () =&gt; void</div>
+      <div class="line add">+     onCreated: (task: Task, user: User) =&gt; void</div>
+      <div class="line add">+ }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ export function AssignTaskModal({ isOpen, onClose, onCreated }: AssignTaskModalProps) {</div>
+      <div class="line add">+     const [taskName, setTaskName] = useState("")</div>
+      <div class="line add">+     const [field, setField] = useState&lt;SearchField&gt;("name")</div>
+      <div class="line add">+     const [text, setText] = useState("")</div>
+      <div class="line add">+     const [users, setUsers] = useState&lt;User[] | null&gt;(null)</div>
+      <div class="line add">+     const [total, setTotal] = useState(0)</div>
+      <div class="line add">+     const [selected, setSelected] = useState&lt;User | null&gt;(null)</div>
+      <div class="line add">+     const [error, setError] = useState("")</div>
+      <div class="line add">+     const [isSearching, setIsSearching] = useState(false)</div>
+      <div class="line add">+     const [isCreating, setIsCreating] = useState(false)</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     const canCreate = taskName.trim() !== "" &amp;&amp; selected !== null &amp;&amp; !isCreating</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     function reset() {</div>
+      <div class="line add">+         setTaskName("")</div>
+      <div class="line add">+         setField("name")</div>
+      <div class="line add">+         setText("")</div>
+      <div class="line add">+         setUsers(null)</div>
+      <div class="line add">+         setTotal(0)</div>
+      <div class="line add">+         setSelected(null)</div>
+      <div class="line add">+         setError("")</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     function handleClose() {</div>
+      <div class="line add">+         reset()</div>
+      <div class="line add">+         onClose()</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     // Buscar: botão ou Enter (o campo está num &lt;form&gt;)</div>
+      <div class="line add">+     async function handleSearch(event: FormEvent) {</div>
+      <div class="line add">+         event.preventDefault()</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         if (text.trim() === "") {</div>
+      <div class="line add">+             setError("Digite algo para buscar")</div>
+      <div class="line add">+             return</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         const filters: UserSearchFilters = {}</div>
+      <div class="line add">+         filters[field] = text.trim()</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         setError("")</div>
+      <div class="line add">+         setIsSearching(true)</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         try {</div>
+      <div class="line add">+             const result = await userSearchApi(filters, 1, 10)</div>
+      <div class="line add">+             setUsers(result.data)</div>
+      <div class="line add">+             setTotal(result.total)</div>
+      <div class="line add">+         } catch (error) {</div>
+      <div class="line add">+             setError(getErrorMessage(error, "Erro ao buscar usuários"))</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         setIsSearching(false)</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Estados com nome</h4>
+        <p><code class="inline">isSearching</code> e <code class="inline">isCreating</code> são booleanos; <code class="inline">users</code> começa <code class="inline">null</code> para saber que ainda não buscou.</p>
+      </div>
+      <div class="why-card">
+        <h4>Texto vazio</h4>
+        <p>Não chama a API: mostra "Digite algo para buscar". O Enter funciona porque o campo está num <code class="inline">&lt;form&gt;</code>.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">npx tsc --noEmit</code> e <code class="inline">npx vite build</code> sem erro. Não testado com servidor e banco (sem Docker, migrate ou seed nesta etapa).</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 11 -->
+  <div class="entry" id="etapa-11">
+    <div class="entry-dot">11</div>
+    <div class="entry-date">Etapa 11 · TF07</div>
+    <h2>O modal: escolher e criar a tarefa</h2>
+    <p class="sub"><code class="inline">handleChoose</code> guarda o usuário; <code class="inline">handleCreate</code> chama <code class="inline">taskCreateApi(escolhido.id, { name })</code> e avisa o pai.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/components/AssignTaskModal.tsx (escolher, criar e JSX)</div>
+      <div class="line add">+     // Escolher: guarda o usuário selecionado</div>
+      <div class="line add">+     function handleChoose(user: User) {</div>
+      <div class="line add">+         setSelected(user)</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     // Criar tarefa: POST /users/{idUser}/tasks para o usuário escolhido</div>
+      <div class="line add">+     async function handleCreate() {</div>
+      <div class="line add">+         if (selected === null) return</div>
+      <div class="line add">+         if (taskName.trim() === "") return</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         setError("")</div>
+      <div class="line add">+         setIsCreating(true)</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         try {</div>
+      <div class="line add">+             const created = await taskCreateApi(selected.id, { name: taskName.trim() })</div>
+      <div class="line add">+             onCreated(created, selected)</div>
+      <div class="line add">+             handleClose()</div>
+      <div class="line add">+         } catch (error) {</div>
+      <div class="line add">+             setError(getErrorMessage(error, "Erro ao criar a tarefa"))</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         setIsCreating(false)</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     if (!isOpen) return null</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     return (</div>
+      <div class="line add">+         &lt;&gt;</div>
+      <div class="line add">+             &lt;div className="modal fade show d-block" tabIndex={-1} role="dialog" aria-modal="true"&gt;</div>
+      <div class="line add">+                 &lt;div className="modal-dialog modal-lg modal-dialog-scrollable"&gt;</div>
+      <div class="line add">+                     &lt;div className="modal-content"&gt;</div>
+      <div class="line add">+                         &lt;div className="modal-header"&gt;</div>
+      <div class="line add">+                             &lt;h5 className="modal-title"&gt;Nova tarefa para outro usuário&lt;/h5&gt;</div>
+      <div class="line add">+                             &lt;button type="button" className="btn-close" aria-label="Fechar" onClick={handleClose}&gt;&lt;/button&gt;</div>
+      <div class="line add">+                         &lt;/div&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+                         &lt;div className="modal-body d-flex flex-column gap-3"&gt;</div>
+      <div class="line add">+                             &lt;div&gt;</div>
+      <div class="line add">+                                 &lt;label className="form-label"&gt;Nome da tarefa&lt;/label&gt;</div>
+      <div class="line add">+                                 &lt;input</div>
+      <div class="line add">+                                     className="form-control"</div>
+      <div class="line add">+                                     value={taskName}</div>
+      <div class="line add">+                                     onChange={event =&gt; setTaskName(event.target.value)}</div>
+      <div class="line add">+                                 /&gt;</div>
+      <div class="line add">+                             &lt;/div&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+                             &lt;form className="d-flex flex-column gap-2" onSubmit={handleSearch}&gt;</div>
+      <div class="line add">+                                 &lt;label className="form-label mb-0"&gt;Buscar o usuário&lt;/label&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+                                 &lt;div className="input-group"&gt;</div>
+      <div class="line add">+                                     &lt;select</div>
+      <div class="line add">+                                         className="form-select flex-grow-0 w-auto"</div>
+      <div class="line add">+                                         value={field}</div>
+      <div class="line add">+                                         onChange={event =&gt; setField(event.target.value as SearchField)}</div>
+      <div class="line add">+                                     &gt;</div>
+      <div class="line add">+                                         {FIELDS.map(item =&gt; (</div>
+      <div class="line add">+                                             &lt;option key={item.value} value={item.value}&gt;{item.label}&lt;/option&gt;</div>
+      <div class="line add">+                                         ))}</div>
+      <div class="line add">+                                     &lt;/select&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+                                     &lt;input</div>
+      <div class="line add">+                                         className="form-control"</div>
+      <div class="line add">+                                         placeholder="Digite para buscar..."</div>
+      <div class="line add">+                                         value={text}</div>
+      <div class="line add">+                                         onChange={event =&gt; setText(event.target.value)}</div>
+      <div class="line add">+                                     /&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+                                     &lt;button className="btn btn-primary" type="submit" disabled={isSearching}&gt;</div>
+      <div class="line add">+                                         {isSearching ? "Buscando..." : "Buscar"}</div>
+      <div class="line add">+                                     &lt;/button&gt;</div>
+      <div class="line add">+                                 &lt;/div&gt;</div>
+      <div class="line add">+                             &lt;/form&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+                             &lt;UserSearchResults</div>
+      <div class="line add">+                                 users={users}</div>
+      <div class="line add">+                                 total={total}</div>
+      <div class="line add">+                                 selectedId={selected?.id ?? null}</div>
+      <div class="line add">+                                 onChoose={handleChoose}</div>
+      <div class="line add">+                             /&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+                             {selected !== null &amp;&amp; (</div>
+      <div class="line add">+                                 &lt;p className="mb-0"&gt;</div>
+      <div class="line add">+                                     &lt;strong&gt;Atribuir para:&lt;/strong&gt; {selected.name} ({selected.email})</div>
+      <div class="line add">+                                 &lt;/p&gt;</div>
+      <div class="line add">+                             )}</div>
+      <div class="line add">+ </div>
+      <div class="line add">+                             {error !== "" &amp;&amp; &lt;div className="alert alert-danger mb-0"&gt;{error}&lt;/div&gt;}</div>
+      <div class="line add">+                         &lt;/div&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+                         &lt;div className="modal-footer"&gt;</div>
+      <div class="line add">+                             &lt;button type="button" className="btn btn-secondary" onClick={handleClose}&gt;Cancelar&lt;/button&gt;</div>
+      <div class="line add">+                             &lt;button type="button" className="btn btn-primary" disabled={!canCreate} onClick={handleCreate}&gt;</div>
+      <div class="line add">+                                 {isCreating ? "Criando..." : "Criar tarefa"}</div>
+      <div class="line add">+                             &lt;/button&gt;</div>
+      <div class="line add">+                         &lt;/div&gt;</div>
+      <div class="line add">+                     &lt;/div&gt;</div>
+      <div class="line add">+                 &lt;/div&gt;</div>
+      <div class="line add">+             &lt;/div&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+             &lt;div className="modal-backdrop fade show"&gt;&lt;/div&gt;</div>
+      <div class="line add">+         &lt;/&gt;</div>
+      <div class="line add">+     )</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Criar só com tudo</h4>
+        <p><code class="inline">canCreate</code> exige nome preenchido e usuário escolhido; o botão fica desabilitado até lá.</p>
+      </div>
+      <div class="why-card">
+        <h4>Modal sem JavaScript do Bootstrap</h4>
+        <p>Só as classes do Bootstrap 5; aberto ou fechado pela prop <code class="inline">isOpen</code>.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">npx tsc --noEmit</code> e <code class="inline">npx vite build</code> sem erro. Não testado com servidor e banco (sem Docker, migrate ou seed nesta etapa).</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 12 -->
+  <div class="entry" id="etapa-12">
+    <div class="entry-dot">12</div>
+    <div class="entry-date">Etapa 12 · TF07</div>
+    <h2>O modal entra na tela de tasks</h2>
+    <p class="sub">O <code class="inline">TaskApp</code> ganha o botão "Nova tarefa para outro usuário" e o <code class="inline">handleAssigned</code>.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/components/TaskApp.tsx</div>
+      <div class="line ctx">  import { useState } from "react"</div>
+      <div class="line rem">- import type { Task } from "../types/api"</div>
+      <div class="line add">+ import type { Task, User } from "../types/api"</div>
+      <div class="line ctx">  import { taskCreateApi } from "../api/taskCreateApi"</div>
+      <div class="line ctx">  import { taskUpdateApi } from "../api/taskUpdateApi"</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx">  import { TaskItem } from "./TaskItem"</div>
+      <div class="line ctx">  import { Header } from "./Header"</div>
+      <div class="line add">+ import { Alert } from "./Alert"</div>
+      <div class="line add">+ import { AssignTaskModal } from "./AssignTaskModal"</div>
+      <div class="line ctx"></div>
+      <div class="line ctx">  type TaskAppProps = {</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx">      const [tasks, setTasks] = useState&lt;Task[]&gt;(initialTasks)</div>
+      <div class="line ctx">      const [name, setName] = useState("")</div>
+      <div class="line add">+     const [isModalOpen, setIsModalOpen] = useState(false)</div>
+      <div class="line add">+     const [message, setMessage] = useState("")</div>
+      <div class="line ctx"></div>
+      <div class="line ctx">      const pending = tasks.filter(task =&gt; !task.is_done).length</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx">      }</div>
+      <div class="line ctx"></div>
+      <div class="line add">+     // TF07: a task foi criada para outro usuário (ou para mim mesmo)</div>
+      <div class="line add">+     function handleAssigned(created: Task, user: User) {</div>
+      <div class="line add">+         // Só entra na lista se a task é minha: se foi para outra pessoa, a lista dela não é esta</div>
+      <div class="line add">+         if (user.id === idUser) setTasks(current =&gt; [...current, created])</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         setMessage(`Tarefa criada para ${user.name}`)</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line ctx">      return (</div>
+      <div class="line ctx">          &lt;&gt;</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx">              &lt;main className="container flex-grow-1 py-5"&gt;</div>
+      <div class="line ctx">                  &lt;section&gt;</div>
+      <div class="line add">+                     {message !== "" &amp;&amp; &lt;Alert variant="success" message={message} onClose={() =&gt; setMessage("")} /&gt;}</div>
+      <div class="line add">+ </div>
+      <div class="line add">+                     &lt;div className="d-flex justify-content-end mb-3"&gt;</div>
+      <div class="line add">+                         &lt;button className="btn btn-outline-primary" onClick={() =&gt; setIsModalOpen(true)}&gt;</div>
+      <div class="line add">+                             Nova tarefa para outro usuário</div>
+      <div class="line add">+                         &lt;/button&gt;</div>
+      <div class="line add">+                     &lt;/div&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line ctx">                      &lt;div className="input-group mb-3"&gt;</div>
+      <div class="line ctx">                          &lt;input</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx">                  &lt;/section&gt;</div>
+      <div class="line ctx">              &lt;/main&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+             &lt;AssignTaskModal</div>
+      <div class="line add">+                 isOpen={isModalOpen}</div>
+      <div class="line add">+                 onClose={() =&gt; setIsModalOpen(false)}</div>
+      <div class="line add">+                 onCreated={handleAssigned}</div>
+      <div class="line add">+             /&gt;</div>
+      <div class="line ctx">          &lt;/&gt;</div>
+      <div class="line ctx">      )</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Quem é o dono</h4>
+        <p>O estado continua no <code class="inline">TaskApp</code>; o modal avisa por <code class="inline">onCreated</code> (a mesma inversão de controle do <code class="inline">onToggle</code>).</p>
+      </div>
+      <div class="why-card">
+        <h4>Só entra na lista se for minha</h4>
+        <p>Se a task foi para outra pessoa, a lista desta tela não muda; a mensagem "Tarefa criada para X" aparece sempre.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">npx tsc --noEmit</code> e <code class="inline">npx vite build</code> sem erro. Não testado com servidor e banco (sem Docker, migrate ou seed nesta etapa).</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 13 -->
+  <div class="entry" id="etapa-13">
+    <div class="entry-dot">13</div>
+    <div class="entry-date">Etapa 13 · Usuários</div>
+    <h2>A View de usuários: rota, controller e EJS</h2>
+    <p class="sub"><code class="inline">GET /usuarios</code> é uma View protegida: o controller lê a primeira página (sem a senha) e o EJS entrega num <code class="inline">#root</code>.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/routes/router.js</div>
+      <div class="line ctx">  import LogoutController from '../app/Http/Controllers/Views/LogoutController.js';</div>
+      <div class="line add">+ import UsersViewController from '../app/Http/Controllers/Views/UsersViewController.js';</div>
+      <div class="line ctx"></div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx"></div>
+      <div class="line add">+ /** Usuários (React dentro da View): mesmo middleware, que verifica o JWT antes de renderizar */</div>
+      <div class="line add">+ router.get('/usuarios', RedirectIfGuestMiddleware, UsersViewController);</div>
+      <div class="line add">+ </div>
+      <div class="line ctx">  /**</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/app/Http/Controllers/Views/UsersViewController.js</div>
+      <div class="line add">+ import UserModel from "../../../Models/UserModel.js";</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ const LIMIT = 10;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ /**</div>
+      <div class="line add">+  * Tela de usuarios como View: o HTML vem de resources/views/users.ejs e o React</div>
+      <div class="line add">+  * monta a lista de usuarios (e as tasks de cada um) dentro do #root.</div>
+      <div class="line add">+  * O usuario logado vem do token ja verificado (request.user); a primeira</div>
+      <div class="line add">+  * pagina de usuarios e lida aqui, sem a senha.</div>
+      <div class="line add">+  *</div>
+      <div class="line add">+  * Rota: GET /usuarios (protegida por RedirectIfGuestMiddleware)</div>
+      <div class="line add">+  */</div>
+      <div class="line add">+ export default async function UsersViewController(request, response) {</div>
+      <div class="line add">+     const user = await UserModel.findByPk(request.user.id);</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     if (!user) {</div>
+      <div class="line add">+         return response.redirect("/login");</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     const { rows, count } = await UserModel.findAndCountAll({</div>
+      <div class="line add">+         attributes: { exclude: ["password"] },</div>
+      <div class="line add">+         order: [["id", "DESC"]],</div>
+      <div class="line add">+         limit: LIMIT,</div>
+      <div class="line add">+         raw: true</div>
+      <div class="line add">+     });</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     const initialUsers = { page: 1, limit: LIMIT, total: count, data: rows };</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     return response.status(200).render("users", { user, initialUsers });</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/views/users.ejs</div>
+      <div class="line add">+ &lt;!DOCTYPE html&gt;</div>
+      <div class="line add">+ &lt;html lang="pt-BR"&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ &lt;head&gt;</div>
+      <div class="line add">+   &lt;meta charset="UTF-8" /&gt;</div>
+      <div class="line add">+   &lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;</div>
+      <div class="line add">+   &lt;title&gt;Tasks - Usuários&lt;/title&gt;</div>
+      <div class="line add">+   &lt;link rel="icon" type="image/png" href="/img/favicon.ico"&gt;</div>
+      <div class="line add">+   &lt;%- vite(["css/app.css", "js/app.ts", "js/pages/users.tsx"]) %&gt;</div>
+      <div class="line add">+ &lt;/head&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ &lt;body class="d-flex flex-column min-vh-100 bg-light"&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+   &lt;%# O servidor entrega o usuário logado (do token verificado) e a primeira página de usuários; o React monta o resto %&gt;</div>
+      <div class="line add">+   &lt;div id="root" class="d-flex flex-column flex-grow-1"</div>
+      <div class="line add">+        data-user-name="&lt;%= user.name %&gt;"</div>
+      <div class="line add">+        data-initial-users="&lt;%= JSON.stringify(initialUsers) %&gt;"&gt;&lt;/div&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+   &lt;footer class="bg-primary text-white text-center py-3 mt-auto"&gt;</div>
+      <div class="line add">+     &lt;div class="small"&gt;Frontend 2026.2&lt;/div&gt;</div>
+      <div class="line add">+   &lt;/footer&gt;</div>
+      <div class="line add">+ &lt;/body&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ &lt;/html&gt;</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Mesmo padrão do /tasks</h4>
+        <p>Middleware verifica o JWT, controller usa <code class="inline">request.user</code>, EJS entrega o dado inicial.</p>
+      </div>
+      <div class="why-card">
+        <h4>Sem a senha</h4>
+        <p><code class="inline">attributes: { exclude: ["password"] }</code>: o hash não chega ao navegador.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">npx tsc --noEmit</code> e <code class="inline">npx vite build</code> sem erro. Não testado com servidor e banco (sem Docker, migrate ou seed nesta etapa).</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 14 -->
+  <div class="entry" id="etapa-14">
+    <div class="entry-dot">14</div>
+    <div class="entry-date">Etapa 14 · Usuários</div>
+    <h2>UsersApp: a lista, a página e as tasks do usuário</h2>
+    <p class="sub">Clicar num usuário busca as tasks dele (<code class="inline">handleSelect</code>); <code class="inline">handlePage</code> pagina. Tudo por handler, sem <code class="inline">useEffect</code>.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/components/UsersApp.tsx</div>
+      <div class="line add">+ import { useState } from "react"</div>
+      <div class="line add">+ import type { PaginatedResponse, Task, User } from "../types/api"</div>
+      <div class="line add">+ import { userListApi } from "../api/userListApi"</div>
+      <div class="line add">+ import { tasksListApi } from "../api/tasksListApi"</div>
+      <div class="line add">+ import { getErrorMessage } from "../utils/getErrorMessage"</div>
+      <div class="line add">+ import { Header } from "./Header"</div>
+      <div class="line add">+ import { UserTasks } from "./UserTasks"</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ type UsersAppProps = {</div>
+      <div class="line add">+     userName: string</div>
+      <div class="line add">+     initialUsers: PaginatedResponse&lt;User&gt;</div>
+      <div class="line add">+ }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ export function UsersApp({ userName, initialUsers }: UsersAppProps) {</div>
+      <div class="line add">+     const [list, setList] = useState&lt;PaginatedResponse&lt;User&gt;&gt;(initialUsers)</div>
+      <div class="line add">+     const [selected, setSelected] = useState&lt;User | null&gt;(null)</div>
+      <div class="line add">+     const [tasks, setTasks] = useState&lt;Task[] | null&gt;(null)</div>
+      <div class="line add">+     const [error, setError] = useState("")</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     const lastPage = Math.max(1, Math.ceil(list.total / list.limit))</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     // Clicar num usuário: busca as tasks dele (handler explícito, sem useEffect)</div>
+      <div class="line add">+     async function handleSelect(user: User) {</div>
+      <div class="line add">+         setSelected(user)</div>
+      <div class="line add">+         setTasks(null)</div>
+      <div class="line add">+         setError("")</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         try {</div>
+      <div class="line add">+             const result = await tasksListApi(user.id, { page: 1, limit: 20 })</div>
+      <div class="line add">+             setTasks(result.data)</div>
+      <div class="line add">+         } catch (error) {</div>
+      <div class="line add">+             setError(getErrorMessage(error, "Erro ao carregar as tasks"))</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     // Paginação: carrega a página pedida e mantém o usuário escolhido</div>
+      <div class="line add">+     async function handlePage(page: number) {</div>
+      <div class="line add">+         if (page &lt; 1) return</div>
+      <div class="line add">+         if (page &gt; lastPage) return</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         const result = await userListApi({ page, limit: list.limit })</div>
+      <div class="line add">+         setList(result)</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     return (</div>
+      <div class="line add">+         &lt;&gt;</div>
+      <div class="line add">+             &lt;Header userName={userName} active="users" /&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+             &lt;main className="container flex-grow-1 py-5"&gt;</div>
+      <div class="line add">+                 &lt;div className="row g-4"&gt;</div>
+      <div class="line add">+                     &lt;section className="col-lg-6"&gt;</div>
+      <div class="line add">+                         &lt;h2 className="h5"&gt;Usuários ({list.total})&lt;/h2&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+                         &lt;ul className="list-group mb-3"&gt;</div>
+      <div class="line add">+                             {list.data.map(user =&gt; {</div>
+      <div class="line add">+                                 const isSelected = user.id === selected?.id</div>
+      <div class="line add">+                                 const itemClass = isSelected ? "list-group-item list-group-item-action active" : "list-group-item list-group-item-action"</div>
+      <div class="line add">+ </div>
+      <div class="line add">+                                 return (</div>
+      <div class="line add">+                                     &lt;li key={user.id} className={itemClass} role="button" onClick={() =&gt; handleSelect(user)}&gt;</div>
+      <div class="line add">+                                         &lt;strong&gt;{user.name}&lt;/strong&gt;</div>
+      <div class="line add">+                                         &lt;br /&gt;</div>
+      <div class="line add">+                                         &lt;small&gt;{user.email} · {user.job_title ?? "sem cargo"}&lt;/small&gt;</div>
+      <div class="line add">+                                     &lt;/li&gt;</div>
+      <div class="line add">+                                 )</div>
+      <div class="line add">+                             })}</div>
+      <div class="line add">+                         &lt;/ul&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+                         &lt;div className="d-flex justify-content-between align-items-center"&gt;</div>
+      <div class="line add">+                             &lt;button className="btn btn-outline-secondary btn-sm" disabled={list.page &lt;= 1} onClick={() =&gt; handlePage(list.page - 1)}&gt;</div>
+      <div class="line add">+                                 Anterior</div>
+      <div class="line add">+                             &lt;/button&gt;</div>
+      <div class="line add">+                             &lt;span className="small"&gt;Página {list.page} de {lastPage}&lt;/span&gt;</div>
+      <div class="line add">+                             &lt;button className="btn btn-outline-secondary btn-sm" disabled={list.page &gt;= lastPage} onClick={() =&gt; handlePage(list.page + 1)}&gt;</div>
+      <div class="line add">+                                 Próxima</div>
+      <div class="line add">+                             &lt;/button&gt;</div>
+      <div class="line add">+                         &lt;/div&gt;</div>
+      <div class="line add">+                     &lt;/section&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+                     &lt;section className="col-lg-6"&gt;</div>
+      <div class="line add">+                         &lt;UserTasks user={selected} tasks={tasks} error={error} /&gt;</div>
+      <div class="line add">+                     &lt;/section&gt;</div>
+      <div class="line add">+                 &lt;/div&gt;</div>
+      <div class="line add">+             &lt;/main&gt;</div>
+      <div class="line add">+         &lt;/&gt;</div>
+      <div class="line add">+     )</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/components/UserTasks.tsx</div>
+      <div class="line add">+ import type { Task, User } from "../types/api"</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ type UserTasksProps = {</div>
+      <div class="line add">+     user: User | null</div>
+      <div class="line add">+     tasks: Task[] | null</div>
+      <div class="line add">+     error: string</div>
+      <div class="line add">+ }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ export function UserTasks({ user, tasks, error }: UserTasksProps) {</div>
+      <div class="line add">+     if (user === null) {</div>
+      <div class="line add">+         return &lt;p className="text-muted"&gt;Escolha um usuário para ver as tasks dele.&lt;/p&gt;</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     if (error !== "") {</div>
+      <div class="line add">+         return &lt;div className="alert alert-danger"&gt;{error}&lt;/div&gt;</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     if (tasks === null) {</div>
+      <div class="line add">+         return &lt;p className="text-muted"&gt;Carregando as tasks de {user.name}...&lt;/p&gt;</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     return (</div>
+      <div class="line add">+         &lt;&gt;</div>
+      <div class="line add">+             &lt;h2 className="h5"&gt;Tasks de {user.name}&lt;/h2&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+             {tasks.length === 0 &amp;&amp; &lt;p className="text-muted"&gt;Nenhuma task.&lt;/p&gt;}</div>
+      <div class="line add">+ </div>
+      <div class="line add">+             &lt;ul className="list-group"&gt;</div>
+      <div class="line add">+                 {tasks.map(task =&gt; (</div>
+      <div class="line add">+                     &lt;li key={task.id} className="list-group-item d-flex justify-content-between"&gt;</div>
+      <div class="line add">+                         &lt;span&gt;{task.name}&lt;/span&gt;</div>
+      <div class="line add">+                         &lt;span className={task.is_done ? "badge text-bg-success" : "badge text-bg-secondary"}&gt;</div>
+      <div class="line add">+                             {task.is_done ? "feita" : "pendente"}</div>
+      <div class="line add">+                         &lt;/span&gt;</div>
+      <div class="line add">+                     &lt;/li&gt;</div>
+      <div class="line add">+                 ))}</div>
+      <div class="line add">+             &lt;/ul&gt;</div>
+      <div class="line add">+         &lt;/&gt;</div>
+      <div class="line add">+     )</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Três estados</h4>
+        <p><code class="inline">list</code>, <code class="inline">selected</code> e <code class="inline">tasks</code>: trocar o usuário reseta <code class="inline">tasks</code> para <code class="inline">null</code> ("Carregando...").</p>
+      </div>
+      <div class="why-card">
+        <h4>UserTasks só lê</h4>
+        <p>Painel de leitura: recebe <code class="inline">user</code>, <code class="inline">tasks</code> e <code class="inline">error</code> por parâmetro.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">npx tsc --noEmit</code> e <code class="inline">npx vite build</code> sem erro. Não testado com servidor e banco (sem Docker, migrate ou seed nesta etapa).</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 15 -->
+  <div class="entry" id="etapa-15">
+    <div class="entry-dot">15</div>
+    <div class="entry-date">Etapa 15 · Usuários</div>
+    <h2>Montar a tela de usuários</h2>
+    <p class="sub"><code class="inline">users.tsx</code> lê os <code class="inline">data-*</code> e monta o componente; a entrada vai para o <code class="inline">rollupOptions.input</code> dos dois configs.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/pages/users.tsx</div>
+      <div class="line add">+ import { createRoot } from "react-dom/client"</div>
+      <div class="line add">+ import type { PaginatedResponse, User } from "../types/api"</div>
+      <div class="line add">+ import { UsersApp } from "../components/UsersApp"</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ // A View (resources/views/users.ejs) entrega o nome do usuário logado e a</div>
+      <div class="line add">+ // primeira página de usuários, já lida do banco, nos data-* do #root.</div>
+      <div class="line add">+ const root = document.getElementById("root")!</div>
+      <div class="line add">+ const userName = root.dataset.userName ?? ""</div>
+      <div class="line add">+ const initialUsers: PaginatedResponse&lt;User&gt; = JSON.parse(root.dataset.initialUsers ?? "{}")</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ createRoot(root).render(&lt;UsersApp userName={userName} initialUsers={initialUsers} /&gt;)</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/vite.config.js (rollupOptions.input)</div>
+      <div class="line ctx">                  "./resources/js/pages/login.ts",</div>
+      <div class="line rem">-                 "./resources/js/pages/tasks.tsx"</div>
+      <div class="line add">+                 "./resources/js/pages/tasks.tsx",</div>
+      <div class="line add">+                 "./resources/js/pages/users.tsx"</div>
+      <div class="line ctx">              ],</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">docker/node24-vite-compiler/vite.config.js (rollupOptions.input)</div>
+      <div class="line ctx">                  "./resources/js/pages/login.ts",</div>
+      <div class="line rem">-                 "./resources/js/pages/tasks.tsx"</div>
+      <div class="line add">+                 "./resources/js/pages/tasks.tsx",</div>
+      <div class="line add">+                 "./resources/js/pages/users.tsx"</div>
+      <div class="line ctx">              ],</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>A mesma receita</h4>
+        <p>View + <code class="inline">#root</code> + entry + entrada no Vite: o que vale para tasks vale para usuários.</p>
+      </div>
+      <div class="why-card">
+        <h4>Dado inicial</h4>
+        <p><code class="inline">initialUsers</code> vem do banco pela View: nenhuma busca ao abrir a página.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">vite build</code> gerou <code class="inline">src/users.&lt;hash&gt;.js</code>. <code class="inline">npx tsc --noEmit</code> e <code class="inline">npx vite build</code> sem erro. Não testado com servidor e banco (sem Docker, migrate ou seed nesta etapa).</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 16 -->
+  <div class="entry" id="etapa-16">
+    <div class="entry-dot">16</div>
+    <div class="entry-date">Etapa 16 · Login</div>
+    <h2>LoginForm: o formulário como componente</h2>
+    <p class="sub">Estados <code class="inline">email</code>, <code class="inline">password</code>, <code class="inline">error</code> e <code class="inline">isLoading</code>; <code class="inline">handleSubmit</code> chama o <code class="inline">loginApi</code> e vai para <code class="inline">/tasks</code>.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/components/LoginForm.tsx</div>
+      <div class="line add">+ import { useState } from "react"</div>
+      <div class="line add">+ import type { FormEvent } from "react"</div>
+      <div class="line add">+ import { loginApi } from "../api/loginApi"</div>
+      <div class="line add">+ import { getErrorMessage } from "../utils/getErrorMessage"</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ export function LoginForm() {</div>
+      <div class="line add">+     const [email, setEmail] = useState("")</div>
+      <div class="line add">+     const [password, setPassword] = useState("")</div>
+      <div class="line add">+     const [error, setError] = useState("")</div>
+      <div class="line add">+     const [isLoading, setIsLoading] = useState(false)</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     // Enviar o formulário: o servidor valida a senha e grava o JWT no cookie HttpOnly</div>
+      <div class="line add">+     async function handleSubmit(event: FormEvent) {</div>
+      <div class="line add">+         event.preventDefault()</div>
+      <div class="line add">+         setError("")</div>
+      <div class="line add">+         setIsLoading(true)</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         try {</div>
+      <div class="line add">+             await loginApi(email, password)</div>
+      <div class="line add">+ </div>
+      <div class="line add">+             // Sessão criada: a próxima página (View) já passa pelo middleware com o cookie</div>
+      <div class="line add">+             window.location.href = "/tasks"</div>
+      <div class="line add">+             return</div>
+      <div class="line add">+         } catch (error) {</div>
+      <div class="line add">+             setError(getErrorMessage(error, "Erro ao fazer login"))</div>
+      <div class="line add">+         }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+         setIsLoading(false)</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     return (</div>
+      <div class="line add">+         &lt;form className="d-flex flex-column gap-3" onSubmit={handleSubmit}&gt;</div>
+      <div class="line add">+             &lt;h2 className="text-center mb-4"&gt;Login&lt;/h2&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+             &lt;label className="form-label"&gt;Email&lt;/label&gt;</div>
+      <div class="line add">+             &lt;input</div>
+      <div class="line add">+                 type="email"</div>
+      <div class="line add">+                 className="form-control"</div>
+      <div class="line add">+                 placeholder="seu@email.com"</div>
+      <div class="line add">+                 required</div>
+      <div class="line add">+                 value={email}</div>
+      <div class="line add">+                 onChange={event =&gt; setEmail(event.target.value)}</div>
+      <div class="line add">+             /&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+             &lt;label className="form-label"&gt;Senha&lt;/label&gt;</div>
+      <div class="line add">+             &lt;input</div>
+      <div class="line add">+                 type="password"</div>
+      <div class="line add">+                 className="form-control"</div>
+      <div class="line add">+                 placeholder="sua senha"</div>
+      <div class="line add">+                 required</div>
+      <div class="line add">+                 value={password}</div>
+      <div class="line add">+                 onChange={event =&gt; setPassword(event.target.value)}</div>
+      <div class="line add">+             /&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+             &lt;button type="submit" className="btn btn-primary btn-lg mt-3" disabled={isLoading}&gt;</div>
+      <div class="line add">+                 {isLoading ? "Entrando..." : "Entrar"}</div>
+      <div class="line add">+             &lt;/button&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+             {error !== "" &amp;&amp; &lt;div className="alert alert-danger"&gt;{error}&lt;/div&gt;}</div>
+      <div class="line add">+         &lt;/form&gt;</div>
+      <div class="line add">+     )</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Campos controlados</h4>
+        <p><code class="inline">value</code> + <code class="inline">onChange</code>: o estado é a fonte da verdade do formulário.</p>
+      </div>
+      <div class="why-card">
+        <h4>O JWT não passa pelo JavaScript</h4>
+        <p>O servidor grava o token num cookie HttpOnly; o componente só redireciona.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">npx tsc --noEmit</code> e <code class="inline">npx vite build</code> sem erro. Não testado com servidor e banco (sem Docker, migrate ou seed nesta etapa).</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 17 -->
+  <div class="entry" id="etapa-17">
+    <div class="entry-dot">17</div>
+    <div class="entry-date">Etapa 17 · Login</div>
+    <h2>O login na View: shell, entry e Vite</h2>
+    <p class="sub">O <code class="inline">login.ejs</code> vira um shell com <code class="inline">#root</code>; <code class="inline">login.tsx</code> monta o componente e substitui o <code class="inline">login.ts</code> no <code class="inline">input</code>.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/pages/login.tsx</div>
+      <div class="line add">+ import { createRoot } from "react-dom/client"</div>
+      <div class="line add">+ import { LoginForm } from "../components/LoginForm"</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ // A View (resources/views/login.ejs) entrega o #root; o formulário é um componente.</div>
+      <div class="line add">+ createRoot(document.getElementById("root")!).render(&lt;LoginForm /&gt;)</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/views/login.ejs</div>
+      <div class="line ctx">    &lt;link rel="icon" type="image/png" href="/img/favicon.ico"&gt;</div>
+      <div class="line rem">-   &lt;%- vite(["css/app.css", "js/app.ts", "js/pages/login.ts"]) %&gt;</div>
+      <div class="line add">+   &lt;%- vite(["css/app.css", "js/app.ts", "js/pages/login.tsx"]) %&gt;</div>
+      <div class="line ctx">  &lt;/head&gt;</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx"></div>
+      <div class="line rem">-       &lt;%# O formulário que o loginRender.ts montava via DOM agora já vem pronto do servidor %&gt;</div>
+      <div class="line rem">-       &lt;form id="login-form" class="d-flex flex-column gap-3"&gt;</div>
+      <div class="line rem">-         &lt;h2 class="text-center mb-4"&gt;Login&lt;/h2&gt;</div>
+      <div class="line rem">- </div>
+      <div class="line rem">-         &lt;label for="email-input" class="form-label"&gt;Email&lt;/label&gt;</div>
+      <div class="line rem">-         &lt;input id="email-input" type="email" class="form-control" placeholder="seu@email.com" required&gt;</div>
+      <div class="line rem">- </div>
+      <div class="line rem">-         &lt;label for="password-input" class="form-label"&gt;Senha&lt;/label&gt;</div>
+      <div class="line rem">-         &lt;input id="password-input" type="password" class="form-control" placeholder="sua senha" required&gt;</div>
+      <div class="line rem">- </div>
+      <div class="line rem">-         &lt;button type="submit" class="btn btn-primary btn-lg mt-3"&gt;Entrar&lt;/button&gt;</div>
+      <div class="line rem">- </div>
+      <div class="line rem">-         &lt;div id="login-message" class="alert alert-danger d-none"&gt;&lt;/div&gt;</div>
+      <div class="line rem">-       &lt;/form&gt;</div>
+      <div class="line add">+       &lt;%# O formulário agora é um componente React (LoginForm), montado dentro do #root %&gt;</div>
+      <div class="line add">+       &lt;div id="root"&gt;&lt;/div&gt;</div>
+      <div class="line ctx"></div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/vite.config.js (rollupOptions.input)</div>
+      <div class="line ctx">                  "./resources/js/app.ts",</div>
+      <div class="line rem">-                 "./resources/js/pages/login.ts",</div>
+      <div class="line add">+                 "./resources/js/pages/login.tsx",</div>
+      <div class="line ctx">                  "./resources/js/pages/tasks.tsx",</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">docker/node24-vite-compiler/vite.config.js (rollupOptions.input)</div>
+      <div class="line ctx">                  "./resources/js/app.ts",</div>
+      <div class="line rem">-                 "./resources/js/pages/login.ts",</div>
+      <div class="line add">+                 "./resources/js/pages/login.tsx",</div>
+      <div class="line ctx">                  "./resources/js/pages/tasks.tsx",</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Legado fica</h4>
+        <p><code class="inline">login.ts</code> e <code class="inline">loginListeners.ts</code> continuam no repositório, mas a View não usa mais.</p>
+      </div>
+      <div class="why-card">
+        <h4>Sem HTML do formulário no EJS</h4>
+        <p>O formulário nasce do componente.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">vite build</code> gerou <code class="inline">src/login.&lt;hash&gt;.js</code>. <code class="inline">npx tsc --noEmit</code> e <code class="inline">npx vite build</code> sem erro. Não testado com servidor e banco (sem Docker, migrate ou seed nesta etapa).</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 18 -->
+  <div class="entry" id="etapa-18">
+    <div class="entry-dot">18</div>
+    <div class="entry-date">Etapa 18 · Layout</div>
+    <h2>Um layout só para as telas</h2>
+    <p class="sub"><code class="inline">Page</code> (cabeçalho + conteúdo) para as telas logadas e um <code class="inline">partials/footer.ejs</code> para o rodapé das três Views.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/components/Page.tsx</div>
+      <div class="line add">+ import type { ReactNode } from "react"</div>
+      <div class="line add">+ import { Header } from "./Header"</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ type PageProps = {</div>
+      <div class="line add">+     userName: string</div>
+      <div class="line add">+     active: "tasks" | "users"</div>
+      <div class="line add">+     children: ReactNode</div>
+      <div class="line add">+ }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ // Layout das telas logadas: o cabeçalho e a área de conteúdo</div>
+      <div class="line add">+ export function Page({ userName, active, children }: PageProps) {</div>
+      <div class="line add">+     return (</div>
+      <div class="line add">+         &lt;&gt;</div>
+      <div class="line add">+             &lt;Header userName={userName} active={active} /&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+             &lt;main className="container flex-grow-1 py-5"&gt;</div>
+      <div class="line add">+                 {children}</div>
+      <div class="line add">+             &lt;/main&gt;</div>
+      <div class="line add">+         &lt;/&gt;</div>
+      <div class="line add">+     )</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/views/partials/footer.ejs</div>
+      <div class="line add">+   &lt;footer class="bg-primary text-white text-center py-3 mt-auto"&gt;</div>
+      <div class="line add">+     &lt;div class="small"&gt;Frontend 2026.2&lt;/div&gt;</div>
+      <div class="line add">+   &lt;/footer&gt;</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/components/TaskApp.tsx</div>
+      <div class="line ctx">  import { TaskItem } from "./TaskItem"</div>
+      <div class="line rem">- import { Header } from "./Header"</div>
+      <div class="line add">+ import { Page } from "./Page"</div>
+      <div class="line ctx">  import { Alert } from "./Alert"</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx">          &lt;&gt;</div>
+      <div class="line rem">-             &lt;Header userName={userName} active="tasks" /&gt;</div>
+      <div class="line rem">- </div>
+      <div class="line rem">-             &lt;main className="container flex-grow-1 py-5"&gt;</div>
+      <div class="line add">+             &lt;Page userName={userName} active="tasks"&gt;</div>
+      <div class="line ctx">                  &lt;section&gt;</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx">                  &lt;/section&gt;</div>
+      <div class="line rem">-             &lt;/main&gt;</div>
+      <div class="line add">+             &lt;/Page&gt;</div>
+      <div class="line ctx"></div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/components/UsersApp.tsx</div>
+      <div class="line ctx">  import { getErrorMessage } from "../utils/getErrorMessage"</div>
+      <div class="line rem">- import { Header } from "./Header"</div>
+      <div class="line add">+ import { Page } from "./Page"</div>
+      <div class="line ctx">  import { UserTasks } from "./UserTasks"</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx">          &lt;&gt;</div>
+      <div class="line rem">-             &lt;Header userName={userName} active="users" /&gt;</div>
+      <div class="line rem">- </div>
+      <div class="line rem">-             &lt;main className="container flex-grow-1 py-5"&gt;</div>
+      <div class="line add">+             &lt;Page userName={userName} active="users"&gt;</div>
+      <div class="line ctx">                  &lt;div className="row g-4"&gt;</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx">                  &lt;/div&gt;</div>
+      <div class="line rem">-             &lt;/main&gt;</div>
+      <div class="line add">+             &lt;/Page&gt;</div>
+      <div class="line ctx">          &lt;/&gt;</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/views/tasks.ejs</div>
+      <div class="line ctx"></div>
+      <div class="line rem">-   &lt;footer class="bg-primary text-white text-center py-3 mt-auto"&gt;</div>
+      <div class="line rem">-     &lt;div class="small"&gt;Frontend 2026.2&lt;/div&gt;</div>
+      <div class="line rem">-   &lt;/footer&gt;</div>
+      <div class="line add">+   &lt;%- include('partials/footer') %&gt;</div>
+      <div class="line ctx">  &lt;/body&gt;</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>children</h4>
+        <p><code class="inline">Page</code> recebe o conteúdo como <code class="inline">children</code>: cada tela só diz quem é a aba ativa.</p>
+      </div>
+      <div class="why-card">
+        <h4>include() no EJS</h4>
+        <p>O rodapé fica num arquivo só, incluído nas três Views.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">npx tsc --noEmit</code> e <code class="inline">npx vite build</code> sem erro. Não testado com servidor e banco (sem Docker, migrate ou seed nesta etapa).</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 19 -->
+  <div class="entry destaque" id="etapa-19">
+    <div class="entry-dot">19</div>
+    <div class="entry-date">Etapa 19 · Views protegidas por JWT · ★ destaque</div>
+    <h2>★ Toda página é uma View protegida pelo JWT</h2>
+    <p class="sub">A regra da aula: nenhuma página estática. Cada tela é uma rota de View que passa pelo middleware ANTES de o HTML existir.</p>
+
+    <div class="tree">GET /tasks · GET /usuarios<br>
+  → <span class="new">RedirectIfGuestMiddleware</span>   <span class="comment">// jwt.verify: assinatura + validade</span><br>
+       sem cookie, token inválido ou expirado → <span class="new">redirect /login</span><br>
+       token ok → <span class="new">request.user = { id }</span><br>
+  → controller (usa request.user, nunca dado do cliente)<br>
+  → res.render("tasks" | "users", ...)<br>
+  → HTML com #root → navegador → createRoot(...) → componente React<br>
+<br>
+GET /login<br>
+  → RedirectIfAuthenticatedMiddleware  <span class="comment">// também jwt.verify</span><br>
+       token ok → redirect /tasks  ·  senão renderiza o login</div>
+
+    <div class="diff">
+      <div class="diff-head">src/app/Http/Middlewares/RedirectIfGuestMiddleware.js</div>
+      <div class="line add">+ import jwt from "jsonwebtoken";</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ /**</div>
+      <div class="line add">+  * Middleware de página (View), o espelho do RedirectIfAuthenticatedMiddleware.</div>
+      <div class="line add">+  *</div>
+      <div class="line add">+  * Página que exige sessão: sem cookie auth_token válido, o usuário é mandado</div>
+      <div class="line add">+  * para o login ANTES de o HTML ser montado. Com token válido, guarda o id</div>
+      <div class="line add">+  * do usuário em request.user e segue para o controller.</div>
+      <div class="line add">+  */</div>
+      <div class="line add">+ export default function RedirectIfGuestMiddleware(request, response, next) {</div>
+      <div class="line add">+     const token = request.cookies.auth_token;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     if (!token) {</div>
+      <div class="line add">+         return response.redirect("/login");</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     try {</div>
+      <div class="line add">+         request.user = jwt.verify(token, process.env.JWT_SECRET);</div>
+      <div class="line add">+     } catch (error) {</div>
+      <div class="line add">+         return response.redirect("/login");</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     return next();</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/routes/router.js (a rota /tasks com o middleware)</div>
+      <div class="line ctx">  import RedirectIfAuthenticatedMiddleware from '../app/Http/Middlewares/RedirectIfAuthenticatedMiddleware.js';</div>
+      <div class="line add">+ import RedirectIfGuestMiddleware from '../app/Http/Middlewares/RedirectIfGuestMiddleware.js';</div>
+      <div class="line add">+ import TasksViewController from '../app/Http/Controllers/Views/TasksViewController.js';</div>
+      <div class="line ctx"></div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx"></div>
+      <div class="line add">+ /** Tasks (React dentro da View): sem sessão válida, o middleware redireciona para /login antes do HTML existir */</div>
+      <div class="line add">+ router.get('/tasks', RedirectIfGuestMiddleware, TasksViewController);</div>
+      <div class="line add">+ </div>
+      <div class="line ctx">  /**</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>jwt.verify de verdade</h4>
+        <p>Não basta o cookie existir: <code class="inline">jwt.verify</code> confere a assinatura e a validade (10 min) com o <code class="inline">JWT_SECRET</code>.</p>
+      </div>
+      <div class="why-card">
+        <h4>Antes do HTML</h4>
+        <p>O Nginx não sabe o que é um JWT; o middleware sabe. Quem não tem sessão nunca recebe o HTML da tela.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p>Middleware verificado por leitura e import (<code class="inline">node --check</code>). Rotas não exercitadas com servidor e banco.</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 20 -->
+  <div class="entry" id="etapa-20">
+    <div class="entry-dot">20</div>
+    <div class="entry-date">Etapa 20 · Views protegidas por JWT</div>
+    <h2>O controller usa o usuário do token</h2>
+    <p class="sub">O dono da tela vem de <code class="inline">request.user</code> (token verificado), nunca de um dado enviado pelo cliente.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/app/Http/Controllers/Views/TasksViewController.js</div>
+      <div class="line add">+ import UserModel from "../../../Models/UserModel.js";</div>
+      <div class="line add">+ import TaskModel from "../../../Models/TaskModel.js";</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ /**</div>
+      <div class="line add">+  * Tela de tasks como View: o HTML vem de resources/views/tasks.ejs e o React</div>
+      <div class="line add">+  * monta o CRUD dentro do #root, já com as tasks lidas aqui do banco.</div>
+      <div class="line add">+  *</div>
+      <div class="line add">+  * Rota: GET /tasks (protegida por RedirectIfGuestMiddleware)</div>
+      <div class="line add">+  */</div>
+      <div class="line add">+ export default async function TasksViewController(request, response) {</div>
+      <div class="line add">+     const user = await UserModel.findByPk(request.user.id);</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     if (!user) {</div>
+      <div class="line add">+         return response.redirect("/login");</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     const tasks = await TaskModel.findAll({</div>
+      <div class="line add">+         where: { id_user: user.id },</div>
+      <div class="line add">+         order: [["id", "ASC"]],</div>
+      <div class="line add">+         raw: true</div>
+      <div class="line add">+     });</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     return response.status(200).render("tasks", { user, tasks });</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/views/tasks.ejs</div>
+      <div class="line add">+ &lt;!DOCTYPE html&gt;</div>
+      <div class="line add">+ &lt;html lang="pt-BR"&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ &lt;head&gt;</div>
+      <div class="line add">+   &lt;meta charset="UTF-8" /&gt;</div>
+      <div class="line add">+   &lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;</div>
+      <div class="line add">+   &lt;title&gt;Tasks - Minhas Tarefas&lt;/title&gt;</div>
+      <div class="line add">+   &lt;link rel="icon" type="image/png" href="/img/favicon.ico"&gt;</div>
+      <div class="line add">+   &lt;%- vite(["css/app.css", "js/app.ts", "js/pages/tasks.tsx"]) %&gt;</div>
+      <div class="line add">+ &lt;/head&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ &lt;body class="d-flex flex-column min-vh-100 bg-light"&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+   &lt;%# O cabeçalho agora é um componente React (Header), dentro do #root; o servidor entrega o id, o nome e as tasks já lidas do banco %&gt;</div>
+      <div class="line add">+   &lt;div id="root" class="d-flex flex-column flex-grow-1"</div>
+      <div class="line add">+        data-id-user="&lt;%= user.id %&gt;"</div>
+      <div class="line add">+        data-user-name="&lt;%= user.name %&gt;"</div>
+      <div class="line add">+        data-tasks="&lt;%= JSON.stringify(tasks) %&gt;"&gt;&lt;/div&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+   &lt;%- include('partials/footer') %&gt;</div>
+      <div class="line add">+ &lt;/body&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ &lt;/html&gt;</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Confiar só no token</h4>
+        <p><code class="inline">findByPk(request.user.id)</code>: se o usuário foi apagado, volta para o login.</p>
+      </div>
+      <div class="why-card">
+        <h4>EJS escapa</h4>
+        <p><code class="inline">&lt;%= %&gt;</code> escapa aspas e <code class="inline">&lt;</code>: o JSON cabe com segurança num atributo <code class="inline">data-*</code>.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p>A View <code class="inline">tasks.ejs</code> foi renderizada isolada (<code class="inline">ejs.renderFile</code>): nome com <code class="inline">&lt;b&gt;</code> e aspas do JSON saíram escapados.</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 21 -->
+  <div class="entry" id="etapa-21">
+    <div class="entry-dot">21</div>
+    <div class="entry-date">Etapa 21 · Views protegidas por JWT</div>
+    <h2>Quem já tem sessão vai direto para as tasks</h2>
+    <p class="sub">O <code class="inline">RedirectIfAuthenticatedMiddleware</code> passa a redirecionar para a View <code class="inline">/tasks</code>, não mais para <code class="inline">/tasks.html</code>.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/app/Http/Middlewares/RedirectIfAuthenticatedMiddleware.js</div>
+      <div class="line ctx">   * Middleware de página (View).</div>
+      <div class="line ctx">   *</div>
+      <div class="line rem">-  * Se o usuário JÁ tem sessão válida (cookie auth_token), não faz sentido</div>
+      <div class="line rem">-  * mostrar o login: redireciona para as tarefas ANTES de o HTML ser montado.</div>
+      <div class="line rem">-  * Sem cookie, ou com token inválido/expirado, segue para o controller.</div>
+      <div class="line add">+  * Se o usuário JÁ tem sessão válida (cookie auth_token com JWT de assinatura e</div>
+      <div class="line add">+  * validade verificadas), não faz sentido mostrar o login: redireciona para a View</div>
+      <div class="line add">+  * de tasks ANTES de o HTML ser montado. Sem cookie, ou com token inválido/expirado,</div>
+      <div class="line add">+  * segue para o controller.</div>
+      <div class="line ctx">   *</div>
+      <div class="line ctx">   * Antes isso era feito no navegador (checkAuthentication no login.ts),</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx">      }</div>
+      <div class="line ctx"></div>
+      <div class="line rem">-     return response.redirect("/tasks.html");</div>
+      <div class="line add">+     return response.redirect("/tasks");</div>
+      <div class="line ctx">  }</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Nada de página estática como destino</h4>
+        <p><code class="inline">/tasks.html</code> não passa por middleware; <code class="inline">/tasks</code> passa.</p>
+      </div>
+      <div class="why-card">
+        <h4>O mesmo vale no login</h4>
+        <p><code class="inline">LoginForm</code> também redireciona para <code class="inline">/tasks</code>.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p>Verificado por leitura e <code class="inline">node --check</code>.</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 22 -->
+  <div class="entry" id="etapa-22">
+    <div class="entry-dot">22</div>
+    <div class="entry-date">Etapa 22 · Views protegidas por JWT</div>
+    <h2>Sair de verdade</h2>
+    <p class="sub"><code class="inline">GET /logout</code> apaga o cookie e manda para o login. O cookie é HttpOnly: só o servidor consegue apagá-lo.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/app/Http/Controllers/Views/LogoutController.js</div>
+      <div class="line add">+ /**</div>
+      <div class="line add">+  * Encerra a sessão: o cookie auth_token é HttpOnly, então o JavaScript do</div>
+      <div class="line add">+  * navegador não consegue apagá-lo. Quem apaga é o servidor.</div>
+      <div class="line add">+  *</div>
+      <div class="line add">+  * Rota: GET /logout</div>
+      <div class="line add">+  */</div>
+      <div class="line add">+ export default function LogoutController(request, response) {</div>
+      <div class="line add">+     response.clearCookie("auth_token", {</div>
+      <div class="line add">+         httpOnly: true,</div>
+      <div class="line add">+         sameSite: "lax"</div>
+      <div class="line add">+     });</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     return response.redirect("/login");</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/routes/router.js</div>
+      <div class="line ctx">  import TasksViewController from '../app/Http/Controllers/Views/TasksViewController.js';</div>
+      <div class="line add">+ import LogoutController from '../app/Http/Controllers/Views/LogoutController.js';</div>
+      <div class="line ctx"></div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx"></div>
+      <div class="line add">+ /** Logout: o cookie auth_token é HttpOnly, só o servidor consegue apagá-lo */</div>
+      <div class="line add">+ router.get('/logout', LogoutController);</div>
+      <div class="line add">+ </div>
+      <div class="line ctx">  /** Tasks (React dentro da View): sem sessão válida, o middleware redireciona para /login antes do HTML existir */</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Por que no servidor</h4>
+        <p>O JavaScript do navegador não enxerga um cookie <code class="inline">HttpOnly</code>, então não consegue removê-lo.</p>
+      </div>
+      <div class="why-card">
+        <h4>Fechando o ciclo</h4>
+        <p>Login grava o cookie, as Views verificam, o logout apaga.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p>Verificado por leitura e <code class="inline">node --check</code>.</p>
+    </div>
+  </div>
+
+  <!-- ETAPA 23 -->
+  <div class="entry" id="etapa-23">
+    <div class="entry-dot">23</div>
+    <div class="entry-date">Etapa 23 · Contador público</div>
+    <h2>Um contador em React, sem login</h2>
+    <p class="sub">Uma View pública (<code class="inline">GET /contador</code>) com um componente de estado bem simples, para mostrar o <code class="inline">useState</code> sem nada em volta.</p>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/components/Counter.tsx</div>
+      <div class="line add">+ import { useState } from "react"</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ export function Counter() {</div>
+      <div class="line add">+     const [count, setCount] = useState(0)</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     function handleIncrement() {</div>
+      <div class="line add">+         setCount(current =&gt; current + 1)</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     function handleDecrement() {</div>
+      <div class="line add">+         setCount(current =&gt; current - 1)</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     function handleReset() {</div>
+      <div class="line add">+         setCount(0)</div>
+      <div class="line add">+     }</div>
+      <div class="line add">+ </div>
+      <div class="line add">+     return (</div>
+      <div class="line add">+         &lt;div className="text-center"&gt;</div>
+      <div class="line add">+             &lt;p className="display-1"&gt;{count}&lt;/p&gt;</div>
+      <div class="line add">+             &lt;button className="btn btn-danger me-2" onClick={handleDecrement}&gt;-1&lt;/button&gt;</div>
+      <div class="line add">+             &lt;button className="btn btn-secondary me-2" onClick={handleReset}&gt;Zerar&lt;/button&gt;</div>
+      <div class="line add">+             &lt;button className="btn btn-primary" onClick={handleIncrement}&gt;+1&lt;/button&gt;</div>
+      <div class="line add">+         &lt;/div&gt;</div>
+      <div class="line add">+     )</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/app/Http/Controllers/Views/CounterViewController.js</div>
+      <div class="line add">+ /**</div>
+      <div class="line add">+  * Contador em React como View pública: sem login, sem middleware.</div>
+      <div class="line add">+  * O HTML vem de resources/views/counter.ejs; o contador é um componente React.</div>
+      <div class="line add">+  *</div>
+      <div class="line add">+  * Rota: GET /contador</div>
+      <div class="line add">+  */</div>
+      <div class="line add">+ export default function CounterViewController(request, response) {</div>
+      <div class="line add">+     return response.status(200).render("counter");</div>
+      <div class="line add">+ }</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/views/counter.ejs</div>
+      <div class="line add">+ &lt;!DOCTYPE html&gt;</div>
+      <div class="line add">+ &lt;html lang="pt-BR"&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ &lt;head&gt;</div>
+      <div class="line add">+   &lt;meta charset="UTF-8" /&gt;</div>
+      <div class="line add">+   &lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;</div>
+      <div class="line add">+   &lt;title&gt;Contador - Estado em React&lt;/title&gt;</div>
+      <div class="line add">+   &lt;link rel="icon" type="image/png" href="/img/favicon.ico"&gt;</div>
+      <div class="line add">+   &lt;%- vite(["css/app.css", "js/app.ts", "js/pages/counter.tsx"]) %&gt;</div>
+      <div class="line add">+ &lt;/head&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ &lt;body class="container py-5"&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+   &lt;h1 class="text-primary text-center mb-4"&gt;Contador&lt;/h1&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+   &lt;%# O React se pendura aqui: o contador é um componente (components/Counter.tsx) %&gt;</div>
+      <div class="line add">+   &lt;div id="root"&gt;&lt;/div&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ &lt;/body&gt;</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ &lt;/html&gt;</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/resources/js/pages/counter.tsx</div>
+      <div class="line add">+ import { createRoot } from "react-dom/client"</div>
+      <div class="line add">+ import { Counter } from "../components/Counter"</div>
+      <div class="line add">+ </div>
+      <div class="line add">+ // A View (resources/views/counter.ejs) entrega o #root; o contador é um componente.</div>
+      <div class="line add">+ createRoot(document.getElementById("root")!).render(&lt;Counter /&gt;)</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/routes/router.js</div>
+      <div class="line ctx">  import TasksViewController from '../app/Http/Controllers/Views/TasksViewController.js';</div>
+      <div class="line add">+ import CounterViewController from '../app/Http/Controllers/Views/CounterViewController.js';</div>
+      <div class="line ctx">  import LogoutController from '../app/Http/Controllers/Views/LogoutController.js';</div>
+      <div class="line ctx">  ...</div>
+      <div class="line ctx"></div>
+      <div class="line add">+ /** Contador em React: View pública, sem login e sem middleware (demonstração de estado) */</div>
+      <div class="line add">+ router.get('/contador', CounterViewController);</div>
+      <div class="line add">+ </div>
+      <div class="line ctx">  /** Login: se já tem sessão válida, o middleware redireciona antes do HTML existir */</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">src/vite.config.js (rollupOptions.input)</div>
+      <div class="line ctx">                  "./resources/js/pages/tasks.tsx",</div>
+      <div class="line rem">-                 "./resources/js/pages/users.tsx"</div>
+      <div class="line add">+                 "./resources/js/pages/users.tsx",</div>
+      <div class="line add">+                 "./resources/js/pages/counter.tsx"</div>
+      <div class="line ctx">              ],</div>
+    </div>
+
+    <div class="diff">
+      <div class="diff-head">docker/node24-vite-compiler/vite.config.js (rollupOptions.input)</div>
+      <div class="line ctx">                  "./resources/js/pages/tasks.tsx",</div>
+      <div class="line rem">-                 "./resources/js/pages/users.tsx"</div>
+      <div class="line add">+                 "./resources/js/pages/users.tsx",</div>
+      <div class="line add">+                 "./resources/js/pages/counter.tsx"</div>
+      <div class="line ctx">              ],</div>
+    </div>
+
+    <div class="why">
+      <div class="why-card">
+        <h4>Rota pública</h4>
+        <p><code class="inline">router.get('/contador', CounterViewController)</code> sem middleware: é a exceção de propósito, só para a demonstração. As telas das tasks e dos usuários continuam protegidas.</p>
+      </div>
+      <div class="why-card">
+        <h4>Um estado só</h4>
+        <p><code class="inline">count</code> com <code class="inline">useState(0)</code>; os três handlers (<code class="inline">handleIncrement</code>, <code class="inline">handleDecrement</code>, <code class="inline">handleReset</code>) usam a forma de função, menos o zerar.</p>
+      </div>
+    </div>
+
+    <div class="ok">
+      <strong><i class="fa-solid fa-circle-check"></i> Testado:</strong>
+      <p><code class="inline">npx tsc --noEmit</code> e <code class="inline">npx vite build</code> sem erro (<code class="inline">src/counter.&lt;hash&gt;.js</code> no manifest); a View foi renderizada isolada e traz <code class="inline">#root</code> e o script do contador. Rota não testada com servidor.</p>
+    </div>
+  </div>
+
+</div>
+</main>
+
+<footer>
+  Aula 08 — React: Gerenciamento de Estados · Frontend 2026.2 · Raio-X do Código (timeline viva — novas etapas entram aqui embaixo)
+</footer>
+
+<script src="../../../assets/raio-x.js"></script>
+</body>
+</html>

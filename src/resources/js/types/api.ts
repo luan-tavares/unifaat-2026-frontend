@@ -25,6 +25,20 @@ export interface Task {
   id_user: number;
 }
 
+/**
+ * Filtros aceitos pela busca de usuários (POST /users/search).
+ * Texto = "contém", sem diferenciar maiúscula. Todos opcionais.
+ */
+export interface UserSearchFilters {
+  name?: string;
+  email?: string;
+  job_title?: string;
+  bio?: string;
+  city?: string;
+  state?: string;
+  is_active?: boolean;
+}
+
 // ── Generics para respostas de API ──────────────────────────
 
 /**

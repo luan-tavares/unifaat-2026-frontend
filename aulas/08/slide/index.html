@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aula 08 — React: Gerenciamento de Estados</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="../../../assets/slide.css">
+<link rel="stylesheet" href="../../../assets/slide-16x9.css">
+<link rel="stylesheet" href="../../../assets/slide-interativo.css">
+<script src="../../../assets/tema.js"></script>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar" aria-label="Miniaturas dos slides">
+  <a class="sidebar-back" href="../../../index.html">← Voltar</a>
+</aside>
+
+<div class="deck" id="deck">
+
+  <!-- 1 · capa -->
+  <section class="slide" data-eyebrow="abertura">
+    <div class="cover-top">
+      <span class="cover-uni">Unifaat</span>
+      <span class="cover-sem">2026.2</span>
+    </div>
+    <h1><span class="cover-num">08</span> - React: Gerenciamento de Estados</h1>
+    <p class="cover-prof">Prof. Luan Lourenço</p>
+  </section>
+
+  <!-- 2 · por que frontend é difícil -->
+  <section class="slide" data-eyebrow="o problema">
+    <h2>Frontend é mais difícil de <span class="accent">organizar</span></h2>
+    <div class="two-col">
+    <div class="tree">
+<span class="dim"># backend · ciclo curto</span><br>
+requisição chega<br>
+&nbsp;&nbsp;↓ lê dados, monta a resposta<br>
+&nbsp;&nbsp;↓ <span class="hl">termina</span><br>
+<span class="dim">cada requisição começa do zero;<br>
+o estado longo mora no banco</span>
+    </div>
+    <div class="tree">
+<span class="dim"># frontend · processo vivo</span><br>
+a página fica aberta por horas<br>
+&nbsp;&nbsp;↓ eventos em qualquer ordem<br>
+&nbsp;&nbsp;↓ dados chegando a qualquer hora<br>
+&nbsp;&nbsp;↓ o mesmo dado em vários lugares<br>
+<span class="dim">fonte da verdade <span class="hl">espalhada</span>:<br>
+variável, input, classe CSS, localStorage</span>
+    </div>
+    </div>
+    <p class="payoff">Quanto mais a tela cresce, mais difícil lembrar de "atualizar tudo que depende disso". Esquecer um ponto = tela incoerente.</p>
+  </section>
+
+  <!-- 3 · call stack com funções (passo a passo) -->
+  <section class="slide" data-eyebrow="memória · call stack">
+    <h2>Call stack: cada chamada de <span class="accent">função</span> ganha um frame</h2>
+    <div class="w passos" data-passos="5" data-print="3">
+      <div class="cena mem">
+        <div class="painel"><h4>código</h4><div class="painel-corpo"><pre class="cod"><span class="ln" data-ativo="3"><span class="k">function</span> dobro(n) {</span><span class="ln" data-ativo="3">    <span class="k">const</span> resultado = n * 2</span><span class="ln" data-ativo="4">    <span class="k">return</span> resultado</span><span class="ln">}</span><span class="ln"><span class="k">function</span> principal() {</span><span class="ln" data-ativo="2">    <span class="k">const</span> x = 10</span><span class="ln" data-ativo="3 4">    <span class="k">const</span> y = dobro(x)</span><span class="ln" data-ativo="5">}</span><span class="ln" data-ativo="1">principal()</span></pre></div></div>
+
+        <div class="memoria"><h4>memória do programa</h4>
+          <div class="memoria-corpo">
+            <div class="painel"><h4>call stack (LIFO)</h4><div class="painel-corpo base">
+              <div class="frame" data-de="3" data-ate="3"><b>dobro</b>
+                <div class="var"><span>n</span><span class="v">10</span></div>
+                <div class="var"><span>resultado</span><span class="v">20</span></div>
+              </div>
+              <div class="frame" data-de="1" data-ate="4"><b>principal</b>
+                <div class="var"><span>x</span><span class="v" data-de="2">10</span></div>
+                <div class="var"><span>y</span><span class="v" data-de="4">20</span></div>
+              </div>
+              <div class="frame"><b>global</b>
+                <div class="var"><span>dobro</span><span class="ref" data-aponta="f1">0x0A</span></div>
+                <div class="var"><span>principal</span><span class="ref" data-aponta="f2">0x0B</span></div>
+              </div>
+            </div></div>
+            <div class="painel"><h4>heap</h4><div class="painel-corpo">
+              <div class="heap-obj" data-alvo="f1"><b>0x0A</b>ƒ dobro(n)</div>
+              <div class="heap-obj" data-alvo="f2"><b>0x0B</b>ƒ principal()</div>
+            </div></div>
+          </div>
+          <p class="memoria-obs"><b>Observação:</b> pilha e heap são regiões da <b>mesma memória</b>. A pilha guarda valores e <b>endereços</b> (setas); o objeto, inclusive a função, fica no heap.</p>
+          <svg class="setas" aria-hidden="true"></svg>
+        </div>
+      </div>
+      <div class="w-barra"><button class="p-prev" aria-label="Passo anterior">‹</button><span class="w-n"></span><span class="w-leg"></span><button class="p-next acao" aria-label="Próximo passo">›</button></div>
+      <ol class="passos-legendas">
+        <li><b>1.</b> <code>principal()</code> é chamada: um <b>frame</b> entra na pilha.</li>
+        <li><b>2.</b> A variável local <code>x</code> mora no frame de <code>principal</code>.</li>
+        <li><b>3.</b> <code>dobro(x)</code> empilha outro frame <b>por cima</b>, com seus próprios <code>n</code> e <code>resultado</code>.</li>
+        <li><b>4.</b> <code>return</code>: o frame de <code>dobro</code> é <b>descartado</b> e o valor volta para <code>y</code>.</li>
+        <li><b>5.</b> <code>principal</code> termina e o frame some. Variável local morre com a função.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 4 · heap: primitivo x referência (passo a passo) -->
+  <section class="slide" data-eyebrow="memória · heap">
+    <h2>Heap: copiar <span class="accent">valor</span> x copiar <span class="accent">endereço</span></h2>
+    <div class="w passos" data-passos="5" data-print="5">
+      <div class="cena mem">
+        <div class="painel"><h4>código</h4><div class="painel-corpo"><pre class="cod"><span class="ln" data-ativo="1"><span class="k">let</span> idade = 20</span><span class="ln" data-ativo="2"><span class="k">let</span> copia = idade</span><span class="ln" data-ativo="2">copia = 21</span><span class="ln" data-ativo="3"><span class="k">const</span> a = {</span><span class="ln" data-ativo="3">    nome: <span class="s">"Ana"</span>,</span><span class="ln" data-ativo="3">    tags: [<span class="s">"react"</span>, <span class="s">"ts"</span>]</span><span class="ln" data-ativo="3">}</span><span class="ln" data-ativo="4"><span class="k">const</span> b = a</span><span class="ln" data-ativo="5">b.nome = <span class="s">"Bia"</span></span><span class="ln" data-ativo="5">b.tags.push(<span class="s">"tsx"</span>)</span></pre></div></div>
+
+        <div class="memoria"><h4>memória do programa</h4>
+          <div class="memoria-corpo">
+            <div class="painel"><h4>pilha · variáveis</h4><div class="painel-corpo">
+              <div class="frame"><b>escopo</b>
+                <div class="var"><span>idade</span><span class="v" data-de="1">20</span></div>
+                <div class="var"><span>copia</span><span class="v" data-de="2">21</span></div>
+                <div class="var"><span>a</span><span class="ref" data-de="3" data-aponta="o1">0x1A</span></div>
+                <div class="var"><span>b</span><span class="ref" data-de="4" data-aponta="o1">0x1A</span></div>
+              </div>
+            </div></div>
+            <div class="painel"><h4>heap</h4><div class="painel-corpo" style="padding-right:46px">
+              <div class="slot" style="min-height:84px">
+                <div class="heap-obj" data-de="3" data-ate="4" data-alvo="o1"><b>0x1A</b>{ nome: "Ana",<div class="prop" data-aponta="arr">&nbsp;&nbsp;tags: 0x2B }</div></div>
+                <div class="heap-obj" data-de="5" data-alvo="o1"><b>0x1A</b>{ nome: "Bia",<div class="prop" data-aponta="arr">&nbsp;&nbsp;tags: 0x2B }</div></div>
+              </div>
+              <div class="slot" style="min-height:52px">
+                <div class="heap-obj" data-de="3" data-ate="4" data-alvo="arr"><b>0x2B</b>[ "react", "ts" ]</div>
+                <div class="heap-obj" data-de="5" data-alvo="arr"><b>0x2B</b>[ "react", "ts", "tsx" ]</div>
+              </div>
+            </div></div>
+          </div>
+          <p class="memoria-obs"><b>Observação:</b> primitivo guarda o valor na pilha; objeto guarda só o <b>endereço</b> (seta) e vive no heap. Um objeto pode apontar para outro: a propriedade <code>tags</code> guarda o endereço do array.</p>
+          <svg class="setas" aria-hidden="true"></svg>
+        </div>
+      </div>
+      <div class="w-barra"><button class="p-prev" aria-label="Passo anterior">‹</button><span class="w-n"></span><span class="w-leg"></span><button class="p-next acao" aria-label="Próximo passo">›</button></div>
+      <ol class="passos-legendas">
+        <li><b>1.</b> Primitivo: a variável guarda o <b>próprio valor</b>.</li>
+        <li><b>2.</b> <code>copia = idade</code> copia o <b>valor</b>. Mudar <code>copia</code> para 21 não mexe em <code>idade</code>: continua 20.</li>
+        <li><b>3.</b> Objeto vive no <b>heap</b>; a variável guarda só o <b>endereço</b>. E a propriedade <code>tags</code> também: guarda o endereço do <b>array</b>, que é outro objeto no heap.</li>
+        <li><b>4.</b> <code>b = a</code> copia o <b>endereço</b>: um objeto, duas variáveis apontando.</li>
+        <li><b>5.</b> Alterar por <code>b</code> altera o mesmo objeto, e o mesmo array: <code>a</code> enxerga tudo. O React compara <b>endereços</b>.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 5 · imperativo x declarativo -->
+  <section class="slide" data-eyebrow="react · o que resolve">
+    <h2>Imperativo <span class="accent">x</span> declarativo</h2>
+    <div class="two-col">
+    <div class="tree" style="font-size:1.05rem">
+<span class="dim"># imperativo · como mudar a tela</span><br>
+<span class="hl">let</span> contador = 0<br>
+botao.addEventListener("click", () =&gt; {<br>
+&nbsp;&nbsp;contador++<br>
+&nbsp;&nbsp;saida.innerText = String(contador)<br>
+})<br>
+<span class="dim">dois lugares com o número: você sincroniza</span>
+    </div>
+    <div class="tree" style="font-size:1.05rem">
+<span class="dim"># declarativo · o jeito antigo: o evento na própria tag</span><br>
+&lt;button <span class="hl">onclick="somar()"</span>&gt;<br>
+&nbsp;&nbsp;Cliques: &lt;span id="saida"&gt;0&lt;/span&gt;<br>
+&lt;/button&gt;<br>
+<span class="dim">o que dispara está declarado no HTML, sem<br>
+addEventListener. Era assim antigamente</span>
+    </div>
+    </div>
+    <div class="callout"><span class="mark" style="white-space:nowrap">ideia</span><p>Declarar o evento na tag é <strong>antigo</strong>: o <code>onclick</code> do HTML caiu em desuso. O <strong>React voltou com ele</strong>: <code>onClick={...}</code>, agora com <code>UI = f(estado)</code> e só o que mudou é alterado no DOM.</p></div>
+  </section>
+
+  <!-- 6 · componentes -->
+  <section class="slide" data-eyebrow="react · componentes">
+    <h2>A proposta: <span class="accent">componentes</span></h2>
+    <div class="two-col">
+    <ul class="points">
+      <li><strong>Componente</strong> = uma <strong>função</strong> que recebe parâmetros (<code>props</code>) e <strong>retorna</strong> a descrição da tela daquele pedaço</li>
+      <li>Pedaços <strong>independentes e reutilizáveis</strong>, encaixados por parâmetros</li>
+      <li>O mesmo <code>TaskItem</code> serve para qualquer task; só muda o dado que recebe</li>
+    </ul>
+    <div class="tree">
+&lt;TaskApp&gt;&nbsp;&nbsp;<span class="dim">← a tela de tasks</span><br>
+&nbsp;&nbsp;├ &lt;TaskForm&gt;<br>
+&nbsp;&nbsp;└ &lt;TaskList&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├ &lt;TaskItem&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├ &lt;TaskItem&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└ &lt;TaskItem&gt;
+    </div>
+    </div>
+    <p class="payoff">Troca de problema: manter dezenas de pontos sincronizados vira descrever um ponto. A sincronização é do React.</p>
+  </section>
+
+  <!-- 7 · jsx e tsx -->
+  <section class="slide" data-eyebrow="jsx · tsx">
+    <h2>JSX e <span class="accent">TSX</span></h2>
+    <div class="two-col">
+    <div class="tree" style="font-size:1.1rem">
+<span class="dim"># o return parece HTML; não é</span><br>
+&lt;h1 className="destaque"&gt;<br>
+&nbsp;&nbsp;Olá, {task.name}<br>
+&lt;/h1&gt;<br>
+<span class="dim">JSX = JavaScript XML: o Vite compila<br>
+para chamadas de função. O navegador<br>
+nunca vê JSX.</span>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Extensão</th><th>Linguagem</th><th>JSX?</th></tr></thead>
+      <tbody>
+        <tr><td><code>.js</code></td><td>JavaScript</td><td>não</td></tr>
+        <tr><td><code>.jsx</code></td><td>JavaScript</td><td><strong>sim</strong></td></tr>
+        <tr><td><code>.ts</code></td><td>TypeScript</td><td>não</td></tr>
+        <tr><td><code>.tsx</code></td><td>TypeScript</td><td><strong>sim</strong></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <ul class="points">
+      <li><code>className</code> (não <code>class</code>) · <code>onClick</code> em camelCase, recebendo uma <strong>função</strong> · <code>{ }</code> abre uma expressão · tags sempre fechadas</li>
+    </ul>
+    <p class="payoff">Temos TypeScript, então usamos <strong>.tsx</strong> nos componentes. Arquivo sem interface continua <code>.ts</code>.</p>
+  </section>
+
+  <!-- 8 · anatomia (abas) -->
+  <section class="slide" data-eyebrow="componente · anatomia">
+    <h2>Anatomia de um <span class="accent">componente</span></h2>
+    <div class="w" data-abas>
+      <div class="abas">
+        <div class="painel"><h4>TaskItem.tsx · clique numa parte</h4><div class="painel-corpo"><pre class="cod"><span class="parte" data-parte="params" data-rotulo="① parâmetros">type TaskItemProps = {
+    task: Task
+    onToggle: (task: Task) =&gt; void
+}</span><span class="parte" data-parte="params">function TaskItem({ task, onToggle }: TaskItemProps) {</span><span class="parte" data-parte="codigo" data-rotulo="② código">    const decoration = task.is_done ? "line-through" : "none"</span><span class="parte" data-parte="retorno" data-rotulo="③ retorno">    return (
+        &lt;li onClick={() =&gt; onToggle(task)}
+            style={{ textDecoration: decoration }}&gt;
+            {task.name}
+        &lt;/li&gt;
+    )</span><span class="parte" data-parte="params codigo retorno uso">}</span><span class="parte" data-parte="uso" data-rotulo="④ uso">&lt;TaskItem task={task} onToggle={toggle} /&gt;</span></pre></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="abas-nav">
+            <button class="w-btn acao" data-aba="params">① Parâmetros</button>
+            <button class="w-btn acao" data-aba="codigo">② Código</button>
+            <button class="w-btn acao" data-aba="retorno">③ Retorno</button>
+            <button class="w-btn acao" data-aba="uso">④ Como usar</button>
+          </div>
+          <div class="abas-txt">
+            <p data-texto="params"><b>Parâmetros.</b> O componente recebe <b>um único objeto</b>, o <code>props</code>, desestruturado na assinatura e tipado com <code>TaskItemProps</code>. É <b>somente leitura</b>: o filho lê, o dono é o pai.</p>
+            <p data-texto="codigo"><b>Código.</b> TypeScript comum, antes do <code>return</code>. <b>Roda inteiro a cada renderização</b>: aqui calcula <code>decoration</code> a partir de <code>task.is_done</code>.</p>
+            <p data-texto="retorno"><b>Retorno.</b> É o que <b>renderiza</b>: o JSX devolvido vira a tela. Cada renderização produz um JSX novo para os parâmetros e o estado atuais. <code>{ }</code> abre uma expressão; um único elemento raiz.</p>
+            <p data-texto="uso"><b>Uso.</b> Uma tag com o nome da função, <b>sempre maiúsculo</b>. Os parâmetros viram atributos; função e variável vão entre chaves.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · callback injetada pelo pai (inversão de controle) -->
+  <section class="slide" data-eyebrow="parâmetros · callback">
+    <h2>O pai <span class="accent">injeta</span> a função, a filha <span class="accent">executa</span></h2>
+    <div class="w passos" data-passos="4" data-print="4">
+      <div class="cena" style="grid-template-columns:1fr 1fr">
+        <div class="painel"><h4>pai · TaskApp (dono do estado)</h4><div class="painel-corpo"><pre class="cod"><span class="ln" data-ativo="1 4"><span class="k">function</span> toggle(task: Task) {</span><span class="ln" data-ativo="1 4">    setTasks(<span class="c">/* marca a task */</span>)</span><span class="ln" data-ativo="1">}</span><span class="ln"> </span><span class="ln" data-ativo="2"><span class="k">return</span> (</span><span class="ln" data-ativo="2">  &lt;TaskItem task={task}</span><span class="ln" data-ativo="2">    onToggle={<span class="hl">toggle</span>} /&gt;</span><span class="ln" data-ativo="2">)</span></pre></div></div>
+
+        <div class="painel"><h4>filha · TaskItem (só executa)</h4><div class="painel-corpo"><pre class="cod"><span class="ln" data-ativo="2"><span class="k">function</span> TaskItem({ task, <span class="hl">onToggle</span> }) {</span><span class="ln" data-ativo="3 4">  <span class="k">return</span> (</span><span class="ln" data-ativo="3 4">    &lt;li onClick={() =&gt;</span><span class="ln" data-ativo="3 4">      <span class="hl">onToggle</span>(task)}&gt;</span><span class="ln" data-ativo="3">      {task.name}</span><span class="ln">    &lt;/li&gt;</span><span class="ln">  )</span><span class="ln">}</span></pre></div></div>
+      </div>
+      <div class="w-barra"><button class="p-prev" aria-label="Passo anterior">‹</button><span class="w-n"></span><span class="w-leg"></span><button class="p-next acao" aria-label="Próximo passo">›</button></div>
+      <ol class="passos-legendas">
+        <li><b>1.</b> O <b>pai</b> escreve a função <code>toggle</code>: só ele conhece o estado e sabe como alterá-lo.</li>
+        <li><b>2.</b> O pai <b>injeta</b> a função como parâmetro: <code>onToggle={toggle}</code>. Passa a <b>referência</b> (o endereço da função no heap), sem executar.</li>
+        <li><b>3.</b> A filha só recebe um <code>onToggle</code> e liga no clique. Ela <b>não sabe</b> o que a função faz.</li>
+        <li><b>4.</b> No clique, a filha <b>executa</b> <code>onToggle(task)</code>, e roda o código do <b>pai</b>: <code>setTasks</code>, nova renderização.</li>
+      </ol>
+    </div>
+    <div class="callout"><span class="mark" style="white-space:nowrap">IoC</span><p><strong>Inversão de controle</strong>: quem decide <em>o que</em> acontece é o pai; a filha decide só <em>quando</em> chamar. É a mesma ideia do <code>addEventListener</code> e dos middlewares do Express.</p></div>
+  </section>
+
+  <!-- 10 · instalação -->
+  <section class="slide" data-eyebrow="instalação · tsconfig">
+    <h2>Instalando <span class="accent">React + TypeScript</span></h2>
+    <div class="two-col">
+    <div class="tree" style="font-size:1.05rem">
+<span class="dim"># núcleo + ponte com o navegador</span><br>
+npm install react react-dom<br>
+<span class="dim"># tipos + plugin do Vite</span><br>
+npm install -D @types/react @types/react-dom \<br>
+&nbsp;&nbsp;@vitejs/plugin-react<br>
+<span class="dim"># projeto novo, já pronto</span><br>
+npm create vite@latest meu-app -- --template react-ts
+    </div>
+    <div class="tree" style="font-size:1.05rem">
+<span class="dim"># vite.config.js</span><br>
+plugins: [<span class="hl">react()</span>]<br>
+<span class="dim"># tsconfig.json</span><br>
+"jsx": <span class="hl">"react-jsx"</span><br>
+"include": ["resources/js/**/*.ts",<br>
+&nbsp;&nbsp;<span class="hl">"resources/js/**/*.tsx"</span>]
+    </div>
+    </div>
+    <ul class="points">
+      <li><code>react-jsx</code> dispensa <code>import React</code> em cada arquivo · o HTML precisa de <strong>um</strong> <code>&lt;div id="root"&gt;</code> onde o React se pendura</li>
+    </ul>
+  </section>
+
+  <!-- 11 · Turing + semáforo (interativo) -->
+  <section class="slide" data-eyebrow="estado · conceito zero">
+    <h2>Estado: de <span class="accent">Alan Turing</span> ao semáforo</h2>
+    <div class="w" data-semaforo>
+      <div class="sem">
+        <div class="sem-luzes"><div class="sem-luz vermelho"></div><div class="sem-luz amarelo"></div><div class="sem-luz verde"></div></div>
+        <table>
+          <thead><tr><th>estado atual</th><th>passa o tempo →</th></tr></thead>
+          <tbody>
+            <tr data-estado="verde"><td>"verde"</td><td>"amarelo"</td></tr>
+            <tr data-estado="amarelo"><td>"amarelo"</td><td>"vermelho"</td></tr>
+            <tr data-estado="vermelho"><td>"vermelho"</td><td>"verde"</td></tr>
+          </tbody>
+        </table>
+        <div class="sem-info">
+          <div class="estado-chip">estado = <b></b></div>
+          <button class="w-btn prim acao sem-passa">⏱ passa o tempo</button>
+        </div>
+      </div>
+    </div>
+    <ul class="points">
+      <li><strong>Máquina de Turing (1936)</strong>: fita, cabeçote, tabela de transição e um <strong>estado atual</strong></li>
+      <li><strong>Estado</strong> = tudo que o sistema precisa lembrar do passado para decidir o que fazer agora. Mesmo evento, resultado depende do estado</li>
+      <li><strong>Em orientação a objetos</strong>, o estado são os valores <strong>atuais das propriedades</strong> do objeto instanciado de uma classe: <code>new Task("Estudar")</code> começa com <code>isDone = false</code>, e <code>complete()</code> muda o estado</li>
+    </ul>
+    <div class="callout"><span class="mark" style="white-space:nowrap">git</span><p>Essa foto é o famoso <strong>snapshot</strong>, como um <strong>commit do Git</strong>: guarda o projeto inteiro naquele momento, e o evento leva de um snapshot ao próximo.</p></div>
+    <p class="payoff">Gerenciar estado = responder: quem é o dono, quem lê, quem muda e quem precisa ser avisado.</p>
+  </section>
+
+  <!-- 12 · re-render por estado e parâmetro (interativo) -->
+  <section class="slide" data-eyebrow="useState · re-renderização">
+    <h2>Estado ou parâmetro mudou: a função <span class="accent">roda inteira</span> de novo</h2>
+    <div class="w" data-render>
+      <div class="rr">
+        <div class="painel"><h4>pai · parâmetro</h4><div class="painel-corpo">
+          <code class="rr-tag">&lt;Tarefa nome={…} /&gt;</code>
+          <button class="w-btn acao" data-nome="Estudar React" aria-pressed="true">"Estudar React"</button>
+          <button class="w-btn acao" data-nome="Ler o briefing" aria-pressed="false">"Ler o briefing"</button>
+        </div></div>
+
+        <div class="painel"><h4>função Tarefa() · código</h4><div class="painel-corpo"><pre class="cod"><span class="ln" data-l="1"><span class="k">function</span> Tarefa({ nome }: Props) {</span><span class="ln" data-l="2">    <span class="k">const</span> [isDone, setIsDone] = useState(<span class="k">false</span>)</span><span class="ln" data-l="3"> </span><span class="ln" data-l="4" data-ev="2">    <span class="k">function</span> aoClicar() {</span><span class="ln" data-l="5" data-ev="2">        setIsDone(!isDone)</span><span class="ln" data-l="6" data-ev="2">    }</span><span class="ln" data-l="7"> </span><span class="ln" data-l="8">    <span class="k">return</span> (</span><span class="ln" data-l="9" data-ev="1">        &lt;li <span class="hl">onClick={aoClicar}</span>&gt;</span><span class="ln" data-l="10">            &lt;input type="checkbox"</span><span class="ln" data-l="11">                checked={isDone} readOnly /&gt;</span><span class="ln" data-l="12">            {nome}</span><span class="ln" data-l="13">        &lt;/li&gt;</span><span class="ln" data-l="14">    )</span><span class="ln" data-l="15">}</span></pre></div></div>
+
+        <div class="painel"><h4>frame · tela</h4><div class="painel-corpo">
+          <div class="frame rr-frame"><b>Tarefa()</b>
+            <div class="var"><span>nome</span><span class="v rr-nome"></span></div>
+            <div class="var"><span>isDone</span><span class="v rr-is-done"></span></div>
+          </div>
+          <ul class="rr-tela"><li class="acao acao-pill"><span class="cb"></span><span class="rr-txt"></span></li></ul>
+          <div class="renders">renderizações: <b class="rr-n">1</b></div>
+          <ol class="rr-fases"><li data-fase="1">1 · clique no &lt;li&gt;: o navegador chama <code>onClick</code></li><li data-fase="2">2 · <code>aoClicar()</code> chama <code>setIsDone</code>: o React guarda o estado novo</li><li data-fase="3">3 · <code>Tarefa()</code> roda de novo, inteira</li></ol>
+          <div class="rr-causa">primeira renderização</div>
+        </div></div>
+      </div>
+    </div>
+    <p class="payoff">Clique na tarefa (muda o <strong>estado</strong>) ou troque o texto no pai (muda o <strong>parâmetro</strong>). Nos dois casos o frame volta à pilha e todo o código roda de novo.</p>
+  </section>
+
+  <!-- 13 · a foto do estado (interativo) -->
+  <section class="slide" data-eyebrow="useState · a foto do estado">
+    <h2>Cada renderização vê uma <span class="accent">foto</span> do estado</h2>
+    <div class="w" data-foto>
+      <div class="rr" style="grid-template-columns:1.25fr 1.4fr 1fr">
+        <div class="painel"><h4>tela (DOM)</h4><div class="painel-corpo">
+          <ul class="rr-tela"><li class="acao acao-pill"><span class="foto-nome"></span><span class="foto-prio">prioridade <b class="foto-priority-big">0</b></span></li></ul>
+          <div class="renders renders-big">renderizações <b class="rr-n">1</b></div>
+          <div class="foto-sep">escolha o jeito de atualizar</div>
+          <button class="w-btn acao" data-modo="direta" aria-pressed="false">setPriority(priority + 1)</button>
+          <button class="w-btn acao" data-modo="funcao" aria-pressed="true">✓ setPriority(atual =&gt; atual + 1)</button>
+          <button class="w-btn acao foto-reset">zerar</button>
+        </div></div>
+
+        <div class="painel"><h4>função Tarefa() · código</h4><div class="painel-corpo"><pre class="cod"><span class="ln" data-l="1"><span class="k">function</span> Tarefa({ nome }: Props) {</span><span class="ln" data-l="2">    <span class="k">const</span> [priority, setPriority] = useState(0)</span><span class="ln" data-l="3"> </span><span class="ln" data-l="4" data-ev="2">    <span class="k">function</span> aumentarTres() {</span><span class="ln foto-chamada" data-ev="3a">        setPriority(atual =&gt; atual + 1)</span><span class="ln foto-chamada" data-ev="3b">        setPriority(atual =&gt; atual + 1)</span><span class="ln foto-chamada" data-ev="3c">        setPriority(atual =&gt; atual + 1)</span><span class="ln" data-l="8" data-ev="2">    }</span><span class="ln" data-l="9"> </span><span class="ln" data-l="10">    <span class="k">return</span> (</span><span class="ln" data-l="11" data-ev="1">        &lt;li <span class="hl">onClick={aumentarTres}</span>&gt;</span><span class="ln" data-l="12">            {nome} · prioridade {priority}</span><span class="ln" data-l="13">        &lt;/li&gt;</span><span class="ln" data-l="14">    )</span><span class="ln" data-l="15">}</span></pre></div></div>
+
+        <div class="painel"><h4>o que o React recebe</h4><div class="painel-corpo">
+          <div class="frame rr-frame"><b>Tarefa()</b>
+            <div class="var"><span>priority</span><span class="v foto-priority"></span></div>
+          </div>
+          <pre class="mem-json foto-log" style="min-height:4.2em"></pre>
+        </div></div>
+      </div>
+    </div>
+    <p class="payoff">Clique na tarefa. Dentro de uma renderização <code>priority</code> é <strong>constante</strong> (a foto): as três linhas veem o mesmo valor. Quando o novo estado depende do antigo, <strong>use sempre o segundo jeito</strong>: a forma de função.</p>
+  </section>
+
+  <!-- 14 · generics -->
+  <section class="slide" data-eyebrow="generics · componentes">
+    <h2>Generics nos <span class="accent">componentes</span></h2>
+    <div class="tree" style="font-size:1.1rem">
+<span class="dim"># 1 · useState&lt;S&gt;: o tipo do estado (inferido ou explícito)</span><br>
+useState(0)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">→ number (inferido)</span><br>
+useState&lt;<span class="hl">Task[]</span>&gt;([])&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">→ sem o generic, [] vira never[]</span><br>
+useState&lt;<span class="hl">Task | null</span>&gt;(null)<br>
+<span class="dim"># 2 · parâmetros: o type Props</span><br>
+function TaskItem({ task, onToggle }: <span class="hl">TaskItemProps</span>)<br>
+<span class="dim"># 3 · componente genérico</span><br>
+function Lista&lt;<span class="hl">T</span>&gt;({ itens, renderItem }: ListaProps&lt;<span class="hl">T</span>&gt;)<br>
+&lt;Lista itens={tasks} renderItem={t =&gt; t.name} /&gt;&nbsp;<span class="dim">← T = Task</span>
+    </div>
+    <ul class="points">
+      <li>O TypeScript protege o estado: <code>setCor("azul")</code> não compila; <code>selecionada.name</code> só depois de provar que não é <code>null</code></li>
+    </ul>
+    <p class="payoff">Parâmetros e estado são as entradas; o código roda a cada renderização; o JSX é a saída.</p>
+  </section>
+
+  <!-- 15 · view EJS + React (passo a passo) -->
+  <section class="slide" data-eyebrow="juntando · view + react">
+    <h2>A View <span class="accent">EJS</span> entrega, o React <span class="accent">reage</span></h2>
+    <div class="w passos fluxo" data-passos="6" data-print="6">
+      <div class="fluxo-dois">
+        <div class="fluxo">
+          <div class="cx cli" data-de="1"><i>1</i><span>Navegador pede a página de tasks</span></div>
+          <div class="cx srv" data-de="2"><i>2</i><span>Middleware de sessão: sem token, redireciona</span></div>
+          <div class="cx srv" data-de="3"><i>3</i><span>Controller lê as tasks no banco e chama <code>res.render("tasks")</code></span></div>
+          <div class="cx srv" data-de="4"><i>4</i><span>EJS devolve o HTML com <code>#root</code> e <code>data-tasks</code></span></div>
+          <div class="cx cli" data-de="5"><i>5</i><span><code>createRoot(root).render(&lt;TaskApp initialTasks /&gt;)</code></span></div>
+          <div class="cx cli" data-de="6"><i>6</i><span>Clique → API → <code>setTasks</code> → o componente roda de novo</span></div>
+        </div>
+        <div class="tree" style="font-size:1.05rem">
+<span class="dim"># servidor (EJS)</span><br>
+&lt;div id="root"<br>
+&nbsp;&nbsp;data-id-user="..."<br>
+&nbsp;&nbsp;data-tasks="..."&gt;<br>
+<span class="dim"># navegador (React)</span><br>
+initialTasks → <span class="hl">useState</span>
+        </div>
+      </div>
+      <div class="w-barra"><button class="p-prev" aria-label="Passo anterior">‹</button><span class="w-n"></span><span class="w-leg"></span><button class="p-next acao" aria-label="Próximo passo">›</button></div>
+      <ol class="passos-legendas">
+        <li><b>Passo 1.</b> A página continua sendo uma <b>View</b>: HTML que passa pelo ciclo HTTP.</li>
+        <li><b>Passo 2.</b> A proteção da página continua no <b>servidor</b>, antes do HTML existir.</li>
+        <li><b>Passo 3.</b> O servidor lê o dado inicial: o React não precisa buscar nada ao abrir.</li>
+        <li><b>Passo 4.</b> A View entrega o dado como <b>atributo</b>: o <code>&lt;%= %&gt;</code> escapa o JSON.</li>
+        <li><b>Passo 5.</b> O dado inicial vira <b>parâmetro</b> e depois o <b>estado</b> do componente.</li>
+        <li><b>Passo 6.</b> A partir daqui o dono do dado é o <b>estado</b>: criar, marcar e excluir passam por <code>setTasks</code>.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 16 · próxima aula -->
+  <section class="slide" data-eyebrow="próxima aula">
+    <h2>Fica para a <span class="accent">próxima aula</span></h2>
+    <div class="two-col">
+    <div class="tree">
+<span class="hl">useRef</span><br>
+valor que sobrevive às renderizações<br>
+<span class="dim">como o estado, mas sem disparar<br>
+nova renderização</span>
+    </div>
+    <div class="tree">
+<span class="hl">useEffect</span><br>
+código que roda <span class="dim">por causa</span> de uma<br>
+renderização<br>
+<span class="dim">buscar dados, assinar eventos</span>
+    </div>
+    </div>
+    <p class="payoff">Os dois são saídas controladas do ciclo estado → renderização → tela. Só fazem sentido com o estado sólido.</p>
+  </section>
+
+  <!-- 17 · TF (sempre por último) -->
+  <section class="slide" data-eyebrow="tf 08 · entrega">
+    <span class="kicker-badge">TF 08</span>
+    <h2><span class="accent">React: Gerenciamento de Estados</span></h2>
+    <div class="two-col">
+    <ul class="points">
+      <li>Crie um <strong>app React</strong> (Vite + TSX): to-do de tasks que adiciona, marca, exclui e <strong>filtra</strong></li>
+      <li>Só <strong>estado, props e callbacks</strong>: <strong>sem</strong> <code>useEffect</code> e <strong>sem</strong> <code>useRef</code></li>
+      <li>Só <code>const</code> · booleano <code>isDone</code> · sem <code>else</code></li>
+    </ul>
+    <div class="tree" style="font-size:1.05rem">
+<span class="dim"># branch = RA + -tf-08 (sem isso, o TF vale ZERO)</span><br>
+git switch -c <span class="hl">1234567-tf-08</span><br>
+<span class="dim"># na raiz: diretório com o MESMO nome da branch</span><br>
+<span class="hl">1234567-tf-08/</span><br>
+&nbsp;&nbsp;tf.md&nbsp;<span class="dim">← nome, RA e GitHub</span><br>
+&nbsp;&nbsp;app/&nbsp;<span class="dim">← o projeto React</span>
+    </div>
+    </div>
+    <a class="link-card" href="https://docs.google.com/forms/d/e/1FAIpQLSfQWln5GAxiFlYf2IVEKINvJ5qEjfVWgMJNAyalcBqFRUqOJw/viewform?usp=publish-editor" target="_blank" rel="noopener">https://docs.google.com/forms/d/e/1FAIpQLSfQWln5GAxiFlYf2IVEKINvJ5qEjfVWgMJNAyalcBqFRUqOJw/viewform?usp=publish-editor</a>
+    <p class="payoff">Entrega por Pull Request, título <code>TF-08 · RA · Nome</code>. Prazo: 02/11/2026 · detalhes em TF08.md.</p>
+  </section>
+
+</div>
+
+<nav class="hud">
+  <button id="prevBtn" aria-label="Slide anterior">‹</button>
+  <div class="hud-mid">
+    <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="hud-meta">
+      <span><span id="counterCurrent">01</span> / <span id="counterTotal">17</span> — <span id="eyebrowLabel">abertura</span></span>
+      <span class="hint">← → trocam de slide · ↑ ↓ passo a passo · T alterna o tema</span>
+    </div>
+  </div>
+  <button id="nextBtn" aria-label="Próximo slide">›</button>
+</nav>
+<script src="../../../assets/slide-interativo.js"></script>
+<script src="../../../assets/slide.js"></script>
+<script src="../../../assets/slide-16x9.js"></script>
+</body>
+</html>

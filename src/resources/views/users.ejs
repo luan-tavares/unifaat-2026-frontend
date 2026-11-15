@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tasks - Usuários</title>
+  <link rel="icon" type="image/png" href="/img/favicon.ico">
+  <%- vite(["css/app.css", "js/app.ts", "js/pages/users.tsx"]) %>
+</head>
+
+<body class="d-flex flex-column min-vh-100 bg-light">
+
+  <%# O servidor entrega o usuário logado (do token verificado) e a primeira página de usuários; o React monta o resto %>
+  <div id="root" class="d-flex flex-column flex-grow-1"
+       data-user-name="<%= user.name %>"
+       data-initial-users="<%= JSON.stringify(initialUsers) %>"></div>
+
+  <%- include('partials/footer') %>
+</body>
+
+</html>

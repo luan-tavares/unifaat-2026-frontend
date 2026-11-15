@@ -1,0 +1,567 @@
+/* Widgets interativos dentro dos slides (FE): passos animados, abas de código,
+   semáforo (máquina de estados), ciclo do estado e "foto" do estado.
+   Só cores por variável (tema claro/escuro vem de slide.css). */
+
+.w{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+/* ── barra de passos ─────────────────────────────────── */
+.w-barra{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-body);
+}
+.w-barra button, .w-btn{
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  font-weight: 600;
+  background: var(--surface);
+  color: var(--ink);
+  border: 2px solid var(--code-border);
+  border-radius: 8px;
+  padding: 4px 14px;
+  cursor: pointer;
+}
+.w-barra button:hover:not(:disabled), .w-btn:hover:not(:disabled){ background: var(--bg-raised); }
+.w-barra button:disabled, .w-btn:disabled{ opacity: .35; cursor: default; }
+.w-btn.prim{ background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.w-btn.prim:hover:not(:disabled){ background: var(--accent); filter: brightness(1.1); }
+.w-n{
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--muted-2);
+  min-width: 3.2em;
+}
+.w-leg{
+  flex: 1;
+  font-size: 1.15rem;
+  line-height: 1.3;
+  color: var(--ink);
+  border-left: 4px solid var(--accent-2);
+  padding: 2px 0 2px 12px;
+}
+.w-leg b{ color: var(--accent); }
+.passos-legendas{ display: none; }
+
+/* ── cena em 3 colunas: código | pilha | heap ──────────── */
+.cena{
+  display: grid;
+  grid-template-columns: 1.25fr 1fr 1fr;
+  gap: 12px;
+  align-items: stretch;
+}
+.cena.duas{ grid-template-columns: 1.15fr 1fr 1fr; }
+.painel{
+  background: var(--surface);
+  border: 2px solid var(--code-border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.painel > h4{
+  margin: 0;
+  padding: 4px 12px;
+  background: var(--code-bar);
+  border-bottom: 2px solid var(--code-border);
+  border-radius: 6px 6px 0 0;
+  font-family: var(--font-mono);
+  font-size: .85rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.painel-corpo{ padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.painel-corpo.base{ justify-content: flex-end; }
+
+pre.cod{
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--code-ink);
+  background: var(--code-bg);
+  white-space: pre;
+  overflow: hidden;
+}
+pre.cod .ln{
+  display: block;
+  padding: 0 10px;
+  border-left: 4px solid transparent;
+}
+pre.cod .ln.ativo{
+  background: var(--bg-raised);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+pre.cod .c{ color: var(--code-comment); font-style: italic; }
+pre.cod .k{ color: var(--code-prompt); font-weight: 600; }
+pre.cod .s{ color: var(--code-hl); }
+
+/* frame da pilha, variável e objeto no heap */
+.frame{
+  border: 2px solid var(--accent-2);
+  border-radius: 6px;
+  background: var(--bg);
+}
+.frame > b{
+  display: block;
+  font-family: var(--font-mono);
+  font-size: .85rem;
+  padding: 2px 8px;
+  background: var(--accent-2);
+  color: var(--bg);
+}
+.var{
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  padding: 2px 8px;
+  border-top: 1px solid var(--rule);
+}
+.var .v{ font-weight: 700; }
+.var .ref{ color: var(--accent); font-weight: 700; }
+.heap-obj{
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  background: var(--bg);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  padding: 4px 8px;
+}
+.heap-obj > b{ display: block; color: var(--accent); font-size: .85rem; }
+.heap-obj.lixo{ border-style: dashed; opacity: .55; text-decoration: line-through; }
+.heap-obj .prop{ display: block; }
+.slot{ position: relative; min-height: 0; }
+.slot > .over{ position: absolute; inset: 0; }
+
+/* elementos que aparecem por passo */
+.passos [data-de]{
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity .25s, transform .25s, visibility .25s;
+}
+.passos [data-de].vis{ opacity: 1; visibility: visible; transform: none; }
+.passos .slot > [data-de]:not(.vis){ position: absolute; inset: 0; }
+
+/* ── abas de código (anatomia) ───────────────────────── */
+.abas{ display: grid; grid-template-columns: 1.35fr 1fr; gap: 12px; align-items: start; }
+.abas-nav{ display: flex; flex-direction: column; gap: 6px; }
+.abas-nav .w-btn{ text-align: left; font-size: 1.05rem; }
+.abas-nav .w-btn[aria-selected="true"]{
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+.abas-txt{
+  background: var(--surface);
+  border: 2px solid var(--code-border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 1.12rem;
+  line-height: 1.35;
+  min-height: 150px;
+}
+.abas-txt p{ margin: 0; }
+.abas-txt [data-texto]{ display: none; }
+.abas-txt [data-texto].on{ display: block; }
+.abas-txt code{ font-family: var(--font-mono); font-size: .95em; background: var(--bg-raised); padding: 0 4px; border-radius: 4px; }
+pre.cod .parte{ display: block; border-left: 4px solid transparent; padding: 0 10px; opacity: .45; transition: opacity .2s, background .2s; }
+pre.cod .parte.on{ opacity: 1; background: var(--bg-raised); border-left-color: var(--accent); }
+pre.cod.todas .parte{ opacity: 1; }
+
+/* ── semáforo ───────────────────────────────────────── */
+.sem{ display: grid; grid-template-columns: auto 1fr 1fr; gap: 16px; align-items: center; }
+.sem-luzes{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #1b1b1b;
+  padding: 10px;
+  border-radius: 12px;
+}
+.sem-luz{ width: 54px; height: 54px; border-radius: 50%; background: #444; opacity: .35; transition: opacity .25s, box-shadow .25s; }
+.sem-luz.vermelho{ background: #e5493a; }
+.sem-luz.amarelo{ background: #f5c211; }
+.sem-luz.verde{ background: #2ec27e; }
+.sem-luz.on{ opacity: 1; box-shadow: 0 0 18px 4px currentColor; }
+.sem-luz.vermelho.on{ color: #e5493a; }
+.sem-luz.amarelo.on{ color: #f5c211; }
+.sem-luz.verde.on{ color: #2ec27e; }
+.sem table{ border-collapse: collapse; font-family: var(--font-mono); font-size: 1.05rem; background: var(--surface); width: 100%; }
+.sem th, .sem td{ border: 2px solid var(--code-border); padding: 4px 10px; text-align: left; }
+.sem th{ background: var(--code-bar); }
+.sem tr.on td{ background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.sem-info{ display: flex; flex-direction: column; gap: 8px; }
+.estado-chip{
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  background: var(--surface);
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  padding: 6px 12px;
+}
+.estado-chip b{ color: var(--accent); }
+
+/* ── quadrado da memória: pilha e heap lado a lado, com setas ── */
+.cena.mem{ grid-template-columns: 1fr 1.9fr; }
+.memoria{
+  position: relative;
+  border: 3px solid var(--accent);
+  border-radius: 10px;
+  background: var(--bg);
+  padding: 0 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.memoria > h4{
+  margin: 0 -10px;
+  padding: 4px 12px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-radius: 6px 6px 0 0;
+  font-family: var(--font-mono);
+  font-size: .85rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.memoria-corpo{ display: grid; grid-template-columns: 1fr 1fr; gap: 56px; flex: 1; }
+.memoria-obs{ margin: 0; font-size: .95rem; line-height: 1.3; color: var(--ink); }
+svg.setas{ position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; color: var(--accent); }
+svg.setas path{ fill: none; stroke: currentColor; stroke-width: 2.8; stroke-dasharray: 10 7; animation: march .6s linear infinite; }
+svg.setas polygon, svg.setas circle{ fill: currentColor; }
+@keyframes march{ to{ stroke-dashoffset: -17; } }
+@media (prefers-reduced-motion: reduce){ svg.setas path{ animation: none; } }
+
+/* ── re-renderização: estado e parâmetro ────────────── */
+.rr{ display: grid; grid-template-columns: .8fr 1.4fr 1fr; gap: 12px; align-items: stretch; }
+.rr-tag{ font-family: var(--font-mono); font-size: 1rem; color: var(--ink); }
+.rr .w-btn[aria-pressed="true"]{ background: var(--accent-2); color: var(--bg); border-color: var(--accent-2); }
+.rr-frame{ opacity: 0; transform: translateY(8px); transition: opacity .2s, transform .2s; }
+.rr-frame.on{ opacity: 1; transform: none; }
+.rr-tela{ margin: 0; padding: 0; }
+.rr-tela li{
+  list-style: none;
+  font-size: 1.1rem;
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  background: var(--bg);
+}
+.rr-tela li.pisca{ animation: flash .8s; }
+@keyframes flash{ from{ background: var(--accent); color: var(--accent-ink); } to{ background: var(--bg); } }
+.rr-causa{ font-size: 1rem; font-weight: 600; color: var(--accent-2); min-height: 1.3em; }
+.renders{ font-family: var(--font-mono); font-size: 1rem; }
+.renders b{ font-size: 1.4rem; color: var(--accent); }
+.mem-aviso{ font-size: .95rem; font-weight: 600; color: var(--warn); }
+
+/* ── "foto" do estado ───────────────────────────────── */
+.foto{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.foto-log{
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0;
+  min-height: 5.2em;
+  white-space: pre-wrap;
+  color: var(--code-ink);
+}
+.foto-res{ font-family: var(--font-mono); font-size: 1.1rem; }
+.foto-res b{ color: var(--accent); font-size: 1.5rem; }
+
+/* ── fluxo vertical em caixas (view → react) ─────────── */
+.fluxo{ display: flex; flex-direction: column; gap: 6px; }
+.fluxo .cx{
+  display: grid;
+  grid-template-columns: 2.2rem 1fr;
+  gap: 10px;
+  align-items: center;
+  border: 2px solid var(--code-border);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 4px 10px;
+  font-size: 1.12rem;
+  line-height: 1.3;
+}
+.fluxo .cx > i{
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+}
+.fluxo .cx code{ font-family: var(--font-mono); font-size: .95em; background: var(--bg-raised); padding: 0 4px; border-radius: 4px; }
+.fluxo .cx.srv{ border-color: var(--accent-2); }
+.fluxo .cx.cli{ border-color: var(--accent); }
+.fluxo .passos [data-de].cx.ativo, .fluxo .cx.ativo{ background: var(--bg-raised); box-shadow: 0 0 0 3px var(--accent); }
+.fluxo-dois{ display: grid; grid-template-columns: 1.3fr 1fr; gap: 14px; align-items: start; }
+
+/* impressão: o PDF mostra o passo "de impressão" de cada widget, sem barra */
+@media print{
+  .w-barra, .modo, .abas-nav .w-btn:not([aria-selected="true"]){ display: none !important; }
+  .passos [data-de]{ transition: none; }
+}
+
+/* ── anatomia do componente: uma cor por parte ───────── */
+:root{
+  --c-params: #1d5fd1;
+  --c-codigo: #c2410c;
+  --c-retorno: #0f7a4a;
+  --c-uso: #7c3aed;
+  --c-on: #ffffff;
+}
+:root[data-theme="dark"]{
+  --c-params: #6ea8ff;
+  --c-codigo: #ffa65c;
+  --c-retorno: #6ee7a8;
+  --c-uso: #c4a1ff;
+  --c-on: #0a1411;
+}
+[data-parte="params"], [data-aba="params"], [data-texto="params"]{ --cor: var(--c-params); }
+[data-parte="codigo"], [data-aba="codigo"], [data-texto="codigo"]{ --cor: var(--c-codigo); }
+[data-parte="retorno"], [data-aba="retorno"], [data-texto="retorno"]{ --cor: var(--c-retorno); }
+[data-parte="uso"], [data-aba="uso"], [data-texto="uso"]{ --cor: var(--c-uso); }
+
+pre.cod .parte{
+  position: relative;
+  border-left: 6px solid var(--cor, transparent);
+  background: color-mix(in srgb, var(--cor, transparent) 9%, transparent);
+  opacity: .5;
+  font-weight: 500;
+}
+pre.cod .parte.on{
+  opacity: 1;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--cor, transparent) 24%, transparent);
+  box-shadow: inset 0 0 0 2px var(--cor);
+}
+pre.cod .parte[data-parte="params codigo retorno uso"]{ --cor: var(--rule); opacity: 1; background: none; box-shadow: none; }
+pre.cod .parte.on[data-rotulo]::after{
+  content: attr(data-rotulo);
+  position: absolute;
+  right: 8px;
+  top: 4px;
+  font-family: var(--font-body);
+  font-size: .85rem;
+  font-weight: 700;
+  background: var(--cor);
+  color: var(--c-on);
+  padding: 1px 12px;
+  border-radius: 999px;
+}
+
+.abas-nav .w-btn{
+  border: 3px solid var(--cor);
+  border-left-width: 10px;
+  background: color-mix(in srgb, var(--cor) 10%, var(--surface));
+  font-size: 1.15rem;
+}
+.abas-nav .w-btn:hover:not(:disabled){ background: color-mix(in srgb, var(--cor) 22%, var(--surface)); }
+.abas-nav .w-btn[aria-selected="true"]{
+  background: var(--cor);
+  border-color: var(--cor);
+  color: var(--c-on);
+  transform: translateX(6px);
+}
+.abas-txt{
+  border: 3px solid var(--cor, var(--code-border));
+  border-left-width: 10px;
+  background: color-mix(in srgb, var(--cor, transparent) 8%, var(--surface));
+}
+.abas-txt [data-texto] b:first-child{ color: var(--cor); font-size: 1.25em; }
+.abas-txt [data-texto].on{ display: block; }
+.abas-txt[data-atual="params"]{ --cor: var(--c-params); }
+.abas-txt[data-atual="codigo"]{ --cor: var(--c-codigo); }
+.abas-txt[data-atual="retorno"]{ --cor: var(--c-retorno); }
+.abas-txt[data-atual="uso"]{ --cor: var(--c-uso); }
+pre.cod .hl{ color: var(--accent); font-weight: 700; }
+
+/* fases do clique (slide de re-renderização) */
+.rr-fases{ margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.rr-fases li{
+  list-style: none;
+  font-size: .88rem;
+  line-height: 1.25;
+  padding: 2px 8px;
+  border-left: 4px solid var(--rule);
+  color: var(--muted-2);
+}
+.rr-fases li.on{ border-left-color: var(--accent); background: var(--bg-raised); color: var(--ink); font-weight: 600; }
+.rr-fases code{ font-family: var(--font-mono); font-size: .95em; }
+.rr .painel-corpo{ gap: 4px; }
+
+/* ── código em negrito, comentário normal e em itálico (padrão de todos os slides) ── */
+.deck .tree,
+.deck pre.cod,
+.deck pre.cod .ln,
+.deck pre.cod .parte,
+.deck pre.cod .parte.on,
+.deck pre.cod .ln.ativo,
+.deck .mem-json,
+.deck .foto-log{ font-weight: 700; }
+.deck .tree .dim,
+.deck pre.cod .c{ font-weight: 400; font-style: italic; }
+
+/* checkbox desenhado (mesmo tamanho marcado ou não) */
+.rr-tela li{ display: flex; align-items: center; gap: 10px; }
+.cb{
+  flex: none;
+  width: 26px;
+  height: 26px;
+  box-sizing: border-box;
+  border: 3px solid var(--ink);
+  border-radius: 6px;
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  transition: background .2s, border-color .2s;
+}
+.cb.on{ background: var(--accent-2); border-color: var(--accent-2); }
+.cb.on::after{
+  content: "";
+  width: 7px;
+  height: 13px;
+  border: solid var(--bg);
+  border-width: 0 3px 3px 0;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+
+/* ── indicador de ação: tudo que executa algo ao clicar leva .acao (bolinha ▶ pulsando) ── */
+.acao{ position: relative; }
+.acao::after{
+  content: "▶";
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: 700 9px/1 var(--font-mono);
+  display: grid;
+  place-items: center;
+  z-index: 2;
+  pointer-events: none;
+  animation: pulsa 1.6s ease-out infinite;
+}
+/* variante em pílula com texto, para elementos que não parecem botão (item da lista) */
+.acao-pill::after{
+  content: "▶ clique";
+  width: auto;
+  height: auto;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: .8rem;
+  top: -12px;
+  right: 12px;
+}
+/* já selecionado ou desligado: não é a ação */
+.acao[aria-pressed="true"]::after,
+.acao[aria-selected="true"]::after,
+.acao:disabled::after{ display: none; }
+@keyframes pulsa{
+  0%{ box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); }
+  70%{ box-shadow: 0 0 0 10px transparent; }
+  100%{ box-shadow: 0 0 0 0 transparent; }
+}
+@media (prefers-reduced-motion: reduce){ .acao::after{ animation: none; } }
+@media print{ .acao::after{ display: none; } }
+
+/* slide da foto do estado: a tela mostra prioridade e renderizações em destaque */
+.rr-tela li .foto-prio{ margin-left: auto; font-size: .95rem; }
+.rr-tela li .foto-priority-big{ font-size: 1.9rem; color: var(--accent); margin-left: 4px; }
+.renders-big{ font-size: 1.05rem; border: 2px solid var(--accent-2); border-radius: 8px; padding: 4px 12px; background: var(--bg); display: flex; justify-content: space-between; align-items: center; }
+.renders-big b{ font-size: 2.2rem; color: var(--accent-2); }
+.foto-sep{ font-size: .85rem; font-weight: 600; color: var(--muted-2); border-top: 1px dashed var(--rule); padding-top: 6px; margin-top: 2px; }
+
+/* ── variantes de cor para fluxos de efeito e referência (Aula 09) ─────────
+   --c-efeito: o que roda DEPOIS da tela (useEffect) · --c-ref: referência / heap */
+:root{ --c-efeito: #b4236a; --c-ref: #0e7490; }
+:root[data-theme="dark"]{ --c-efeito: #ff8fc4; --c-ref: #5fd3e8; }
+.fluxo .cx.efeito{ border-color: var(--c-efeito); }
+.fluxo .cx.efeito > i{ background: var(--c-efeito); color: var(--c-on); }
+.fluxo .cx.ref{ border-color: var(--c-ref); }
+.fluxo .cx.ref > i{ background: var(--c-ref); color: var(--c-on); }
+.tree .efeito, .cod .efeito, .data-table td.efeito{ color: var(--c-efeito); font-weight: 700; }
+.tree .ref, .data-table td.ref{ color: var(--c-ref); font-weight: 700; }
+.tree .erro{ color: var(--warn); font-weight: 700; }
+/* painel de estados herdados do hook: etiqueta que aparece por passo */
+.chip-passo{ font-family: var(--font-mono); font-size: .95rem; border: 2px solid var(--c-efeito); border-radius: 8px; padding: 4px 10px; background: var(--bg); color: var(--ink); }
+.var .slot.v{ min-width: 4.5em; text-align: right; }
+
+/* ── autoplay: a animação roda sozinha; os botões ‹ › e o "acao" da barra de passos não aparecem ── */
+.w-barra button{ display: none; }
+
+/* widgets que animam sozinhos: nada parece "clique" aqui (sem bolinha ▶) */
+[data-passos] .acao::after, [data-abas] .acao::after, [data-render] .acao::after, [data-foto] .acao::after{ display: none; }
+
+/* ── AbortController (slide 13) e a tela /hooks (slide 14) ── */
+.fluxo .cx.erro{ border-color: var(--warn); }
+.fluxo .cx.erro > i{ background: var(--warn); color: var(--c-on); }
+
+/* mock simples da View /hooks: barra de endereço, estados do hook e o log que se escreve sozinho */
+.mock-tela{ border: 2px solid var(--code-border); border-radius: 10px; background: var(--surface); overflow: hidden; font-family: var(--font-body); }
+.mock-barra{ display: flex; gap: 10px; align-items: center; padding: 6px 10px; background: var(--bg-raised); border-bottom: 2px solid var(--code-border); font-size: .9rem; color: var(--muted-2); }
+.mock-url{ font-family: var(--font-mono); background: var(--bg); border: 1px solid var(--code-border); border-radius: 999px; padding: 1px 10px; color: var(--ink); }
+.mock-corpo{ padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.mock-estados{ display: flex; flex-wrap: wrap; gap: 6px 14px; font-family: var(--font-mono); font-size: .95rem; }
+.mock-rotulo{ font-size: .85rem; color: var(--muted-2); }
+.mk{ font-style: normal; border-radius: 6px; padding: 0 8px; color: var(--c-on); }
+.mk-ok{ background: var(--c-ref); }
+.mk-mudo{ background: var(--muted-2); }
+.mock-log{ background: var(--code-bg, var(--bg)); border: 2px solid var(--code-border); border-radius: 8px; padding: 8px 10px; font-family: var(--font-mono); font-size: .86rem; line-height: 1.5; }
+.mock-log .l{ white-space: pre; }
+.mock-log u{ text-decoration: none; color: var(--muted-2); }
+.mk-abort{ color: var(--c-efeito); font-weight: 700; }
+.mk-chegou{ color: var(--c-ref); font-weight: 700; }
+.mock-log .l{ opacity: 0; animation: mockLinha 10s infinite; }
+.mock-log .l:nth-child(1){ animation-delay: .4s; }
+.mock-log .l:nth-child(2){ animation-delay: 1.1s; }
+.mock-log .l:nth-child(3){ animation-delay: 1.8s; }
+.mock-log .l:nth-child(4){ animation-delay: 2.5s; }
+.mock-log .l:nth-child(5){ animation-delay: 3.2s; }
+.mock-log .l:nth-child(6){ animation-delay: 4.2s; }
+@keyframes mockLinha{ 0%{ opacity: 0; transform: translateX(-6px); } 4%, 90%{ opacity: 1; transform: none; } 96%, 100%{ opacity: 0; } }
+@media (prefers-reduced-motion: reduce){ .mock-log .l{ animation: none; opacity: 1; } }
+@media print{ .mock-log .l{ animation: none !important; opacity: 1 !important; transform: none !important; } }
+
+/* duas colunas que NÃO empilham no PDF (código à esquerda, mock à direita) */
+.dois-fixos{ display: grid; grid-template-columns: 1.15fr 1fr; gap: 14px; align-items: start; }
+.dois-fixos .mock-corpo{ padding: 8px 10px; }
+.dois-fixos .mock-log{ font-size: .78rem; padding: 6px 8px; }
+
+/* ── slide-cel: widgets em coluna única no celular (tela estreita ou em pé) ─────────────────── */
+@media screen and (max-width: 719px), screen and (orientation: portrait){
+  .cena, .cena.duas, .cena.mem, .rr, .abas, .dois-fixos{ grid-template-columns: minmax(0, 1fr) !important; }
+  .cena > *, .rr > *, .abas > *{ min-width: 0; }
+  .sem-info, .estado-chip{ flex-wrap: wrap; max-width: 100%; box-sizing: border-box; }
+  .memoria-corpo{ gap: 24px; }
+  .w-btn, .w-barra button, .abas-nav .w-btn{ min-height: 40px; }
+  .w-leg{ font-size: 1.02rem; }
+  .fluxo .cx{ font-size: 1rem; }
+  /* nada estoura a largura: tabelas e código rolam por dentro; botões quebram linha */
+  .data-table{ display: block; max-width: 100%; overflow-x: auto; }
+  .painel{ min-width: 0; max-width: 100%; }
+  .painel-corpo, pre.cod, .tree{ overflow-x: auto; max-width: 100%; }
+  .w-btn{ max-width: 100%; white-space: normal; }
+}
+
+/* celular deitado (pouca altura): rodapé limpo, sem a dica de teclas por cima do contador */
+@media screen and (max-height: 520px){
+  .hud .hint{ display: none !important; }
+}

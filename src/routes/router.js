@@ -24,6 +24,13 @@ import SwaggerDoc from '../app/Http/SwaggerDoc.js';
 import HelloWorldController from '../app/Http/Controllers/Views/HelloWorldController.js';
 import LoginViewController from '../app/Http/Controllers/Views/LoginViewController.js';
 import RedirectIfAuthenticatedMiddleware from '../app/Http/Middlewares/RedirectIfAuthenticatedMiddleware.js';
+import RedirectIfGuestMiddleware from '../app/Http/Middlewares/RedirectIfGuestMiddleware.js';
+import TasksViewController from '../app/Http/Controllers/Views/TasksViewController.js';
+import CounterViewController from '../app/Http/Controllers/Views/CounterViewController.js';
+import RefsViewController from '../app/Http/Controllers/Views/RefsViewController.js';
+import HooksViewController from '../app/Http/Controllers/Views/HooksViewController.js';
+import LogoutController from '../app/Http/Controllers/Views/LogoutController.js';
+import UsersViewController from '../app/Http/Controllers/Views/UsersViewController.js';
 
 const router = Router();
 
@@ -85,8 +92,26 @@ router.use(express.static(path.join(CONSTANTS.DIR, 'public')));
 /** Hello world: GET /hello?nome=Luan */
 router.get('/hello', HelloWorldController);
 
+/** Contador em React: View pública, sem login e sem middleware (demonstração de estado) */
+router.get('/contador', CounterViewController);
+
+/** Laboratório de referências e efeitos em React: View pública (demonstração de useRef e useEffect) */
+router.get('/refs', RefsViewController);
+
+/** Laboratório do custom hook useAxios (React dentro da View): precisa de sessão, porque o hook chama a API com o cookie */
+router.get('/hooks', RedirectIfGuestMiddleware, HooksViewController);
+
 /** Login: se já tem sessão válida, o middleware redireciona antes do HTML existir */
 router.get('/login', RedirectIfAuthenticatedMiddleware, LoginViewController);
+
+/** Logout: o cookie auth_token é HttpOnly, só o servidor consegue apagá-lo */
+router.get('/logout', LogoutController);
+
+/** Tasks (React dentro da View): sem sessão válida, o middleware redireciona para /login antes do HTML existir */
+router.get('/tasks', RedirectIfGuestMiddleware, TasksViewController);
+
+/** Usuários (React dentro da View): mesmo middleware, que verifica o JWT antes de renderizar */
+router.get('/usuarios', RedirectIfGuestMiddleware, UsersViewController);
 
 /**
  * Rota de documentação Swagger

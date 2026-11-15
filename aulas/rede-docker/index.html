@@ -29,6 +29,8 @@
       <button type="button" class="btn" data-scenario="list">HTTP API · list e get one (GET)</button>
       <button type="button" class="btn" data-scenario="fila">HTTP API · actions (POST/PUT/DELETE)</button>
       <button type="button" class="btn" data-scenario="busca">HTTP API · search (Elastic)</button>
+      <button type="button" class="btn" data-scenario="websocket">WebSocket · chat (túnel)</button>
+      <button type="button" class="btn" data-scenario="websocketpesado">WebSocket · evento pesado (worker)</button>
             <button type="button" class="btn" data-scenario="hmr">Vite HMR</button>
       <button type="button" class="btn" data-scenario="migration">migration</button>
     </div>
@@ -39,7 +41,7 @@
 
       <span class="host-title" style="--x:28;--y:18;--w:300;--h:40">Host (seu PC)</span>
 
-      <div class="net" style="--x:200;--y:200;--w:1580;--h:780"><span class="net-title">app-network (bridge)</span></div>
+      <div class="net" style="--x:200;--y:200;--w:1880;--h:780"><span class="net-title">app-network (bridge)</span></div>
 
       <!-- clientes no host -->
       <div class="item client" data-id="browser" tabindex="0" style="--x:18;--y:434;--w:124;--h:62">Navegador</div>
@@ -55,6 +57,7 @@
       <div class="item container" data-id="nodeweb" tabindex="0" style="--x:890;--y:720;--w:270;--h:150">nodeweb<span class="addr">nodeweb_host:3000</span><span class="mount-badge top vol" data-mb="mb-web-public" style="left:20%">public-volume<br>:/app/public</span><span class="mount-badge bottom" data-mb="mb-web-src" style="left:76%">./src:/app</span><span class="mount-badge bottom vol" data-mb="mb-web-nm" style="left:28%">nodemodules-volume<br>:/app/node_modules</span></div>
       <div class="item container ephemeral" data-id="nodecommand" tabindex="0" style="--x:1174;--y:720;--w:270;--h:150">nodecommand<span class="addr">nodecommand_host</span><small>efêmero: run --rm</small><span class="mount-badge bottom" data-mb="mb-cmd-src" style="left:25%">./src:/app</span><span class="mount-badge bottom vol" data-mb="mb-cmd-nm" style="left:72%">nodemodules-volume<br>:/app/node_modules</span></div>
       <div class="item container" data-id="nodeworker" tabindex="0" style="--x:1458;--y:720;--w:270;--h:150">nodeworker<span class="addr">nodeworker_host</span><span class="mount-badge bottom" data-mb="mb-worker-src" style="left:25%">./src:/app</span><span class="mount-badge bottom vol" data-mb="mb-worker-nm" style="left:72%">nodemodules-volume<br>:/app/node_modules</span></div>
+      <div class="item container" data-id="nodewebsocket" tabindex="0" style="--x:1742;--y:720;--w:270;--h:150">nodewebsocket<span class="addr">nodewebsocket_host:3001</span><small>túnel · Socket.IO</small><span class="mount-badge bottom" data-mb="mb-ws-src" style="left:25%">./src:/app</span><span class="mount-badge bottom vol" data-mb="mb-ws-nm" style="left:72%">nodemodules-volume<br>:/app/node_modules</span></div>
 
       <!-- portas publicadas (host → container), na borda da rede -->
       <div class="item port" data-id="p8080" tabindex="0" style="--x:124;--y:449;--w:104;--h:32">8080 → 80</div>
@@ -88,6 +91,8 @@
     <span><i class="lg-vol"></i>volume interno (gerenciado pelo Docker)</span>
     <span><i class="lg-bind"></i>pasta do seu PC montada (bind mount)</span>
     <span><i class="lg-net"></i>conexão pela rede</span>
+    <span><i class="lg-pool"></i>pool de conexões (Elasticsearch: conexões abertas e reaproveitadas)</span>
+    <span><i class="lg-tunnel"></i>túnel WebSocket (o cliente abre uma vez; depois vai e volta nos dois sentidos)</span>
     <span><i class="lg-mount"></i>montagem de volume/pasta</span>
     <span>a seta sempre sai de quem usa e aponta para o que é usado (container → volume, container → serviço, navegador → porta)</span>
     <span><i class="lg-bind"></i>badge <code>origem:destino</code> na borda do container, como no compose: pasta do seu PC → badge, badge laranja → volume interno</span>

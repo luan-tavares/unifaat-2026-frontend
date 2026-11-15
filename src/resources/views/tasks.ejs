@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tasks - Minhas Tarefas</title>
+  <link rel="icon" type="image/png" href="/img/favicon.ico">
+  <%- vite(["css/app.css", "js/app.ts", "js/pages/tasks.tsx"]) %>
+</head>
+
+<body class="d-flex flex-column min-vh-100 bg-light">
+
+  <%# O cabeçalho agora é um componente React (Header), dentro do #root; o servidor entrega o id, o nome e as tasks já lidas do banco %>
+  <div id="root" class="d-flex flex-column flex-grow-1"
+       data-id-user="<%= user.id %>"
+       data-user-name="<%= user.name %>"
+       data-tasks="<%= JSON.stringify(tasks) %>"></div>
+
+  <%- include('partials/footer') %>
+</body>
+
+</html>
