@@ -17,11 +17,13 @@ program
     .description('Servidor WebSocket: segura as conexões dos clients e distribui eventos pelo RabbitMQ')
     .option('--exchange <exchange>', 'Nome do exchange fanout que este servidor assina')
     .option('--port <port>', 'Porta do servidor WebSocket')
+    .option('--results <exchange>', 'Exchange de onde chegam os resultados processados pelos workers')
     .parse(process.argv)
 
 const options = program.opts()
 const exchange = options.exchange || 'notifications'
 const port = Number(options.port || 3001)
+const results = options.results || 'results'
 
 const events = await loadEvents(path.join(__dirname, 'app', 'Events'))
 
@@ -60,7 +62,18 @@ io.on('connection', (socket) => {
     })
 })
 
-// Volta do exchange: cria a fila dinâmica DESTE servidor e entrega aos SEUS clients conectados
+// Entrega o evento aos clients deste servidor. Com room no payload, só para quem está NA SALA
+// (io.to(room)); sem room (ex.: a lista de presença), para todos (io.emit).
+const deliver = (event, payload) => {
+    if (payload && payload.room) {
+        io.to(payload.room).emit(event, payload)
+        return
+    }
+
+    io.emit(event, payload)
+}
+
+// Volta do exchange de eventos: cria a fila dinâmica DESTE servidor e entrega aos SEUS clients conectados
 await rabbit.subscribe(exchange, (event, payload) => {
     // A lista de presença das réplicas é só informação de conexão: não vai direto para a tela
     if (event === 'presence:instance') {
@@ -68,7 +81,13 @@ await rabbit.subscribe(exchange, (event, payload) => {
         return
     }
 
-    io.emit(event, payload)
+    deliver(event, payload)
+})
+
+// Volta do exchange de resultados: o que os workers terminaram (ex.: chat:image) entra pela fila
+// dinâmica deste servidor no "results" e é entregue à sala, igual a qualquer outro evento.
+await rabbit.subscribe(results, (event, payload) => {
+    deliver(event, payload)
 })
 
 const shutdown = async () => {
@@ -82,5 +101,5 @@ process.on('SIGINT', shutdown)
 process.on('SIGTERM', shutdown)
 
 httpServer.listen(port, () => {
-    console.log(`Websocket iniciado na porta ${port}. Exchange: ${exchange}`)
+    console.log(`Websocket iniciado na porta ${port}. Exchange: ${exchange}. Resultados: ${results}`)
 })
