@@ -4,3 +4,15 @@
 /src/public/*
 !/src/public/.gitkeep
 /prova-1/
+# Dependências Node.js
+node_modules/
+**/node_modules/
+
+# Builds
+dist/
+**/dist/
+
+# Variáveis de ambiente
+.env
+.env.*
+!.env.example
