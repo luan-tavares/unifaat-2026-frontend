@@ -10,24 +10,31 @@ import {
 } from "../utils/getUserIdFromAuth.js";
 
 window.addEventListener("DOMContentLoaded", async (): Promise<void> => {
+    const auth = await checkAuthentication();
+
+    if (!auth.authenticated) {
+        clearUserId();
+        redirectToLogin();
+        return;
+    }
+
+    const { idUser } = auth;
+    setUserId(idUser);
+
     try {
-        const auth = await checkAuthentication();
-
-        if (!auth.authenticated) {
-            clearUserId();
-            redirectToLogin();
-            return;
-        }
-
-        const { idUser } = auth;
-
-        setUserId(idUser);
-
         await tasksListRender(idUser);
         await tasksListeners(idUser);
     } catch (error) {
         console.error("Falha ao carregar tarefas:", error);
-        clearUserId();
-        redirectToLogin();
+
+        const container = document.querySelector("#tasks-container");
+
+        if (container instanceof HTMLElement) {
+            container.innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    Não foi possível carregar suas tarefas. Verifique a conexão e atualize a página.
+                </div>
+            `;
+        }
     }
 });
