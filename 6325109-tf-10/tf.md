@@ -1,0 +1,5 @@
+Nome: Carina Dalpino
+RA: 6325109
+GitHub: https://github.com/CarinaDalpino
+
+Armadilha do dispatch: o `dispatch` do `createJob` chamava `rabbit.connect()` no começo e `rabbit.close()` no `finally`, sempre. O módulo `rabbit` guarda uma única conexão e um único canal por processo. No worker e no script de comando isso não atrapalha, porque a conexão é aberta só para publicar. Dentro do websocket, porém, a conexão já está aberta e é a mesma que mantém as filas dinâmicas dos exchanges `notifications` e `results`. Ao lançar o Job `ProcessChatImageJob` a partir do Event `chat:image`, o `finally` fechava essa conexão e o servidor deixava de receber qualquer evento do RabbitMQ: o chat inteiro parava de entregar mensagens. A correção foi perguntar `rabbit.isConnected()` antes do `connect` e guardar o resultado em `wasConnected`. O `dispatch` só abre a conexão se ela não existia e só a fecha, no `finally`, se foi ele quem a abriu. Assim o mesmo `dispatch` serve para o websocket (que reaproveita a conexão e a deixa aberta) e para quem não tem conexão (que abre e fecha como antes).
