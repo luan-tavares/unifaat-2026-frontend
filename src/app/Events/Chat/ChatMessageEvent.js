@@ -14,8 +14,14 @@ export default createEvent({
             return
         }
 
+        const room = String(payload?.room ?? '').trim()
+
+        if (!room) {
+            return
+        }
+
         const name = String(payload?.name ?? '').trim() || 'anônimo'
 
-        await context.notify('chat:message', { name, text: text.slice(0, 500), sentAt: Date.now() })
+        await context.notify('chat:message', { name, room, text: text.slice(0, 500), sentAt: Date.now() })
     }
 })

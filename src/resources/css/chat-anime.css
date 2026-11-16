@@ -1,0 +1,355 @@
+/* Tema anime do chat (Naruto na sala geral, Bleach na dev, Dragon Ball nos detalhes).
+   Escopado em .anime-chat: só a página /chat é afetada. Sem mudança de lógica. */
+
+@import url("https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@500;700;800&display=swap");
+
+.anime-chat {
+    --ink: #0d0f1a;
+    --paper: #fff7e6;
+    --gold: #ffc400;
+    --accent: #ff8a1f;
+    --accent-2: #2aa7ff;
+    --accent-ink: #1a0f00;
+    min-height: 100vh;
+    max-width: 760px;
+    font-family: "Nunito", system-ui, sans-serif;
+    color: var(--paper);
+    background:
+        radial-gradient(circle at 15% 10%, rgba(255, 138, 31, 0.35), transparent 40%),
+        radial-gradient(circle at 90% 85%, rgba(42, 167, 255, 0.25), transparent 45%),
+        #0d0f1a;
+    background-attachment: fixed;
+}
+
+/* O app.css global pinta o body de blueviolet (!important) em telas pequenas: aqui o tema manda */
+body.anime-chat {
+    background-color: #0d0f1a !important;
+}
+
+/* Linhas de velocidade girando bem devagar atrás de tudo */
+.anime-chat::before {
+    content: "";
+    position: fixed;
+    inset: -50%;
+    z-index: -1;
+    background: repeating-conic-gradient(from 0deg, rgba(255, 255, 255, 0.045) 0deg 2deg, transparent 2deg 9deg);
+    animation: speed-lines 90s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes speed-lines {
+    to { transform: rotate(360deg); }
+}
+
+/* ---------- Título ---------- */
+.anime-title {
+    font-family: "Bangers", "Impact", sans-serif;
+    font-size: clamp(2.2rem, 7vw, 3.6rem);
+    letter-spacing: 2px;
+    line-height: 1;
+    transform: skew(-6deg) rotate(-1.5deg);
+    background: linear-gradient(90deg, #ffc400, #ff8a1f, #ff3b1f, #ffc400);
+    background-size: 250% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-stroke: 1.5px #000;
+    filter: drop-shadow(3px 3px 0 #000);
+    animation: title-shine 4s linear infinite;
+}
+
+@keyframes title-shine {
+    to { background-position: -250% 0; }
+}
+
+.anime-tagline {
+    min-height: 1.6em;
+    color: #ffd9a0 !important;
+    font-weight: 700;
+    animation: tagline-in 0.4s ease-out;
+}
+
+@keyframes tagline-in {
+    from { opacity: 0; transform: translateY(6px); }
+}
+
+/* ---------- Painel (a cor muda por sala) ---------- */
+.anime-chat .room-geral {
+    --accent: #ff8a1f;
+    --accent-2: #2aa7ff;
+    --panel: rgba(30, 18, 8, 0.82);
+}
+
+.anime-chat .room-dev {
+    --accent: #ff3b1f;
+    --accent-2: #f2f2fa;
+    --accent-ink: #fff;
+    --panel: rgba(8, 8, 14, 0.9);
+}
+
+.anime-chat .card {
+    background: var(--panel, rgba(20, 20, 32, 0.85));
+    color: var(--paper);
+    border: 3px solid var(--accent);
+    border-radius: 18px;
+    box-shadow: 0 0 0 3px #000, 6px 6px 0 3px #000, 0 0 28px color-mix(in srgb, var(--accent) 45%, transparent);
+    overflow: hidden;
+    transition: border-color 0.4s, box-shadow 0.4s;
+}
+
+.anime-chat .card-header,
+.anime-chat .card-footer {
+    background: rgba(0, 0, 0, 0.35);
+    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+    color: var(--paper);
+}
+
+.anime-chat .card-header strong {
+    font-family: "Bangers", sans-serif;
+    font-weight: 400;
+    font-size: 1.35rem;
+    letter-spacing: 1px;
+}
+
+/* ---------- Botões ---------- */
+.anime-chat .btn {
+    min-height: 44px;
+    font-weight: 800;
+    border-radius: 12px;
+    transition: transform 0.12s, box-shadow 0.12s, filter 0.12s;
+}
+
+.anime-chat .btn-primary {
+    background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #000));
+    border: 2px solid #000;
+    color: var(--accent-ink);
+    box-shadow: 0 4px 0 #000;
+}
+
+.anime-chat .btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px) scale(1.04);
+    filter: brightness(1.12);
+}
+
+.anime-chat .btn-primary:active:not(:disabled) {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #000;
+}
+
+.anime-chat .btn-outline-primary,
+.anime-chat .btn-outline-secondary {
+    color: var(--paper);
+    border: 2px solid color-mix(in srgb, var(--accent) 70%, #fff 0%);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.anime-chat .btn-outline-primary:hover,
+.anime-chat .btn-outline-secondary:hover:not(:disabled) {
+    background: var(--accent);
+    color: var(--accent-ink);
+    transform: translateY(-2px) rotate(-2deg);
+}
+
+.anime-chat .btn-outline-danger {
+    color: #ff8a8a;
+    border: 2px solid #ff3b3b;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.anime-chat .btn-outline-danger:hover {
+    background: #ff3b3b;
+    color: #fff;
+}
+
+/* Abas de sala com a "vila" de cada uma (o texto continua "# geral" / "# dev") */
+.anime-chat [data-room="geral"]::before { content: "🍥 "; }
+.anime-chat [data-room="dev"]::before { content: "⚔️ "; }
+
+/* Esferas do dragão na barra de reações: giram quando o mouse passa */
+.anime-chat .reactions .btn[data-emoji] {
+    padding: 0;
+    line-height: 44px;
+    border-radius: 50%;
+    width: 48px;
+    background: radial-gradient(circle at 35% 30%, #ffe27a, #ff9d00 70%);
+    border: 2px solid #8a3d00;
+    box-shadow: 0 3px 0 #8a3d00;
+}
+
+.anime-chat .reactions .btn[data-emoji]:hover:not(:disabled) {
+    transform: translateY(-4px) rotate(360deg) scale(1.12);
+    transition: transform 0.5s;
+}
+
+/* ---------- Campos ---------- */
+.anime-chat .form-control {
+    min-height: 44px;
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--ink);
+    border: 2px solid #000;
+    border-radius: 12px;
+    font-weight: 700;
+}
+
+.anime-chat .form-control:focus,
+.anime-chat .btn:focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 2px;
+    box-shadow: none;
+}
+
+.anime-chat .form-label {
+    font-family: "Bangers", sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 1px;
+    color: var(--gold);
+}
+
+/* ---------- Mensagens ---------- */
+.anime-chat .chat-bubble {
+    border: 2px solid #000;
+    border-radius: 16px !important;
+    font-weight: 700;
+    box-shadow: 3px 3px 0 #000;
+    animation: bubble-pop 0.35s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.anime-chat .chat-bubble.is-mine {
+    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 60%, #ffc400)) !important;
+    color: var(--accent-ink) !important;
+}
+
+.anime-chat .chat-bubble.is-other {
+    background: #fff7e6 !important;
+    color: var(--ink) !important;
+}
+
+@keyframes bubble-pop {
+    from { opacity: 0; transform: scale(0.4) rotate(-6deg); }
+}
+
+.anime-chat .text-muted {
+    color: #c9b99a !important;
+}
+
+/* Avisos de sistema com "efeito sonoro" */
+.anime-chat .badge {
+    border: 2px solid #000;
+    animation: bubble-pop 0.35s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.anime-chat .bg-success-subtle::after { content: "  🍥 Dattebayo!"; font-style: italic; }
+.anime-chat .bg-warning-subtle::after { content: "  💨 Shunpo!"; font-style: italic; }
+.anime-chat .room-dev .bg-success-subtle::after { content: "  ⚔️ Reiatsu!"; }
+
+/* Miniatura enviada pelo worker: moldura de quadrinho */
+.anime-chat .chat-image {
+    border: 3px solid #000 !important;
+    box-shadow: 4px 4px 0 var(--accent);
+    transform: rotate(-1deg);
+    animation: bubble-pop 0.35s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+/* "Carregando o golpe" enquanto alguém digita */
+.anime-chat .typing-notice {
+    color: var(--gold) !important;
+    font-weight: 800;
+}
+
+.anime-chat .typing-notice::before {
+    content: "⚡ carregando ki: ";
+    animation: charge 0.6s ease-in-out infinite alternate;
+    display: inline-block;
+}
+
+@keyframes charge {
+    to { transform: scale(1.08); filter: brightness(1.4); }
+}
+
+.anime-chat .attack-hint {
+    color: #c9b99a;
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+/* ---------- Golpes secretos ---------- */
+.anime-chat .attack-label {
+    font-family: "Bangers", sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: 2px;
+    -webkit-text-stroke: 1px #000;
+    filter: drop-shadow(2px 2px 0 #000);
+    animation: attack-shout 0.7s ease-out;
+}
+
+.anime-chat .attack-dragonball { color: #4fc3ff; }
+.anime-chat .attack-naruto { color: #ff9d2e; }
+.anime-chat .attack-bleach { color: #fff; }
+
+.anime-chat .chat-bubble.has-attack-dragonball { animation: bubble-pop 0.35s, shake 0.5s 0.35s, aura-blue 1.6s 0.35s ease-in-out 3; }
+.anime-chat .chat-bubble.has-attack-naruto { animation: bubble-pop 0.35s, spin-pop 0.6s 0.35s, aura-orange 1.6s 0.35s ease-in-out 3; }
+.anime-chat .chat-bubble.has-attack-bleach { animation: bubble-pop 0.35s, shake 0.5s 0.35s, aura-red 1.6s 0.35s ease-in-out 3; }
+
+@keyframes attack-shout {
+    0% { opacity: 0; transform: scale(3) rotate(-12deg); }
+    60% { opacity: 1; transform: scale(0.9) rotate(3deg); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translate(0); }
+    20% { transform: translate(-5px, 2px) rotate(-1deg); }
+    40% { transform: translate(5px, -3px) rotate(1deg); }
+    60% { transform: translate(-4px, 3px); }
+    80% { transform: translate(4px, -2px); }
+}
+
+@keyframes spin-pop {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes aura-blue { 50% { box-shadow: 3px 3px 0 #000, 0 0 26px 8px #4fc3ff; } }
+@keyframes aura-orange { 50% { box-shadow: 3px 3px 0 #000, 0 0 26px 8px #ff9d2e; } }
+@keyframes aura-red { 50% { box-shadow: 3px 3px 0 #000, 0 0 26px 8px #ff3b1f; } }
+
+/* ---------- Nível de poder (online) ---------- */
+.anime-chat .power-badge {
+    background: linear-gradient(90deg, #ffc400, #ff8a1f);
+    color: #1a0f00;
+    font-weight: 800;
+    margin-left: 0.5rem;
+}
+
+.anime-chat .power-badge.is-over-9000 {
+    animation: shake 0.5s infinite;
+    background: linear-gradient(90deg, #4fc3ff, #fff, #4fc3ff);
+}
+
+.anime-chat .list-group-item {
+    background: transparent;
+    color: var(--paper);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.anime-chat .list-group-item code {
+    color: var(--gold);
+}
+
+.anime-chat .badge.text-bg-success {
+    background: #2fd36b !important;
+    color: #002b10 !important;
+}
+
+/* ---------- Acessibilidade e responsivo ---------- */
+@media (max-width: 575px) {
+    .anime-chat { padding-top: 1.25rem !important; }
+    .anime-chat .card-body { height: 50vh !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .anime-chat *,
+    .anime-chat *::before,
+    .anime-chat *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+}

@@ -9,10 +9,36 @@
   <%- vite(["css/app.css", "js/app.ts", "js/pages/chat.tsx"]) %>
 </head>
 
-<body class="container py-5">
+<body class="container py-5 anime-chat">
 
-  <h1 class="text-primary mb-1">Chat em tempo real</h1>
-  <p class="text-muted mb-4">Sem login: escolha um nome e entre na sala.</p>
+  <h1 class="anime-title mb-2">Chat em tempo real</h1>
+  <p id="tagline" class="anime-tagline text-muted mb-4">Sem login: escolha um nome e entre na sala.</p>
+
+  <%# Frases aleatórias de anime, trocadas a cada 5 s (só enfeite; sem dependência do React) %>
+  <script>
+    (function () {
+      var frases = [
+        "Sem login: escolha um nome e entre na sala. 🍥",
+        "Eu vou ser o Hokage do deploy! Dattebayo! 🍥",
+        "Seu nível de poder é... mais que 9000?! ⚡",
+        "Bankai! Segmentation fault: core dumped. ⚔️",
+        "Treine 100 flexões, 100 abdominais e 10 km de bug fix. 💪",
+        "Não é um bug, é um Jutsu proibido. 🔥",
+        "O verdadeiro poder do websocket é a amizade. 💛",
+        "Omae wa mou... compilando. 💀",
+        "Reúna as 7 esferas e peça: zero warnings no tsc. 🐉"
+      ];
+      var el = document.getElementById("tagline");
+      var i = Math.floor(Math.random() * frases.length);
+      function troca() {
+        el.textContent = frases[i % frases.length];
+        el.style.animation = "none"; el.offsetHeight; el.style.animation = "";
+        i++;
+      }
+      troca();
+      setInterval(troca, 5000);
+    })();
+  </script>
 
   <%# O React se pendura aqui %>
   <div id="root"></div>
