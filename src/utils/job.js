@@ -18,12 +18,18 @@ export function createJob({ name, handle }) {
             throw new Error('dispatch requer o nome do job como string.')
         }
 
+        // Só fecha a conexão se foi o próprio dispatch que abriu: dentro do websocket (ou do worker)
+        // a conexão já está aberta e é usada pelo servidor; fechar aqui derrubaria o subscribe dele
+        const wasConnected = rabbit.isConnected()
+
         await rabbit.connect()
 
         try {
             return await rabbit.publish(queue, { job: name, payload }, options)
         } finally {
-            await rabbit.close()
+            if (!wasConnected) {
+                await rabbit.close()
+            }
         }
     }
 

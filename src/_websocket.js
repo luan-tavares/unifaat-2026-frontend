@@ -16,11 +16,13 @@ program
     .name('websocket')
     .description('Servidor WebSocket: segura as conexões dos clients e distribui eventos pelo RabbitMQ')
     .option('--exchange <exchange>', 'Nome do exchange fanout que este servidor assina')
+    .option('--results <results>', 'Nome do exchange fanout onde os workers avisam os resultados')
     .option('--port <port>', 'Porta do servidor WebSocket')
     .parse(process.argv)
 
 const options = program.opts()
 const exchange = options.exchange || 'notifications'
+const results = options.results || 'results'
 const port = Number(options.port || 3001)
 
 const events = await loadEvents(path.join(__dirname, 'app', 'Events'))
@@ -39,6 +41,16 @@ const notify = (event, payload) => rabbit.notify(exchange, event, payload)
 
 // Quem está online: cada réplica só conhece os sockets dela, então a lista circula pelo exchange
 const presence = createPresence({ io, notify })
+
+// Entrega aos clients DESTE servidor: com sala, só para quem está nela; sem sala (ex.: presença), para todos
+const deliver = (event, payload) => {
+    if (payload?.room) {
+        io.to(payload.room).emit(event, payload)
+        return
+    }
+
+    io.emit(event, payload)
+}
 
 io.on('connection', (socket) => {
     console.log(`Cliente conectado: ${socket.id}`)
@@ -68,7 +80,12 @@ await rabbit.subscribe(exchange, (event, payload) => {
         return
     }
 
-    io.emit(event, payload)
+    deliver(event, payload)
+})
+
+// Volta dos workers: o resultado do trabalho pesado (ex.: a miniatura do chat:image) chega pelo exchange "results"
+await rabbit.subscribe(results, (event, payload) => {
+    deliver(event, payload)
 })
 
 const shutdown = async () => {
@@ -82,5 +99,5 @@ process.on('SIGINT', shutdown)
 process.on('SIGTERM', shutdown)
 
 httpServer.listen(port, () => {
-    console.log(`Websocket iniciado na porta ${port}. Exchange: ${exchange}`)
+    console.log(`Websocket iniciado na porta ${port}. Exchange: ${exchange}. Resultados: ${results}`)
 })
