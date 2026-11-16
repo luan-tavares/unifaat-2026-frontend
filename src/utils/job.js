@@ -18,12 +18,18 @@ export function createJob({ name, handle }) {
             throw new Error('dispatch requer o nome do job como string.')
         }
 
+        // Só conecta se ainda não estiver conectado
+        const wasConnected = rabbit.isConnected()
+        
         await rabbit.connect()
 
         try {
             return await rabbit.publish(queue, { job: name, payload }, options)
         } finally {
-            await rabbit.close()
+            // Só fecha a conexão se foi aberta por este dispatch (não estava conectada antes)
+            if (!wasConnected) {
+                await rabbit.close()
+            }
         }
     }
 

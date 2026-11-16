@@ -16,11 +16,13 @@ program
     .name('websocket')
     .description('Servidor WebSocket: segura as conexões dos clients e distribui eventos pelo RabbitMQ')
     .option('--exchange <exchange>', 'Nome do exchange fanout que este servidor assina')
+    .option('--results <results>', 'Nome do exchange fanout de resultados (ex.: processamento de imagens)', 'results')
     .option('--port <port>', 'Porta do servidor WebSocket')
     .parse(process.argv)
 
 const options = program.opts()
 const exchange = options.exchange || 'notifications'
+const resultsExchange = options.results || 'results'
 const port = Number(options.port || 3001)
 
 const events = await loadEvents(path.join(__dirname, 'app', 'Events'))
@@ -68,6 +70,24 @@ await rabbit.subscribe(exchange, (event, payload) => {
         return
     }
 
+    // Se o payload tem room, entrega só para quem está na sala
+    if (payload.room) {
+        io.to(payload.room).emit(event, payload)
+        return
+    }
+
+    // Sem room (ex.: a lista de presença), entrega para todos
+    io.emit(event, payload)
+})
+
+// Assina também o exchange de results (imagens processadas, etc.)
+await rabbit.subscribe(resultsExchange, (event, payload) => {
+    // Se o payload tem room, entrega só para quem está na sala
+    if (payload.room) {
+        io.to(payload.room).emit(event, payload)
+        return
+    }
+
     io.emit(event, payload)
 })
 
@@ -82,5 +102,5 @@ process.on('SIGINT', shutdown)
 process.on('SIGTERM', shutdown)
 
 httpServer.listen(port, () => {
-    console.log(`Websocket iniciado na porta ${port}. Exchange: ${exchange}`)
+    console.log(`Websocket iniciado na porta ${port}. Exchange: ${exchange}, Results: ${resultsExchange}`)
 })

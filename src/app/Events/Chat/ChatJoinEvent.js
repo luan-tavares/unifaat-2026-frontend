@@ -8,16 +8,18 @@ export default createEvent({
     name: 'chat:join',
     handle: async (payload, context) => {
         const name = String(payload?.name ?? '').trim().slice(0, 30)
+        const room = String(payload?.room ?? '').trim()
 
-        if (!name) {
+        if (!name || !room) {
             return
         }
 
         context.socket.data.name = name
+        context.socket.join(room)
 
         await context.presence.publish()
 
         // "fulano entrou na sala": vai pelo exchange, então chega a quem está em qualquer réplica
-        await context.notify('chat:joined', { name, sentAt: Date.now() })
+        await context.notify('chat:joined', { name, room, sentAt: Date.now() })
     }
 })
