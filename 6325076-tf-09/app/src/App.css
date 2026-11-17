@@ -1,0 +1,106 @@
+﻿* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+button, input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 5px;
+  background: white;
+  color: #1e293b;
+}
+
+button:hover:not(:disabled) {
+  background: #dbeafe;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+input {
+  padding: 11px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  width: 100%;
+  margin: 10px 0;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 30px 20px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+header h1 {
+  color: #1d4ed8;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 25px;
+}
+
+.layout > section {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px #00000012;
+}
+
+.layout section button {
+  display: block;
+  width: 100%;
+  text-align: left;
+}
+
+button.selected {
+  background: #dbeafe;
+  border-color: #2563eb;
+}
+
+.completed {
+  text-decoration: line-through;
+  opacity: 0.65;
+}
+
+.pagination {
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+footer {
+  text-align: center;
+  margin-top: 35px;
+  color: #64748b;
+}
+
+@media (max-width: 700px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
