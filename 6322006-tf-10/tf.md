@@ -1,0 +1,5 @@
+Nome: Rafael Maruca
+RA: 6322006
+GitHub: https://github.com/rafadical
+
+Armadilha do dispatch: o `rabbit` (`database/connections/rabbit.js`) é um singleton, então o websocket e o `dispatch` do `createJob` dividem a MESMA conexão. O `_websocket.js` conecta no início e deixa a conexão aberta, porque é nela que estão as filas dinâmicas assinadas nos exchanges `notifications` e `results`. Quando o `ChatImageEvent` chamava `ProcessChatImageJob.dispatch('images', ...)`, o `dispatch` fazia `connect()` (que só devolvia a conexão já aberta) e, no `finally`, `rabbit.close()`: fechava o canal e a conexão do servidor websocket. A partir daí o servidor parava de receber os eventos do exchange (o chat "morria" para todo mundo depois da primeira imagem) e o próximo `notify` abria uma conexão nova sem nenhuma assinatura. A correção (em `utils/job.js`) foi guardar, antes do `connect`, se a conexão já existia (`rabbit.isConnected()`): o `dispatch` só conecta e só fecha quando foi ele mesmo que abriu a conexão (ex.: um comando de terminal que só lança o job); dentro do websocket, que já está conectado, ele publica e deixa a conexão do dono aberta.
