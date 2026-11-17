@@ -16,11 +16,16 @@ program
     .name('websocket')
     .description('Servidor WebSocket: segura as conexões dos clients e distribui eventos pelo RabbitMQ')
     .option('--exchange <exchange>', 'Nome do exchange fanout que este servidor assina')
+    .option('--results <results>', 'Exchange por onde os workers devolvem resultado')
     .option('--port <port>', 'Porta do servidor WebSocket')
     .parse(process.argv)
 
 const options = program.opts()
 const exchange = options.exchange || 'notifications'
+// Exchange separado para o caminho de volta dos workers. Poderia ser o mesmo
+// `notifications`, mas separar deixa explícito quem publica o quê: o websocket
+// publica no primeiro, o worker publica no segundo.
+const results = options.results || 'results'
 const port = Number(options.port || 3001)
 
 const events = await loadEvents(path.join(__dirname, 'app', 'Events'))
@@ -60,16 +65,35 @@ io.on('connection', (socket) => {
     })
 })
 
-// Volta do exchange: cria a fila dinâmica DESTE servidor e entrega aos SEUS clients conectados
-await rabbit.subscribe(exchange, (event, payload) => {
+const entregar = (event, payload) => {
     // A lista de presença das réplicas é só informação de conexão: não vai direto para a tela
     if (event === 'presence:instance') {
         presence.receive(payload)
         return
     }
 
+    const room = payload?.room
+
+    // Com sala, entrega só a quem deu socket.join(room). Sem sala (presence:list,
+    // por exemplo), continua indo para todo mundo — é informação de conexão, não
+    // conteúdo de sala.
+    if (room) {
+        io.to(room).emit(event, payload)
+        return
+    }
+
     io.emit(event, payload)
-})
+}
+
+// Volta do exchange: cria a fila dinâmica DESTE servidor e entrega aos SEUS clients conectados
+await rabbit.subscribe(exchange, entregar)
+
+// Caminho de volta dos workers: o resultado do processamento pesado chega por
+// aqui, depois de o worker terminar. Para o client não há diferença — é um
+// evento como outro qualquer, entregue para a mesma sala. Este arquivo não
+// conhece o nome de nenhum Event: o loadEvents registra, e o consumidor só
+// repassa o que vier.
+await rabbit.subscribe(results, entregar)
 
 const shutdown = async () => {
     console.log('\nEncerrando websocket...')
@@ -82,5 +106,5 @@ process.on('SIGINT', shutdown)
 process.on('SIGTERM', shutdown)
 
 httpServer.listen(port, () => {
-    console.log(`Websocket iniciado na porta ${port}. Exchange: ${exchange}`)
+    console.log(`Websocket iniciado na porta ${port}. Exchanges: ${exchange} e ${results}`)
 })

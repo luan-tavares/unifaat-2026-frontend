@@ -84,13 +84,55 @@ services:
         aliases:
           - nodeworker_host
 
+  #NODE WORKER - IMAGENS
+  #
+  # Worker proprio para a fila `images`. Separado do worker padrao de proposito:
+  # processar imagem segura o processo por segundos, e dividir a mesma fila com
+  # os outros jobs faria um upload atrasar tudo o que estiver atras dele.
+  #
+  # Nao tem `ports`: worker nao e servidor, ninguem conecta nele. Ele consome da
+  # fila e publica o resultado no exchange `results`.
+  #
+  # Pare este container e mande uma imagem: o chat de texto continua funcionando
+  # e a imagem espera na fila. E a demonstracao de que o trabalho pesado saiu do
+  # websocket.
+  nodeworker-images-container:
+    build:
+      context: .
+      dockerfile: docker/node-worker/Dockerfile
+    command: ["--queue", "images"]
+    env_file:
+      - .env
+      - .env.docker
+    volumes:
+      - ./src:/app
+      - nodemodules-volume:/app/node_modules
+    depends_on:
+      - postgres-container
+      - rabbitmq-container
+      - elasticsearch-container
+    environment:
+      POSTGRES_HOST: postgres_host
+      POSTGRES_PORT: 5432
+      ELASTIC_HOST: elasticsearch_host
+      ELASTIC_PORT: 9200
+      RABBITMQ_HOST: rabbitmq_host
+      RABBITMQ_PORT: 5672
+    restart: unless-stopped
+    networks:
+      app-network:
+        aliases:
+          - nodeworkerimages_host
+
   #NODE WEBSOCKET
   nodewebsocket-container:
     build:
       context: .
       dockerfile: docker/node-websocket/Dockerfile
     # Argumentos do entrypoint: o exchange que este servidor assina e a porta (só dentro da rede)
-    command: ["--exchange", "notifications", "--port", "3001"]
+    # Dois exchanges: `notifications` e o `results`, por onde os workers devolvem
+    # o que processaram (a miniatura da imagem chega por ele).
+    command: ["--exchange", "notifications", "--results", "results", "--port", "3001"]
     env_file:
       - .env
       - .env.docker

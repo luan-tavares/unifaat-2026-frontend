@@ -16,6 +16,14 @@ export default createEvent({
 
         const name = String(payload?.name ?? '').trim() || 'anônimo'
 
-        await context.notify('chat:message', { name, text: text.slice(0, 500), sentAt: Date.now() })
+        // Sem a sala, o consumidor do exchange cai no io.emit e a mensagem de
+        // #geral aparece em #dev.
+        const room = String(payload?.room ?? '').trim()
+
+        if (!room) {
+            return
+        }
+
+        await context.notify('chat:message', { name, room, text: text.slice(0, 500), sentAt: Date.now() })
     }
 })

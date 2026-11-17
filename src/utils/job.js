@@ -18,12 +18,29 @@ export function createJob({ name, handle }) {
             throw new Error('dispatch requer o nome do job como string.')
         }
 
-        await rabbit.connect()
+        // A ARMADILHA: antes, este bloco fazia connect() e, no finally, close()
+        // incondicional. Num comando avulso isso é correto — o processo abre a
+        // conexão, publica e sai. Dentro do servidor websocket, não: ele já tem
+        // uma conexão aberta no boot, usada pelo exchange e pela presença. O
+        // close() do dispatch derrubava ESSA conexão, e o chat parava de
+        // distribuir eventos depois do primeiro envio de imagem.
+        //
+        // O sintoma enganava: a imagem até chegava na fila, e a quebra aparecia
+        // no evento seguinte, sem relação aparente com o upload.
+        //
+        // Agora quem abriu é quem fecha.
+        const jaEstavaConectado = rabbit.isConnected()
+
+        if (!jaEstavaConectado) {
+            await rabbit.connect()
+        }
 
         try {
             return await rabbit.publish(queue, { job: name, payload }, options)
         } finally {
-            await rabbit.close()
+            if (!jaEstavaConectado) {
+                await rabbit.close()
+            }
         }
     }
 
