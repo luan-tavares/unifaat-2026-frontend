@@ -16,11 +16,13 @@ program
     .name('websocket')
     .description('Servidor WebSocket: segura as conexões dos clients e distribui eventos pelo RabbitMQ')
     .option('--exchange <exchange>', 'Nome do exchange fanout que este servidor assina')
+    .option('--results <results>', 'Exchange de resultados dos workers')
     .option('--port <port>', 'Porta do servidor WebSocket')
     .parse(process.argv)
 
 const options = program.opts()
 const exchange = options.exchange || 'notifications'
+const results = options.results || 'results'
 const port = Number(options.port || 3001)
 
 const events = await loadEvents(path.join(__dirname, 'app', 'Events'))
@@ -46,10 +48,17 @@ io.on('connection', (socket) => {
     // Quem entra já recebe a lista de quem está online
     socket.emit('presence:list', presence.list())
 
+    // Serializa os Events de cada socket para preservar a ordem leave/join.
+    let pending = Promise.resolve()
     for (const event of Object.values(events)) {
-        socket.on(event.name, (payload) => {
-            event.handle(payload, { socket, notify, presence }).catch((error) => {
+        socket.on(event.name, (payload, ack) => {
+            pending = pending.then(async () => {
+                if (!socket.connected) return
+                await event.handle(payload, { socket, notify, presence })
+                if (typeof ack === 'function') ack({ ok: true })
+            }).catch((error) => {
                 console.error(`Erro no Event ${event.name}:`, error)
+                if (typeof ack === 'function') ack({ ok: false })
             })
         })
     }
@@ -60,6 +69,14 @@ io.on('connection', (socket) => {
     })
 })
 
+function deliver(event, payload) {
+    if (payload?.room) {
+        io.to(payload.room).emit(event, payload)
+        return
+    }
+    io.emit(event, payload)
+}
+
 // Volta do exchange: cria a fila dinâmica DESTE servidor e entrega aos SEUS clients conectados
 await rabbit.subscribe(exchange, (event, payload) => {
     // A lista de presença das réplicas é só informação de conexão: não vai direto para a tela
@@ -68,8 +85,10 @@ await rabbit.subscribe(exchange, (event, payload) => {
         return
     }
 
-    io.emit(event, payload)
+    deliver(event, payload)
 })
+
+await rabbit.subscribe(results, deliver)
 
 const shutdown = async () => {
     console.log('\nEncerrando websocket...')

@@ -1,21 +1,12 @@
+import { randomUUID } from 'node:crypto'
 import { createEvent } from '../../../utils/event.js'
-
-/**
- * Chat: o client emite chat:message pelo túnel WebSocket.
- * O Event NÃO entrega nada na tela: só publica no exchange; cada servidor websocket recebe a cópia
- * na sua fila dinâmica e faz o io.emit para os clients dele (inclusive o autor).
- */
 export default createEvent({
     name: 'chat:message',
     handle: async (payload, context) => {
-        const text = String(payload?.text ?? '').trim()
-
-        if (!text) {
-            return
-        }
-
-        const name = String(payload?.name ?? '').trim() || 'anônimo'
-
-        await context.notify('chat:message', { name, text: text.slice(0, 500), sentAt: Date.now() })
+        const { socket } = context
+        const { name, room } = socket.data
+        const text = String(payload?.text ?? '').trim().slice(0, 500)
+        if (!text || !name || room !== payload?.room || !socket.rooms.has(room)) return
+        await context.notify('chat:message', { id: randomUUID(), userId: socket.id, name, room, text, sentAt: Date.now() })
     }
 })

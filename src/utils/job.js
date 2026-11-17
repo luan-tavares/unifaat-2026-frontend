@@ -18,12 +18,15 @@ export function createJob({ name, handle }) {
             throw new Error('dispatch requer o nome do job como string.')
         }
 
+        const isAlreadyConnected = rabbit.isConnected()
         await rabbit.connect()
 
         try {
             return await rabbit.publish(queue, { job: name, payload }, options)
         } finally {
-            await rabbit.close()
+            if (!isAlreadyConnected) {
+                await rabbit.close()
+            }
         }
     }
 
