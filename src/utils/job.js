@@ -18,12 +18,19 @@ export function createJob({ name, handle }) {
             throw new Error('dispatch requer o nome do job como string.')
         }
 
-        await rabbit.connect()
+        // Dentro de um processo que já está conectado (o websocket), a conexão é dele: não pode ser fechada aqui
+        const isOwnConnection = !rabbit.isConnected()
+
+        if (isOwnConnection) {
+            await rabbit.connect()
+        }
 
         try {
             return await rabbit.publish(queue, { job: name, payload }, options)
         } finally {
-            await rabbit.close()
+            if (isOwnConnection) {
+                await rabbit.close()
+            }
         }
     }
 
