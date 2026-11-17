@@ -17,10 +17,12 @@ program
     .description('Servidor WebSocket: segura as conexões dos clients e distribui eventos pelo RabbitMQ')
     .option('--exchange <exchange>', 'Nome do exchange fanout que este servidor assina')
     .option('--port <port>', 'Porta do servidor WebSocket')
+    .option('--results <exchange>', 'Exchange de onde chegam os resultados dos workers')
     .parse(process.argv)
 
 const options = program.opts()
 const exchange = options.exchange || 'notifications'
+const results = options.results || 'results'
 const port = Number(options.port || 3001)
 
 const events = await loadEvents(path.join(__dirname, 'app', 'Events'))
@@ -30,7 +32,18 @@ if (Object.keys(events).length === 0) {
 }
 
 const httpServer = createServer()
-const io = new Server(httpServer, { serveClient: false })
+// maxHttpBufferSize: a imagem do chat (até 500 KB) viaja em base64 (~683 KB) num único evento
+const io = new Server(httpServer, { serveClient: false, maxHttpBufferSize: 1e6 })
+
+// Entrega um evento que voltou de um exchange: com sala, só para quem está nela; sem sala, para todos
+const deliver = (event, payload) => {
+    if (payload?.room) {
+        io.to(payload.room).emit(event, payload)
+        return
+    }
+
+    io.emit(event, payload)
+}
 
 await rabbit.connect()
 
@@ -68,8 +81,11 @@ await rabbit.subscribe(exchange, (event, payload) => {
         return
     }
 
-    io.emit(event, payload)
+    deliver(event, payload)
 })
+
+// Volta dos workers: outra fila dinâmica DESTE servidor, agora no exchange de resultados (ex.: a miniatura pronta)
+await rabbit.subscribe(results, deliver)
 
 const shutdown = async () => {
     console.log('\nEncerrando websocket...')
@@ -82,5 +98,5 @@ process.on('SIGINT', shutdown)
 process.on('SIGTERM', shutdown)
 
 httpServer.listen(port, () => {
-    console.log(`Websocket iniciado na porta ${port}. Exchange: ${exchange}`)
+    console.log(`Websocket iniciado na porta ${port}. Exchange: ${exchange}. Resultados: ${results}`)
 })

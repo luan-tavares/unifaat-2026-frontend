@@ -1,0 +1,5 @@
+Nome: Weslley Lucas
+RA: 6325226
+GitHub: https://github.com/lucaskenway
+
+Armadilha do dispatch: o `dispatch` do `createJob` sempre chamava `rabbit.close()` no `finally`. Isso serve para quem vive pouco (um controller ou um comando abre a conexão, publica e termina), mas o `rabbit.js` é um módulo único por processo: dentro do `_websocket.js` a conexão que o `dispatch` "abria" era a mesma que o servidor já usava para assinar os exchanges `notifications` e `results`. Assim, o primeiro `chat:image` lançava o job e, no `finally`, fechava o canal e a conexão do websocket, derrubando as filas dinâmicas (exclusivas) dele: o chat parava de receber mensagens e a miniatura nunca voltava. A correção foi guardar `const isAlreadyConnected = rabbit.isConnected()` antes do `rabbit.connect()` e, no `finally`, só chamar `rabbit.close()` se `isAlreadyConnected` for `false`, ou seja, o `dispatch` só fecha a conexão que ele mesmo abriu. No controller e no comando nada muda (eles abrem e fecham); no websocket e no worker, que já estão conectados, a conexão continua de pé.
