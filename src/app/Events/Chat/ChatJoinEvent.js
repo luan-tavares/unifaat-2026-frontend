@@ -1,23 +1,28 @@
 import { createEvent } from '../../../utils/event.js'
+import { parseName, parseRoom } from './rooms.js'
 
 /**
- * Chat: o client entra na sala e diz o nome (chat:join), logo depois de o túnel abrir.
- * O nome fica no próprio socket (socket.data), a presença é publicada para as outras réplicas e a sala é avisada (chat:joined).
+ * Chat: o client entra numa sala e diz o nome (chat:join { name, room }), logo depois de o túnel abrir
+ * ou ao trocar de sala. O socket entra na sala do Socket.IO (socket.join), o nome e a sala ficam no próprio
+ * socket (socket.data), a presença é publicada para as outras réplicas e a sala é avisada (chat:joined).
  */
 export default createEvent({
     name: 'chat:join',
     handle: async (payload, context) => {
-        const name = String(payload?.name ?? '').trim().slice(0, 30)
+        const name = parseName(payload?.name)
+        const room = parseRoom(payload?.room)
 
-        if (!name) {
+        if (!name || !room) {
             return
         }
 
         context.socket.data.name = name
+        context.socket.data.room = room
+        context.socket.join(room)
 
         await context.presence.publish()
 
-        // "fulano entrou na sala": vai pelo exchange, então chega a quem está em qualquer réplica
-        await context.notify('chat:joined', { name, sentAt: Date.now() })
+        // "fulano entrou na sala": vai pelo exchange (com a sala), então chega a quem está nela em qualquer réplica
+        await context.notify('chat:joined', { name, room, sentAt: Date.now() })
     }
 })

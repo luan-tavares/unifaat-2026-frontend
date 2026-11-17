@@ -1,0 +1,509 @@
+/*
+ * Tema do chat (o mesmo do TF-09): shihakusho (preto e branco), reiatsu laranja e azul espiritual.
+ * Só vale na página do chat (body.chat-bleach): sobrescreve as variáveis do Bootstrap, sem mexer no app.css.
+ */
+.chat-bleach {
+    --bg: #07070a;
+    --panel: #111116;
+    --panel-2: #18181f;
+    --line: #2a2a33;
+    --robe-white: #f2efe8;
+    --text: #e9e6df;
+    --muted: #8d8a95;
+    --reiatsu: #ff7a1a;
+    --reiatsu-soft: rgba(255, 122, 26, 0.18);
+    --spirit: #5cc8ff;
+    --blood: #ff4d5e;
+    --font-title: "Shippori Mincho B1", "Noto Serif JP", Georgia, serif;
+    --font-body: "Noto Sans", system-ui, sans-serif;
+
+    /* Bootstrap: cores e fontes da página */
+    --bs-body-font-family: var(--font-body);
+    --bs-body-color: var(--text);
+    --bs-body-bg: var(--bg);
+    --bs-secondary-color: var(--muted);
+    --bs-tertiary-bg: var(--panel-2);
+    --bs-border-color: var(--line);
+    --bs-emphasis-color: var(--robe-white);
+    --bs-primary: var(--reiatsu);
+    --bs-primary-rgb: 255, 122, 26;
+    --bs-link-color: var(--reiatsu);
+    --bs-link-color-rgb: 255, 122, 26;
+    --bs-link-hover-color: #ff9a4d;
+    --bs-code-color: var(--spirit);
+    --bs-focus-ring-color: var(--reiatsu-soft);
+
+    color-scheme: dark;
+}
+
+/* O fundo fica no html (a página inteira): o body é um .container, mais estreito.
+   !important no body: o app.css pinta o body de outra cor no celular */
+html.chat-bleach-root {
+    min-height: 100%;
+    background:
+        radial-gradient(circle at 15% -10%, rgba(255, 122, 26, 0.16), transparent 45%),
+        radial-gradient(circle at 110% 110%, rgba(92, 200, 255, 0.10), transparent 40%),
+        #07070a;
+    background-attachment: fixed;
+}
+
+body.chat-bleach {
+    background: transparent !important;
+}
+
+/* Cabeçalho (o mesmo do TF-09) */
+.chat-bleach .hero {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+}
+
+.chat-bleach .hero::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 120px;
+    height: 2px;
+    background: var(--reiatsu);
+    box-shadow: 0 0 12px var(--reiatsu);
+}
+
+.chat-bleach .hero-kanji {
+    font-family: var(--font-title);
+    font-size: 3rem;
+    line-height: 1;
+    writing-mode: vertical-rl;
+    color: var(--robe-white);
+    padding: 8px 6px;
+    border: 2px solid var(--robe-white);
+}
+
+.chat-bleach .hero-eyebrow {
+    margin: 0 0 4px;
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--reiatsu);
+}
+
+.chat-bleach .hero h1 {
+    margin: 0;
+    font-family: var(--font-title);
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    color: var(--robe-white);
+}
+
+.chat-bleach .hero p:not(.hero-eyebrow) {
+    margin: 4px 0 0;
+    color: var(--muted);
+}
+
+/* Painéis: robe preta com gola branca */
+.chat-bleach .card {
+    --bs-card-bg: var(--panel);
+    --bs-card-cap-bg: var(--panel-2);
+    --bs-card-border-color: var(--line);
+    --bs-card-color: var(--text);
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border-top: 3px solid var(--robe-white);
+    border-radius: 4px;
+}
+
+.chat-bleach .card-header strong {
+    font-family: var(--font-title);
+    color: var(--robe-white);
+    letter-spacing: 0.02em;
+}
+
+.chat-bleach .card-header.bg-body,
+.chat-bleach .card-footer {
+    background: transparent !important;
+}
+
+.chat-bleach .kanji {
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    color: var(--bg);
+    background: var(--reiatsu);
+    border-radius: 2px;
+    font-family: var(--font-title);
+}
+
+/* Botões */
+.chat-bleach .btn {
+    border-radius: 4px;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.chat-bleach .btn:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.chat-bleach .btn-primary {
+    --bs-btn-bg: var(--reiatsu);
+    --bs-btn-border-color: var(--reiatsu);
+    --bs-btn-color: var(--bg);
+    --bs-btn-hover-bg: #ff8f3d;
+    --bs-btn-hover-border-color: #ff8f3d;
+    --bs-btn-hover-color: var(--bg);
+    --bs-btn-active-bg: #e8690f;
+    --bs-btn-active-border-color: #e8690f;
+    --bs-btn-active-color: var(--bg);
+    --bs-btn-disabled-bg: var(--reiatsu);
+    --bs-btn-disabled-border-color: var(--reiatsu);
+    --bs-btn-disabled-color: var(--bg);
+    font-weight: 600;
+}
+
+.chat-bleach .btn-outline-primary {
+    --bs-btn-color: var(--reiatsu);
+    --bs-btn-border-color: var(--line);
+    --bs-btn-hover-bg: var(--reiatsu-soft);
+    --bs-btn-hover-border-color: var(--reiatsu);
+    --bs-btn-hover-color: var(--reiatsu);
+    --bs-btn-disabled-color: var(--muted);
+    --bs-btn-disabled-border-color: var(--line);
+}
+
+.chat-bleach .btn-outline-secondary {
+    --bs-btn-color: var(--text);
+    --bs-btn-bg: var(--panel-2);
+    --bs-btn-border-color: var(--line);
+    --bs-btn-hover-bg: var(--panel-2);
+    --bs-btn-hover-border-color: var(--reiatsu);
+    --bs-btn-hover-color: var(--text);
+    --bs-btn-active-bg: var(--reiatsu-soft);
+    --bs-btn-active-border-color: var(--reiatsu);
+    --bs-btn-disabled-color: var(--muted);
+    --bs-btn-disabled-bg: var(--panel-2);
+    --bs-btn-disabled-border-color: var(--line);
+}
+
+.chat-bleach .btn-outline-secondary:hover:not(:disabled),
+.chat-bleach .btn-outline-primary:hover:not(:disabled) {
+    box-shadow: 0 0 0 3px var(--reiatsu-soft);
+}
+
+.chat-bleach .btn-outline-danger {
+    --bs-btn-color: var(--blood);
+    --bs-btn-border-color: var(--blood);
+    --bs-btn-hover-bg: var(--blood);
+    --bs-btn-hover-border-color: var(--blood);
+    --bs-btn-hover-color: var(--bg);
+}
+
+/* Campos */
+.chat-bleach .form-control {
+    background: var(--bg);
+    border-color: var(--line);
+    color: var(--text);
+    border-radius: 4px;
+}
+
+.chat-bleach .form-control::placeholder {
+    color: var(--muted);
+}
+
+.chat-bleach .form-control:focus {
+    background: var(--bg);
+    color: var(--text);
+    border-color: var(--reiatsu);
+    box-shadow: 0 0 0 3px var(--reiatsu-soft);
+}
+
+/* Status: conectado (azul espiritual) / conectando */
+.chat-bleach .text-bg-success {
+    background: transparent !important;
+    color: var(--spirit) !important;
+    border: 1px solid var(--spirit);
+    font-weight: 500;
+}
+
+.chat-bleach .text-bg-secondary {
+    background: transparent !important;
+    color: var(--muted) !important;
+    border: 1px solid var(--muted);
+    font-weight: 500;
+}
+
+/* Bolhas: as minhas com a borda laranja, as dos outros com a borda azul */
+.chat-bleach .chat-bubble {
+    max-width: 75%;
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--spirit);
+    border-radius: 4px;
+    overflow-wrap: anywhere;
+}
+
+.chat-bleach .chat-bubble.mine {
+    border-left: 1px solid var(--line);
+    border-right: 3px solid var(--reiatsu);
+}
+
+.chat-bleach .chat-image {
+    max-width: min(320px, 75%);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+}
+
+.chat-bleach .chat-image.mine {
+    border-right: 3px solid var(--reiatsu);
+}
+
+.chat-bleach .chat-image:not(.mine) {
+    border-left: 3px solid var(--spirit);
+}
+
+/* Mensagens de sistema: entrou (verde) e saiu (amarelo), no tema escuro */
+.chat-bleach .bg-success-subtle {
+    background: rgba(92, 200, 255, 0.10) !important;
+    color: var(--spirit) !important;
+    border: 1px solid rgba(92, 200, 255, 0.35);
+}
+
+.chat-bleach .bg-warning-subtle {
+    background: var(--reiatsu-soft) !important;
+    color: #ffb27a !important;
+    border: 1px solid rgba(255, 122, 26, 0.45);
+}
+
+.chat-bleach .text-primary {
+    color: var(--reiatsu) !important;
+}
+
+.chat-bleach .text-danger {
+    color: var(--blood) !important;
+}
+
+/* Lista de quem está online */
+.chat-bleach .list-group {
+    --bs-list-group-bg: transparent;
+    --bs-list-group-color: var(--text);
+    --bs-list-group-border-color: var(--line);
+}
+
+/* Barra de rolagem do feed */
+.chat-bleach .card-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-bleach .card-body::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .chat-bleach * {
+        transition: none !important;
+    }
+}
+
+/* ===== Mundo de Bleach ===== */
+
+/* Borboletas infernais (jigokuchō): pretas com brilho roxo, voando devagar no fundo */
+.chat-bleach .hell-butterflies {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.chat-bleach .hell-butterflies span {
+    position: absolute;
+    bottom: -40px;
+    font-size: 1.4rem;
+    filter: grayscale(1) brightness(0.35) drop-shadow(0 0 6px #9b5cff) drop-shadow(0 0 2px #c9a6ff);
+    opacity: 0.55;
+    animation: jigokucho 26s linear infinite;
+}
+
+.chat-bleach .hell-butterflies span:nth-child(1) { left: 6%; animation-delay: 0s; }
+.chat-bleach .hell-butterflies span:nth-child(2) { left: 22%; animation-delay: -9s; font-size: 1rem; }
+.chat-bleach .hell-butterflies span:nth-child(3) { left: 78%; animation-delay: -4s; }
+.chat-bleach .hell-butterflies span:nth-child(4) { left: 90%; animation-delay: -15s; font-size: 1.1rem; }
+.chat-bleach .hell-butterflies span:nth-child(5) { left: 50%; animation-delay: -20s; font-size: 0.9rem; }
+
+@keyframes jigokucho {
+    0% { transform: translate(0, 0) rotate(-8deg); }
+    25% { transform: translate(30px, -28vh) rotate(8deg); }
+    50% { transform: translate(-20px, -55vh) rotate(-6deg); }
+    75% { transform: translate(25px, -82vh) rotate(6deg); }
+    100% { transform: translate(0, -112vh) rotate(-8deg); }
+}
+
+/* O conteúdo fica acima das borboletas */
+.chat-bleach > header,
+.chat-bleach > #root {
+    position: relative;
+    z-index: 1;
+}
+
+/* Marca d'água no feed: 卍解 (bankai) */
+.chat-bleach .chat-feed {
+    background-image: radial-gradient(circle at 50% 45%, rgba(255, 122, 26, 0.05), transparent 60%);
+    position: relative;
+}
+
+.chat-bleach .chat-feed::before {
+    content: "卍解";
+    position: sticky;
+    top: 35%;
+    display: block;
+    height: 0;
+    text-align: center;
+    font-family: var(--font-title);
+    font-size: clamp(4rem, 14vw, 9rem);
+    line-height: 1;
+    color: rgba(242, 239, 232, 0.035);
+    pointer-events: none;
+    user-select: none;
+}
+
+/* Cada mensagem chega com um lampejo de reiatsu */
+.chat-bleach .chat-item {
+    animation: shunpo 0.35s ease-out;
+}
+
+@keyframes shunpo {
+    from { opacity: 0; transform: translateY(6px); filter: drop-shadow(0 0 8px var(--reiatsu)); }
+    to { opacity: 1; transform: none; filter: none; }
+}
+
+/* Sala ativa: reiatsu acesa */
+.chat-bleach .btn-primary[aria-pressed="true"] {
+    box-shadow: 0 0 12px rgba(255, 122, 26, 0.55);
+}
+
+/* Ponto de reiatsu na lista de quem está online */
+.chat-bleach .reiatsu-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    margin-right: 4px;
+    border-radius: 50%;
+    background: var(--reiatsu);
+    box-shadow: 0 0 8px var(--reiatsu);
+    animation: reiatsu-pulse 1.8s ease-in-out infinite;
+    vertical-align: middle;
+}
+
+@keyframes reiatsu-pulse {
+    50% { box-shadow: 0 0 2px var(--reiatsu); opacity: 0.7; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .chat-bleach .hell-butterflies span,
+    .chat-bleach .chat-item,
+    .chat-bleach .reiatsu-dot {
+        animation: none;
+    }
+}
+
+/* ===== Golpes dos personagens ===== */
+
+/* Cada golpe tem a sua cor (--tone) */
+.chat-bleach .tone-getsuga { --tone: #ff3b3b; --tone-2: #1a0000; }
+.chat-bleach .tone-sakura { --tone: #ff8fc7; --tone-2: #2a0d1c; }
+.chat-bleach .tone-zabimaru { --tone: #ff5a2e; --tone-2: #2a0f06; }
+.chat-bleach .tone-ice { --tone: #9fe4ff; --tone-2: #071c28; }
+.chat-bleach .tone-kido { --tone: #b07cff; --tone-2: #12071f; }
+.chat-bleach .tone-cero { --tone: #ff2d55; --tone-2: #1f0309; }
+
+/* Botões dos golpes */
+.chat-bleach .attack-button {
+    font-size: 0.85rem;
+    padding: 4px 10px;
+    border-left: 3px solid var(--tone);
+}
+
+.chat-bleach .attack-button:hover:not(:disabled) {
+    color: var(--tone);
+    border-color: var(--tone);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--tone) 45%, transparent);
+}
+
+/* Cartão do golpe no feed */
+.chat-bleach .attack-card {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: min(320px, 90%);
+    max-width: 90%;
+    padding: 12px 18px;
+    border: 1px solid color-mix(in srgb, var(--tone) 55%, transparent);
+    border-radius: 4px;
+    background:
+        linear-gradient(110deg, var(--tone-2), var(--panel) 70%),
+        var(--panel);
+    box-shadow: 0 0 22px color-mix(in srgb, var(--tone) 30%, transparent);
+    animation: attack-hit 0.6s ease-out;
+}
+
+/* O corte de espada que atravessa o cartão quando o golpe chega */
+.chat-bleach .attack-card::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -60%;
+    width: 40%;
+    height: 200%;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--tone) 80%, white), transparent);
+    transform: rotate(20deg);
+    opacity: 0;
+    animation: slash 0.7s ease-out 0.1s;
+    pointer-events: none;
+}
+
+.chat-bleach .attack-emoji {
+    font-size: 2.4rem;
+    line-height: 1;
+    filter: drop-shadow(0 0 10px var(--tone));
+}
+
+.chat-bleach .attack-call {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+.chat-bleach .attack-name {
+    font-family: var(--font-title);
+    font-size: 1.35rem;
+    color: var(--tone);
+    text-shadow: 0 0 12px color-mix(in srgb, var(--tone) 60%, transparent);
+}
+
+.chat-bleach .attack-fighter {
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+@keyframes attack-hit {
+    0% { transform: scale(0.85) translateX(-12px); opacity: 0; }
+    40% { transform: scale(1.04) translateX(4px); opacity: 1; }
+    60% { transform: translateX(-3px); }
+    100% { transform: none; }
+}
+
+@keyframes slash {
+    0% { left: -60%; opacity: 0.9; }
+    100% { left: 130%; opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .chat-bleach .attack-card,
+    .chat-bleach .attack-card::after {
+        animation: none;
+    }
+}
