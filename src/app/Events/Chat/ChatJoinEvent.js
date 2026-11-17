@@ -13,11 +13,22 @@ export default createEvent({
             return
         }
 
+        const room = String(payload?.room ?? '').trim()
+
+        if (!room) {
+            return
+        }
+
         context.socket.data.name = name
+
+        // socket.join é o que faz o io.to(room) do consumidor alcançar este
+        // socket. Sem isso a sala existe só no payload, e todo mundo continua
+        // recebendo tudo.
+        context.socket.join(room)
 
         await context.presence.publish()
 
         // "fulano entrou na sala": vai pelo exchange, então chega a quem está em qualquer réplica
-        await context.notify('chat:joined', { name, sentAt: Date.now() })
+        await context.notify('chat:joined', { name, room, sentAt: Date.now() })
     }
 })
