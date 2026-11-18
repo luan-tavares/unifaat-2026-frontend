@@ -60,6 +60,18 @@ export interface PaginationParams {
   limit?: number;
 }
 
+// ── Tipos de busca de usuários (Elasticsearch) ──────────────
+
+export interface UserSearchFilters {
+  name?: string;
+  email?: string;
+  job_title?: string;
+  bio?: string;
+  city?: string;
+  state?: string;
+  is_active?: boolean;
+}
+
 // ── Tipos específicos de autenticação ───────────────────────
 
 export interface LoginResponse {
