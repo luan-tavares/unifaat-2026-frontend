@@ -17,11 +17,13 @@ program
     .description('Servidor WebSocket: segura as conexões dos clients e distribui eventos pelo RabbitMQ')
     .option('--exchange <exchange>', 'Nome do exchange fanout que este servidor assina')
     .option('--port <port>', 'Porta do servidor WebSocket')
+    .option('--results <results>', 'Exchange de onde chegam os resultados dos workers')
     .parse(process.argv)
 
 const options = program.opts()
 const exchange = options.exchange || 'notifications'
 const port = Number(options.port || 3001)
+const resultsExchange = options.results || 'results'
 
 const events = await loadEvents(path.join(__dirname, 'app', 'Events'))
 
@@ -60,11 +62,25 @@ io.on('connection', (socket) => {
     })
 })
 
-// Volta do exchange: cria a fila dinâmica DESTE servidor e entrega aos SEUS clients conectados
+// Volta do exchange principal: entrega por sala se o payload tem room, senão para todos
 await rabbit.subscribe(exchange, (event, payload) => {
-    // A lista de presença das réplicas é só informação de conexão: não vai direto para a tela
     if (event === 'presence:instance') {
         presence.receive(payload)
+        return
+    }
+
+    if (payload?.room) {
+        io.to(payload.room).emit(event, payload)
+        return
+    }
+
+    io.emit(event, payload)
+})
+
+// Volta do exchange de resultados (workers): mesma lógica de entrega por sala
+await rabbit.subscribe(resultsExchange, (event, payload) => {
+    if (payload?.room) {
+        io.to(payload.room).emit(event, payload)
         return
     }
 
@@ -82,5 +98,5 @@ process.on('SIGINT', shutdown)
 process.on('SIGTERM', shutdown)
 
 httpServer.listen(port, () => {
-    console.log(`Websocket iniciado na porta ${port}. Exchange: ${exchange}`)
+    console.log(`Websocket iniciado na porta ${port}. Exchange: ${exchange}. Results: ${resultsExchange}`)
 })
