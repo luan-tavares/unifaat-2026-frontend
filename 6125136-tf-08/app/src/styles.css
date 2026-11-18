@@ -1,0 +1,11 @@
+body { font-family: system-ui, sans-serif; background: #f4f5f7; margin: 0; }
+.app { max-width: 480px; margin: 2rem auto; padding: 1.5rem; background: #fff; border-radius: 8px; }
+.task-form { display: flex; gap: .5rem; }
+.task-form input { flex: 1; padding: .5rem; }
+.filters { display: flex; gap: .5rem; margin: 1rem 0; }
+.filter.is-active { font-weight: bold; background: #222; color: #fff; }
+.task-list { list-style: none; padding: 0; margin: 0; }
+.task-item { display: flex; justify-content: space-between; align-items: center; padding: .5rem 0; border-bottom: 1px solid #eee; }
+.task-name { cursor: pointer; flex: 1; }
+.task-name.is-done { text-decoration: line-through; color: #888; }
+.empty, .counter { color: #666; }
