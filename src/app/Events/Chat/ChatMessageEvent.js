@@ -1,9 +1,10 @@
 import { createEvent } from '../../../utils/event.js'
+import { normalizeRoom } from '../../../utils/chatRooms.js'
 
 /**
  * Chat: o client emite chat:message pelo túnel WebSocket.
  * O Event NÃO entrega nada na tela: só publica no exchange; cada servidor websocket recebe a cópia
- * na sua fila dinâmica e faz o io.emit para os clients dele (inclusive o autor).
+ * na sua fila dinâmica e entrega aos clients dele que estão na sala (io.to(room), inclusive o autor).
  */
 export default createEvent({
     name: 'chat:message',
@@ -15,7 +16,8 @@ export default createEvent({
         }
 
         const name = String(payload?.name ?? '').trim() || 'anônimo'
+        const room = normalizeRoom(payload?.room ?? context.socket.data.room)
 
-        await context.notify('chat:message', { name, text: text.slice(0, 500), sentAt: Date.now() })
+        await context.notify('chat:message', { name, room, text: text.slice(0, 500), sentAt: Date.now() })
     }
 })

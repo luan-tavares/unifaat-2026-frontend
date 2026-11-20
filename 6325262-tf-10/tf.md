@@ -1,0 +1,5 @@
+Nome: Gabriel de Souza Oliveira
+RA: 6325262
+GitHub: https://github.com/biel334
+
+Armadilha do dispatch: o `dispatch` do `createJob` chamava `rabbit.close()` no `finally`, sempre. Isso funciona no controller e no comando, que são processos curtos e abrem a própria conexão. No websocket a conexão com o RabbitMQ é uma só e fica aberta o tempo todo, porque é por ela que o servidor assina os exchanges `notifications` e `results`. Quando o `ChatImageEvent` chamava `dispatch`, o `close()` fechava essa conexão compartilhada: o servidor deixava de receber as mensagens do exchange e o chat parava de entregar tudo (texto, entrou/saiu, digitando e imagem), sem nenhum erro visível. A correção, em `src/utils/job.js`: antes do `connect`, o `dispatch` guarda `const wasConnected = rabbit.isConnected()` e, no `finally`, só chama `rabbit.close()` se `wasConnected` for `false`, ou seja, só fecha a conexão que ele mesmo abriu. No websocket, que já chega com a conexão aberta, o `dispatch` apenas publica na fila `images` e deixa a conexão como estava; no controller e no comando, que chegam sem conexão, o comportamento continua o mesmo de antes.
