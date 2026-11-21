@@ -18,12 +18,18 @@ export function createJob({ name, handle }) {
             throw new Error('dispatch requer o nome do job como string.')
         }
 
+        // Processo curto (controller, comando) abre e fecha. Processo longo (websocket) já está conectado:
+        // fechar aqui derrubaria a conexão dele (e as assinaturas dos exchanges). Só fecha o que ele mesmo abriu.
+        const isAlreadyConnected = rabbit.isConnected()
+
         await rabbit.connect()
 
         try {
             return await rabbit.publish(queue, { job: name, payload }, options)
         } finally {
-            await rabbit.close()
+            if (!isAlreadyConnected) {
+                await rabbit.close()
+            }
         }
     }
 

@@ -16,11 +16,13 @@ program
     .name('websocket')
     .description('Servidor WebSocket: segura as conexões dos clients e distribui eventos pelo RabbitMQ')
     .option('--exchange <exchange>', 'Nome do exchange fanout que este servidor assina')
+    .option('--results <results>', 'Nome do exchange fanout de onde chegam os resultados dos workers')
     .option('--port <port>', 'Porta do servidor WebSocket')
     .parse(process.argv)
 
 const options = program.opts()
 const exchange = options.exchange || 'notifications'
+const results = options.results || 'results'
 const port = Number(options.port || 3001)
 
 const events = await loadEvents(path.join(__dirname, 'app', 'Events'))
@@ -60,6 +62,16 @@ io.on('connection', (socket) => {
     })
 })
 
+// Entrega aos SEUS clients: evento de sala (payload com room) só para quem está nela; sem room, para todos
+const deliver = (event, payload) => {
+    if (payload?.room) {
+        io.to(payload.room).emit(event, payload)
+        return
+    }
+
+    io.emit(event, payload)
+}
+
 // Volta do exchange: cria a fila dinâmica DESTE servidor e entrega aos SEUS clients conectados
 await rabbit.subscribe(exchange, (event, payload) => {
     // A lista de presença das réplicas é só informação de conexão: não vai direto para a tela
@@ -68,8 +80,11 @@ await rabbit.subscribe(exchange, (event, payload) => {
         return
     }
 
-    io.emit(event, payload)
+    deliver(event, payload)
 })
+
+// Volta dos workers: outra fila dinâmica DESTE servidor, agora no exchange de resultados (ex.: chat:image)
+await rabbit.subscribe(results, deliver)
 
 const shutdown = async () => {
     console.log('\nEncerrando websocket...')
@@ -82,5 +97,5 @@ process.on('SIGINT', shutdown)
 process.on('SIGTERM', shutdown)
 
 httpServer.listen(port, () => {
-    console.log(`Websocket iniciado na porta ${port}. Exchange: ${exchange}`)
+    console.log(`Websocket iniciado na porta ${port}. Exchange: ${exchange}. Resultados: ${results}`)
 })

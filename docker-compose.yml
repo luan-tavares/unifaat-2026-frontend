@@ -84,13 +84,38 @@ services:
         aliases:
           - nodeworker_host
 
+  #NODE WORKER IMAGES (fila "images": o processamento pesado do chat, fora do websocket)
+  nodeworker-images-container:
+    build:
+      context: .
+      dockerfile: docker/node-worker/Dockerfile
+    # Mesma imagem do worker, outra fila: o pesado não compete com os jobs leves da "default"
+    command: ["--queue", "images"]
+    env_file:
+      - .env
+      - .env.docker
+    volumes:
+      - ./src:/app
+      - nodemodules-volume:/app/node_modules
+    depends_on:
+      - rabbitmq-container
+    environment:
+      RABBITMQ_HOST: rabbitmq_host
+      RABBITMQ_PORT: 5672
+    restart: unless-stopped
+    # Sem "ports": não é servidor, só consome a fila
+    networks:
+      app-network:
+        aliases:
+          - nodeworkerimages_host
+
   #NODE WEBSOCKET
   nodewebsocket-container:
     build:
       context: .
       dockerfile: docker/node-websocket/Dockerfile
     # Argumentos do entrypoint: o exchange que este servidor assina e a porta (só dentro da rede)
-    command: ["--exchange", "notifications", "--port", "3001"]
+    command: ["--exchange", "notifications", "--results", "results", "--port", "3001"]
     env_file:
       - .env
       - .env.docker

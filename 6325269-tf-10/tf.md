@@ -1,0 +1,5 @@
+Nome: Sirlande Martins
+RA: 6325269
+GitHub: https://github.com/Sir-Jr
+
+Armadilha do dispatch: o `dispatch` do `createJob` foi pensado para processos curtos (controller, comando), que abrem a conexão com o RabbitMQ, publicam o job e fecham tudo no `finally` com `rabbit.close()`. Só que o `rabbit` é um módulo único por processo, e no websocket a conexão já está aberta desde o início e é a mesma que mantém as assinaturas dos exchanges `notifications` e `results` (as filas dinâmicas exclusivas). Assim, o primeiro `chat:image` fecharia o canal e a conexão do servidor: as filas exclusivas sumiriam, o servidor pararia de receber mensagens, entradas e resultados dos workers, e o próximo `notify` abriria uma conexão nova sem nenhuma assinatura, ou seja, o chat "morreria" em silêncio. A correção, em `src/utils/job.js`, é guardar `rabbit.isConnected()` antes do `connect()` e, no `finally`, só chamar `rabbit.close()` se a conexão não estava aberta antes, ou seja, se foi o próprio `dispatch` que a abriu. O controller e o comando continuam abrindo e fechando como antes, e o websocket mantém a conexão dele.
