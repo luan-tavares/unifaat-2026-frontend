@@ -2,6 +2,7 @@
 export type ChatMessage = {
     name: string
     text: string
+    room: string
     sentAt: number
 }
 
@@ -12,13 +13,47 @@ export type OnlineUser = {
     ip: string
 }
 
-// "fulano entrou na sala": o aviso de quem acabou de dar chat:join
+// "fulano entrou na sala"
 export type ChatJoin = {
     name: string
+    room: string
     sentAt: number
 }
 
-// A lista da sala mistura mensagens e avisos
+// "fulano saiu da sala"
+export type ChatLeave = {
+    name: string
+    room: string
+    sentAt: number
+}
+
+// "fulano está digitando"
+export type ChatTyping = {
+    name: string
+    room: string
+}
+
+// Imagem processada pelo worker
+export type ChatImage = {
+    name: string
+    room: string
+    filename: string
+    thumb: string
+}
+
+// Imagem sendo processada (aviso imediato)
+export type ChatImageProcessing = {
+    name: string
+    room: string
+    filename: string
+}
+
+// A lista da sala mistura mensagens, avisos de entrada/saída e imagens
 export type ChatFeedItem =
     | { kind: "message"; message: ChatMessage }
     | { kind: "join"; join: ChatJoin }
+    | { kind: "leave"; leave: ChatLeave }
+    | { kind: "image"; image: ChatImage }
+    | { kind: "image:processing"; processing: ChatImageProcessing }
+
+export type Room = "geral" | "dev"

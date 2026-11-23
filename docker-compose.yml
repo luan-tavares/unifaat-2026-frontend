@@ -126,13 +126,35 @@ services:
         aliases:
           - nodeworkersavemessage_host
 
+  #NODE WORKER (fila images): processa imagens do chat e avisa pelo exchange results
+  nodeworker-images-container:
+    build:
+      context: .
+      dockerfile: docker/node-worker/Dockerfile
+    command: ["--queue", "images"]
+    env_file:
+      - .env
+      - .env.docker
+    volumes:
+      - ./src:/app
+      - nodemodules-volume:/app/node_modules
+    depends_on:
+      - rabbitmq-container
+    environment:
+      RABBITMQ_HOST: rabbitmq_host
+      RABBITMQ_PORT: 5672
+    restart: unless-stopped
+    networks:
+      data-network:
+        aliases:
+          - nodeworkerimages_host
   #NODE WEBSOCKET
   nodewebsocket-container:
     build:
       context: .
       dockerfile: docker/node-websocket/Dockerfile
-    # Argumentos do entrypoint: o exchange que este servidor assina e a porta (só dentro da rede)
-    command: ["--exchange", "notifications", "--port", "3001"]
+    # Argumentos do entrypoint: o exchange principal, o exchange de resultados e a porta
+    command: ["--exchange", "notifications", "--results", "results", "--port", "3001"]
     env_file:
       - .env
       - .env.docker

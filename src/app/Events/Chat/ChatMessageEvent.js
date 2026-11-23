@@ -18,10 +18,11 @@ export default createEvent({
         }
 
         const name = String(payload?.name ?? '').trim() || 'anônimo'
+        const room = String(payload?.room ?? 'geral').trim()
         const message = text.slice(0, 500)
         const sentAt = Date.now()
 
-        await context.notify('chat:message', { name, text: message, sentAt })
+        await context.notify('chat:message', { name, room, text: message, sentAt })
 
         // Gravar no banco não é trabalho do websocket: entrega o job à fila save-message e segue
         await SaveMessageJob.dispatch('save-message', { ip: ipOf(context.socket), name, message, sentAt })

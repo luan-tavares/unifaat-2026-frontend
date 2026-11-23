@@ -16,11 +16,13 @@ program
     .name('websocket')
     .description('Servidor WebSocket: segura as conexões dos clients e distribui eventos pelo RabbitMQ')
     .option('--exchange <exchange>', 'Nome do exchange fanout que este servidor assina')
+    .option('--results <results>', 'Nome do exchange fanout de resultados de workers (ex.: imagens processadas)')
     .option('--port <port>', 'Porta do servidor WebSocket')
     .parse(process.argv)
 
 const options = program.opts()
 const exchange = options.exchange || 'notifications'
+const resultsExchange = options.results || 'results'
 const port = Number(options.port || 3001)
 
 const events = await loadEvents(path.join(__dirname, 'app', 'Events'))
@@ -60,7 +62,16 @@ io.on('connection', (socket) => {
     })
 })
 
-// Volta do exchange: cria a fila dinâmica DESTE servidor e entrega aos SEUS clients conectados
+// Entrega um evento para a sala certa (se o payload tiver room) ou para todos
+function deliverToClients(event, payload) {
+    if (payload?.room) {
+        io.to(payload.room).emit(event, payload)
+        return
+    }
+    io.emit(event, payload)
+}
+
+// Volta do exchange principal: cria a fila dinâmica DESTE servidor e entrega aos SEUS clients
 await rabbit.subscribe(exchange, (event, payload) => {
     // A lista de presença das réplicas é só informação de conexão: não vai direto para a tela
     if (event === 'presence:instance') {
@@ -68,7 +79,12 @@ await rabbit.subscribe(exchange, (event, payload) => {
         return
     }
 
-    io.emit(event, payload)
+    deliverToClients(event, payload)
+})
+
+// Volta do exchange de resultados (workers de imagem, etc.): entrega para a sala do payload
+await rabbit.subscribe(resultsExchange, (event, payload) => {
+    deliverToClients(event, payload)
 })
 
 const shutdown = async () => {
@@ -82,5 +98,5 @@ process.on('SIGINT', shutdown)
 process.on('SIGTERM', shutdown)
 
 httpServer.listen(port, () => {
-    console.log(`Websocket iniciado na porta ${port}. Exchange: ${exchange}`)
+    console.log(`Websocket iniciado na porta ${port}. Exchange: ${exchange}, Results: ${resultsExchange}`)
 })
