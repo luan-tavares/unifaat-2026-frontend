@@ -19,6 +19,11 @@ server {
         return 404;
     }
 
+    # /stub_status também é interno: de fora (pelo nginx na porta publicada) devolve 404; o exporter lê pela porta 8081 abaixo
+    location = /stub_status {
+        return 404;
+    }
+
     location / {
         autoindex on; # Mostra índice de arquivos se não encontrar o index
         try_files $uri.html $uri $uri/ @node; # Procura o arquivo estático => procura o diretório estático => senao vai para o bloco @node
@@ -45,6 +50,17 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; # Encadeia os IPs no cabeçalho para rastrear origem real
         proxy_set_header X-Forwarded-Proto $scheme; # Passa pra frente se é HTTP ou HTTPS
 
+    }
+
+}
+
+# Porta interna do nginx: não é publicada no docker-compose, só quem está na edge-network (o exporter do Prometheus) chega aqui
+server {
+
+    listen 8081;
+
+    location = /stub_status {
+        stub_status; # Conexões ativas e total de requisições que o nginx atendeu (inclusive arquivos estáticos)
     }
 
 }

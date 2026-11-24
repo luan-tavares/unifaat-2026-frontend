@@ -1,0 +1,9 @@
+Nome: Gabriel Reis Cunha
+RA: 6325149
+GitHub: https://github.com/gabrielreis354
+
+Invalidação no worker: quem sabe que o dado mudou é quem grava no banco. O `ChatMessageEvent` só publica a mensagem no exchange e entrega o job à fila `save-message`; nesse momento nada foi gravado ainda. Se ele apagasse a chave `report:chat-recent` ali, o próximo GET seria MISS, leria o Postgres antes de o worker gravar e recachearia a lista velha por mais 60 s (a mensagem nova só apareceria depois do TTL). Apagando no `SaveMessageJob`, logo depois do `MessageModel.create`, a ordem é garantida: o dado novo já está no Postgres quando a chave some. Também cobre qualquer outro caminho que dispare o job e deixa o websocket só conectando e distribuindo.
+
+Redes do exporter: o `nginx-exporter-container` entra nas duas redes. Na `edge-network` porque o Nginx só está nela e o exporter precisa alcançar `nginx-container:8081/stub_status`. Na `data-network` (alias `nginxexporter_host`) porque o Prometheus só está nela e precisa alcançar o `/metrics` do exporter na porta 9113. Ele funciona como ponte entre as duas e não publica nenhuma porta no host (sem `ports:`). O `stub_status` fica numa porta interna (8081) do Nginx, que não é publicada; na porta publicada, `/stub_status` devolve 404.
+
+O que o stub_status mede: o `stub_status` mede o que o Nginx vê, e o Nginx está na frente de tudo: conexões ativas (lendo, escrevendo, esperando/keep-alive), conexões aceitas e tratadas, e o total de requisições, inclusive as que nunca chegam ao Node, como arquivos estáticos (JS, CSS, imagens, páginas HTML servidas direto do disco), o túnel do WebSocket (`/socket.io/`) e requisições recusadas na borda (404 do `/metrics` e do `/stub_status`). O `/metrics` do `nodeweb` só enxerga o que passa pelo Express: duração por rota e rotas da API. Já o número de conexões abertas do lado do cliente (keep-alive, websockets parados) só o Nginx mede.
