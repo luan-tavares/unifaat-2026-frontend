@@ -19,10 +19,10 @@ export const httpDuration = new Histogram({
     registers: [register]
 })
 
-// Acertos (hit) e erros (miss) do cache do relatório
+// Acertos (hit) e erros (miss) do cache, por resultado e endpoint
 export const cacheRequests = new Counter({
     name: 'cache_requests_total',
-    help: 'Consultas ao cache do relatório, por resultado (hit ou miss)',
-    labelNames: ['result'],
+    help: 'Consultas ao cache, por resultado (hit ou miss) e endpoint',
+    labelNames: ['result', 'endpoint'],
     registers: [register]
 })

@@ -19,6 +19,15 @@ server {
         return 404;
     }
 
+    # stub_status: métricas internas do Nginx (conexões, requisições). Acessível apenas pela rede interna Docker;
+    # qualquer requisição que chegue aqui pelo host (porta 8080) já foi recusada antes (allow/deny abaixo).
+    location = /stub_status {
+        stub_status;
+        allow 172.16.0.0/12;   # redes bridge do Docker (172.x.x.x)
+        allow 10.0.0.0/8;      # redes overlay/macvlan do Docker
+        deny all;
+    }
+
     location / {
         autoindex on; # Mostra índice de arquivos se não encontrar o index
         try_files $uri.html $uri $uri/ @node; # Procura o arquivo estático => procura o diretório estático => senao vai para o bloco @node

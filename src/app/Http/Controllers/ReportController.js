@@ -19,7 +19,7 @@ export default async function ReportController(request, response) {
             const cached = await redis.get(CACHE_KEY)
 
             if (cached) {
-                cacheRequests.inc({ result: 'hit' })
+                cacheRequests.inc({ result: 'hit', endpoint: 'relatorio' })
                 response.set('X-Cache', 'HIT')
                 return response.json(JSON.parse(cached))
             }
@@ -31,7 +31,7 @@ export default async function ReportController(request, response) {
             await redis.set(CACHE_KEY, JSON.stringify(ranking), CACHE_TTL_SECONDS)
         }
 
-        cacheRequests.inc({ result: 'miss' })
+        cacheRequests.inc({ result: 'miss', endpoint: 'relatorio' })
         response.set('X-Cache', 'MISS')
         return response.json(ranking)
     } catch (error) {
