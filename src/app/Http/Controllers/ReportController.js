@@ -1,9 +1,10 @@
 import redis from '../../../database/connections/redis.js'
 import ChatReportService from '../../Services/ChatReportService.js'
 import { cacheRequests } from '../../../utils/metrics.js'
+import { CHAT_RANKING_KEY } from '../../../utils/cacheKeys.js'
 
-const CACHE_KEY = 'report:chat-ranking'
 const CACHE_TTL_SECONDS = 30
+const METRIC_ENDPOINT = 'ranking'
 
 /**
  * GET /api/relatorio: ranking do chat com cache-aside no Redis.
@@ -16,10 +17,10 @@ export default async function ReportController(request, response) {
         const isCacheOn = (await redis.get('cache:ativo')) === '1'
 
         if (isCacheOn) {
-            const cached = await redis.get(CACHE_KEY)
+            const cached = await redis.get(CHAT_RANKING_KEY)
 
             if (cached) {
-                cacheRequests.inc({ result: 'hit' })
+                cacheRequests.inc({ result: 'hit', endpoint: METRIC_ENDPOINT })
                 response.set('X-Cache', 'HIT')
                 return response.json(JSON.parse(cached))
             }
@@ -28,10 +29,10 @@ export default async function ReportController(request, response) {
         const ranking = await ChatReportService.ranking()
 
         if (isCacheOn) {
-            await redis.set(CACHE_KEY, JSON.stringify(ranking), CACHE_TTL_SECONDS)
+            await redis.set(CHAT_RANKING_KEY, JSON.stringify(ranking), CACHE_TTL_SECONDS)
         }
 
-        cacheRequests.inc({ result: 'miss' })
+        cacheRequests.inc({ result: 'miss', endpoint: METRIC_ENDPOINT })
         response.set('X-Cache', 'MISS')
         return response.json(ranking)
     } catch (error) {

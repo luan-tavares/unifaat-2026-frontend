@@ -268,6 +268,19 @@ services:
         aliases:
           - redis_host
 
+  #NGINX EXPORTER: traduz o stub_status do nginx para o formato do Prometheus (/metrics na 9113). Sem ports: ninguém de fora enxerga
+  nginx-exporter-container:
+    image: nginx/nginx-prometheus-exporter:1.4.2
+    restart: unless-stopped
+    command: ["--nginx.scrape-uri=http://nginx-container:8081/stub_status"]
+    depends_on:
+      - nginx-container
+    networks:
+      edge-network: {}   # alcança o nginx (que só está aqui)
+      data-network:      # e é alcançado pelo Prometheus (que só está aqui)
+        aliases:
+          - nginxexporter_host
+
   #PROMETHEUS (coleta e guarda as métricas): busca o /metrics do nodeweb a cada 5 s (pull) pela data-network
   prometheus-container:
     image: prom/prometheus:v3.5.0
