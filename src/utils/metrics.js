@@ -19,10 +19,11 @@ export const httpDuration = new Histogram({
     registers: [register]
 })
 
-// Acertos (hit) e erros (miss) do cache do relatório
+// Acertos (hit) e erros (miss) do cache, por endpoint (relatorio, mensagens-recentes).
+// O dashboard soma tudo com sum(...), então o label novo não muda os painéis que já existiam
 export const cacheRequests = new Counter({
     name: 'cache_requests_total',
-    help: 'Consultas ao cache do relatório, por resultado (hit ou miss)',
-    labelNames: ['result'],
+    help: 'Consultas ao cache, por resultado (hit ou miss) e por endpoint',
+    labelNames: ['result', 'endpoint'],
     registers: [register]
 })

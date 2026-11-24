@@ -197,6 +197,8 @@ services:
       - public-volume:/var/www
       - ./aulas:/var/www/aulas
       - ./src/logs/nginx:/var/log/nginx
+      # Configuração que editamos em bind mount: mudou o template, basta reiniciar o nginx (sem rebuild)
+      - ./docker/nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
     depends_on:
       - nodeweb-container
       - nodewebsocket-container
@@ -283,6 +285,23 @@ services:
       data-network:
         aliases:
           - prometheus_host
+
+  #NGINX EXPORTER: lê o stub_status do nginx (texto simples) e traduz para o formato do Prometheus em :9113/metrics.
+  # Sem ports: ninguém de fora precisa dele. Fica nas DUAS redes: na edge-network alcança o nginx (porta interna 8081)
+  # e na data-network é alcançado pelo Prometheus
+  nginx-exporter-container:
+    image: nginx/nginx-prometheus-exporter:1.4.2
+    restart: unless-stopped
+    command: ["--nginx.scrape-uri=http://nginx-container:8081/stub_status"]
+    depends_on:
+      - nginx-container
+    networks:
+      edge-network:
+        aliases:
+          - nginxexporter_host
+      data-network:
+        aliases:
+          - nginxexporter_host
 
   #GRAFANA (só mostra): consulta o Prometheus (métricas) e o Postgres (as mensagens do chat). Nas DUAS redes
   grafana-container:

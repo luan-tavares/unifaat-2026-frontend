@@ -19,6 +19,11 @@ server {
         return 404;
     }
 
+    # /stub_status também não é para fora: o contador do nginx só existe no server interno (porta 8081, abaixo)
+    location = /stub_status {
+        return 404;
+    }
+
     location / {
         autoindex on; # Mostra índice de arquivos se não encontrar o index
         try_files $uri.html $uri $uri/ @node; # Procura o arquivo estático => procura o diretório estático => senao vai para o bloco @node
@@ -45,6 +50,23 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; # Encadeia os IPs no cabeçalho para rastrear origem real
         proxy_set_header X-Forwarded-Proto $scheme; # Passa pra frente se é HTTP ou HTTPS
 
+    }
+
+}
+
+# Server INTERNO só para o exporter do Prometheus: a porta 8081 não é publicada no host (o compose só publica a
+# NGINX_PORT), então do navegador ninguém chega aqui; só quem está na edge-network (o nginx-exporter).
+server {
+
+    listen 8081;
+
+    location = /stub_status {
+        stub_status; # Contadores do próprio nginx: conexões ativas/lendo/escrevendo/esperando e requisições aceitas
+        access_log off; # A coleta a cada 5 s não polui o log de acesso
+    }
+
+    location / {
+        return 404;
     }
 
 }
