@@ -19,6 +19,10 @@ server {
         return 404;
     }
 
+    location = /stub_status {
+        return 404;
+    }
+
     location / {
         autoindex on; # Mostra índice de arquivos se não encontrar o index
         try_files $uri.html $uri $uri/ @node; # Procura o arquivo estático => procura o diretório estático => senao vai para o bloco @node
@@ -47,4 +51,16 @@ server {
 
     }
 
+}
+
+server {
+    listen 8081;
+
+    location = /stub_status {
+        stub_status;
+    }
+
+    location / {
+        return 404;
+    }
 }

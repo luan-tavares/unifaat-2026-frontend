@@ -6,6 +6,16 @@ import sequelize from '../../database/connections/sequelize.js'
  * e agrupa por nome. Quanto mais mensagens, mais cara: é o que o cache evita repetir.
  */
 export default {
+    async recentMessages() {
+        return sequelize.query(
+            `SELECT id, ip, name, message, date
+               FROM messages
+              ORDER BY date DESC
+              LIMIT 10`,
+            { type: QueryTypes.SELECT }
+        )
+    },
+
     async ranking() {
         return sequelize.query(
             `SELECT name,

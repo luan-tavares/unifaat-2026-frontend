@@ -197,6 +197,7 @@ services:
       - public-volume:/var/www
       - ./aulas:/var/www/aulas
       - ./src/logs/nginx:/var/log/nginx
+      - ./docker/nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
     depends_on:
       - nodeweb-container
       - nodewebsocket-container
@@ -269,11 +270,24 @@ services:
           - redis_host
 
   #PROMETHEUS (coleta e guarda as métricas): busca o /metrics do nodeweb a cada 5 s (pull) pela data-network
+  nginx-exporter-container:
+    image: nginx/nginx-prometheus-exporter:1.4.2
+    restart: unless-stopped
+    command: ["--nginx.scrape-uri=http://nginx-container:8081/stub_status"]
+    depends_on:
+      - nginx-container
+    networks:
+      edge-network:
+      data-network:
+        aliases:
+          - nginx-exporter_host
+
   prometheus-container:
     image: prom/prometheus:v3.5.0
     restart: unless-stopped
     depends_on:
       - nodeweb-container
+      - nginx-exporter-container
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"   # a interface do Prometheus (Status > Targets mostra o nodeweb)
     volumes:
