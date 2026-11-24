@@ -17,6 +17,7 @@ import fileUpload from 'express-fileupload';
 import swaggerUi from 'swagger-ui-express';
 import LoginController from '../app/Http/Controllers/LoginController.js';
 import ReportController from '../app/Http/Controllers/ReportController.js';
+import RecentMessagesController from '../app/Http/Controllers/RecentMessagesController.js';
 import MetricsController from '../app/Http/Controllers/MetricsController.js';
 import MetricsMiddleware from '../app/Http/Middlewares/MetricsMiddleware.js';
 import ToggleCacheController from '../app/Http/Controllers/ToggleCacheController.js';
@@ -150,6 +151,9 @@ router.post('/api/login', LoginController);
 
 /** Ranking do chat com cache-aside no Redis (o botão do chat dispara requisições aqui) */
 router.get('/api/relatorio', ReportController);
+
+/** 10 últimas mensagens do chat com cache-aside no Redis (invalidado pelo worker save-message) */
+router.get('/api/mensagens/recentes', RecentMessagesController);
 
 /** Liga/desliga o cache do relatório (só o professor, com ADMIN_TOKEN) */
 router.post('/api/admin/cache', AdminMiddleware, ToggleCacheController);
