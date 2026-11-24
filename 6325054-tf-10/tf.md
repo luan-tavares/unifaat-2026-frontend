@@ -1,0 +1,5 @@
+Nome: Leonardo Contini
+RA: 6325054
+GitHub: https://github.com/Leonardocontini
+
+Armadilha do dispatch: o método `dispatch` de `createJob` sempre chamava `rabbit.close()` no bloco `finally`, o que encerra a conexão e o canal do RabbitMQ. No context do worker isso é inofensivo (o processo consome a fila, termina o job e pode fechar a conexão), mas no websocket a conexão com o RabbitMQ fica aberta o tempo todo: o servidor precisa dela para publicar no exchange `notifications` e assinar a fila dinâmica de volta. Quando um Event com imagem disparava o `dispatch`, o `finally` fechava exatamente essa conexão, derrubando a assinatura do exchange e parando a entrega de qualquer evento para os clients. A correção foi checar, antes de conectar, se a conexão já estava aberta (`const wasConnected = rabbit.isConnected()`). Se já estava, o `dispatch` não fecha no `finally`; se ele mesmo abriu (wasConnected era `false`), então fecha normalmente. Assim o worker de jobs curtos continua se comportando como antes, e o websocket não perde a conexão que mantém o chat em pé.

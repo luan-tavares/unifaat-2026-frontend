@@ -131,8 +131,8 @@ services:
     build:
       context: .
       dockerfile: docker/node-websocket/Dockerfile
-    # Argumentos do entrypoint: o exchange que este servidor assina e a porta (só dentro da rede)
-    command: ["--exchange", "notifications", "--port", "3001"]
+    # Argumentos do entrypoint: o exchange que este servidor assina, a porta (só dentro da rede) e o exchange de resultados dos workers
+    command: ["--exchange", "notifications", "--port", "3001", "--results", "results"]
     env_file:
       - .env
       - .env.docker
@@ -152,6 +152,29 @@ services:
       data-network:   # e daqui alcança os dados: a ponte entre as duas redes
         aliases:
           - nodewebsocket_host
+
+  #NODE WORKER (fila images): processa imagens enviadas pelo chat; sem porta, não é servidor
+  nodeworker-images-container:
+    build:
+      context: .
+      dockerfile: docker/node-worker/Dockerfile
+    command: ["--queue", "images"]
+    env_file:
+      - .env
+      - .env.docker
+    volumes:
+      - ./src:/app
+      - nodemodules-volume:/app/node_modules
+    depends_on:
+      - rabbitmq-container
+    environment:
+      RABBITMQ_HOST: rabbitmq_host
+      RABBITMQ_PORT: 5672
+    restart: unless-stopped
+    networks:
+      data-network:
+        aliases:
+          - nodeworkerimages_host
 
   #NODE VITE HMR
   nodevitehmr-container:
