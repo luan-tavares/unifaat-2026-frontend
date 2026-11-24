@@ -19,6 +19,12 @@ server {
         return 404;
     }
 
+    # /stub_status também não sai pela porta publicada (8080): de fora devolve 404. As métricas do nginx ficam
+    # no server interno abaixo, que só o exporter alcança pela rede do Docker
+    location = /stub_status {
+        return 404;
+    }
+
     location / {
         autoindex on; # Mostra índice de arquivos se não encontrar o index
         try_files $uri.html $uri $uri/ @node; # Procura o arquivo estático => procura o diretório estático => senao vai para o bloco @node
@@ -45,6 +51,20 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; # Encadeia os IPs no cabeçalho para rastrear origem real
         proxy_set_header X-Forwarded-Proto $scheme; # Passa pra frente se é HTTP ou HTTPS
 
+    }
+
+}
+
+# Server INTERNO só do stub_status: escuta na 8081, que NÃO é publicada no docker-compose (nginx-container só
+# publica a porta do server principal). O navegador nunca chega aqui; só o nginx-exporter, pela edge-network.
+# Preferido a "allow/deny" por IP: o tráfego do navegador (localhost:8080) também chega ao container com IP
+# privado do Docker (o gateway da rede), então um allow por faixa de IP deixaria o /stub_status aberto.
+server {
+
+    listen 8081;
+
+    location = /stub_status {
+        stub_status; # Conexões ativas, accepts/handled e total de requisições do nginx
     }
 
 }

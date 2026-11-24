@@ -7,3 +7,10 @@ scrape_configs:
     metrics_path: /metrics
     static_configs:
       - targets: ["nodeweb_host:3000"]   # alias do nodeweb na data-network (não passa pelo nginx)
+
+  # O nginx recebe TODA requisição (inclusive arquivos estáticos que nem chegam ao Node): o exporter lê o
+  # stub_status dele e devolve em /metrics, no formato do Prometheus. Também pela data-network, sem passar pelo nginx
+  - job_name: nginx
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["nginx_exporter_host:9113"]

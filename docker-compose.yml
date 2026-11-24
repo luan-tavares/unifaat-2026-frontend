@@ -201,7 +201,9 @@ services:
       - nodeweb-container
       - nodewebsocket-container
     networks:
-      - edge-network   # só a borda: não enxerga o banco
+      edge-network:   # só a borda: não enxerga o banco
+        aliases:
+          - nginx_host   # o nginx-exporter chega por este nome (porta 8081, a do stub_status)
 
   #POSTGRES
   postgres-container:
@@ -268,12 +270,30 @@ services:
         aliases:
           - redis_host
 
+  #NGINX EXPORTER: lê o stub_status do nginx (server interno :8081) e expõe /metrics para o Prometheus.
+  # Sem "ports": ninguém de fora precisa dele. Nas DUAS redes: edge para alcançar o nginx, data para o Prometheus alcançá-lo
+  nginx-exporter-container:
+    image: nginx/nginx-prometheus-exporter:1.4.2
+    restart: unless-stopped
+    command:
+      - --nginx.scrape-uri=http://nginx_host:8081/stub_status
+    depends_on:
+      - nginx-container
+    networks:
+      edge-network:   # alcança o nginx (que só está na edge-network)
+        aliases:
+          - nginx_exporter_host
+      data-network:   # e é alcançado pelo Prometheus (que só está na data-network)
+        aliases:
+          - nginx_exporter_host
+
   #PROMETHEUS (coleta e guarda as métricas): busca o /metrics do nodeweb a cada 5 s (pull) pela data-network
   prometheus-container:
     image: prom/prometheus:v3.5.0
     restart: unless-stopped
     depends_on:
       - nodeweb-container
+      - nginx-exporter-container
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"   # a interface do Prometheus (Status > Targets mostra o nodeweb)
     volumes:

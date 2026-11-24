@@ -220,6 +220,78 @@
       ]
     },
     {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Nginx: conexões ativas",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 12
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "nginx_connections_active",
+          "legendFormat": "conexões ativas",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Nginx: requisições por segundo",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 12
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(nginx_http_requests_total[1m])",
+          "legendFormat": "req/s",
+          "refId": "A"
+        }
+      ]
+    },
+    {
       "id": 6,
       "type": "table",
       "title": "Log das mensagens do chat (últimas 100, gravadas pelo job save-message)",
@@ -229,7 +301,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 16,
+        "y": 24,
         "w": 24,
         "h": 12
       },
