@@ -50,10 +50,13 @@ export function LoadButton() {
 
     return (
         <div className="card mt-3">
-            <div className="card-header"><strong>Carga na API</strong></div>
+            <div className="card-header d-flex align-items-center gap-2">
+                <span className="kanji" aria-hidden="true">霊圧</span>
+                <strong>Carga na API: liberar reiatsu</strong>
+            </div>
 
             <div className="card-body d-flex flex-column gap-2">
-                <button className="btn btn-warning" type="button" disabled={isLoading} onClick={aoDispararRequisicoes}>
+                <button className="btn btn-primary" type="button" disabled={isLoading} onClick={aoDispararRequisicoes}>
                     {isLoading ? "Disparando..." : `Disparar ${TOTAL_REQUESTS} requisições`}
                 </button>
 

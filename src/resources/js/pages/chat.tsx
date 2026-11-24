@@ -1,3 +1,4 @@
+import "../../css/chat.css"
 import { createRoot } from "react-dom/client"
 import { ChatApp } from "../components/ChatApp"
 

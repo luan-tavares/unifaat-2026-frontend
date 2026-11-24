@@ -197,11 +197,30 @@ services:
       - public-volume:/var/www
       - ./aulas:/var/www/aulas
       - ./src/logs/nginx:/var/log/nginx
+      - ./docker/nginx/default.conf.template:/etc/nginx/templates/default.conf.template   # config editável em bind mount
     depends_on:
       - nodeweb-container
       - nodewebsocket-container
     networks:
-      - edge-network   # só a borda: não enxerga o banco
+      edge-network:   # só a borda: não enxerga o banco
+        aliases:
+          - nginx_host
+
+  #NGINX EXPORTER: lê o /stub_status do nginx (edge-network) e expõe /metrics para o Prometheus (data-network).
+  # Fica nas DUAS redes, como ponte só de métricas; sem "ports": ninguém de fora precisa falar com ele
+  nginxexporter-container:
+    image: nginx/nginx-prometheus-exporter:1.4.2
+    restart: unless-stopped
+    command: ["--nginx.scrape-uri=http://nginx_host:8082/stub_status"]
+    depends_on:
+      - nginx-container
+    networks:
+      edge-network:   # alcança o nginx
+        aliases:
+          - nginxexporter_host
+      data-network:   # é alcançado pelo Prometheus
+        aliases:
+          - nginxexporter_host
 
   #POSTGRES
   postgres-container:
@@ -274,6 +293,7 @@ services:
     restart: unless-stopped
     depends_on:
       - nodeweb-container
+      - nginxexporter-container
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"   # a interface do Prometheus (Status > Targets mostra o nodeweb)
     volumes:
