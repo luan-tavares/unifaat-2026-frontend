@@ -17,5 +17,16 @@ export default {
               LIMIT 10`,
             { type: QueryTypes.SELECT }
         )
+    },
+
+    // As 10 últimas mensagens do chat (GET /api/mensagens/recentes)
+    async recent() {
+        return sequelize.query(
+            `SELECT id, name, ip, message, date
+               FROM messages
+              ORDER BY date DESC
+              LIMIT 10`,
+            { type: QueryTypes.SELECT }
+        )
     }
 }

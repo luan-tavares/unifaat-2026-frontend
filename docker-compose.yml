@@ -201,7 +201,9 @@ services:
       - nodeweb-container
       - nodewebsocket-container
     networks:
-      - edge-network   # só a borda: não enxerga o banco
+      edge-network:
+        aliases:
+          - nginx_host   # o exporter lê o stub_status por este nome
 
   #POSTGRES
   postgres-container:
@@ -214,8 +216,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       TZ: America/Sao_Paulo
-    ports:
-      - "${POSTGRES_PORT}:5432"
+    # Sem "ports": só a data-network alcança o banco (aula 11, seção 3.5)
     volumes:
       - postgres-volume:/var/lib/postgresql
       - ./src/docker/postgres/init:/docker-entrypoint-initdb.d
@@ -268,6 +269,22 @@ services:
         aliases:
           - redis_host
 
+  #NGINX EXPORTER (métricas do nginx): lê o stub_status do nginx (edge-network) e expõe /metrics para o Prometheus
+  # (data-network). Entra nas DUAS redes porque faz a ponte; sem "ports:", só quem está nas redes alcança.
+  nginx-exporter-container:
+    image: nginx/nginx-prometheus-exporter:1.4
+    restart: unless-stopped
+    command:
+      - --nginx.scrape-uri=http://nginx_host:8088/stub_status
+    depends_on:
+      - nginx-container
+    networks:
+      edge-network:
+        aliases:
+          - nginx_exporter_host
+      data-network:
+        aliases:
+          - nginx_exporter_host
   #PROMETHEUS (coleta e guarda as métricas): busca o /metrics do nodeweb a cada 5 s (pull) pela data-network
   prometheus-container:
     image: prom/prometheus:v3.5.0

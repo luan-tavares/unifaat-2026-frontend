@@ -7,3 +7,9 @@ scrape_configs:
     metrics_path: /metrics
     static_configs:
       - targets: ["nodeweb_host:3000"]   # alias do nodeweb na data-network (não passa pelo nginx)
+
+  # Métricas do nginx (conexões, requisições): o exporter lê o stub_status e entrega aqui, pela data-network
+  - job_name: nginx
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["nginx_exporter_host:9113"]

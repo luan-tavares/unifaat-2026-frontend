@@ -19,6 +19,12 @@ server {
         return 404;
     }
 
+    # /stub_status NÃO é servido na porta pública: de fora (navegador) devolve 404. As métricas do nginx ficam
+    # só no server interno abaixo (porta 8088, nunca publicada no host).
+    location = /stub_status {
+        return 404;
+    }
+
     location / {
         autoindex on; # Mostra índice de arquivos se não encontrar o index
         try_files $uri.html $uri $uri/ @node; # Procura o arquivo estático => procura o diretório estático => senao vai para o bloco @node
@@ -47,4 +53,14 @@ server {
 
     }
 
+}
+
+# Server INTERNO, só para o exporter do Prometheus (nginx-prometheus-exporter) ler o stub_status.
+# A porta 8088 não está em "ports:" do compose: só quem está na edge-network (o exporter) alcança.
+server {
+    listen 8088;
+
+    location = /stub_status {
+        stub_status;
+    }
 }
